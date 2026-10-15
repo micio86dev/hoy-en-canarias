@@ -489,3 +489,13 @@ def test_logging_masks_secrets(caplog: pytest.LogCaptureFixture) -> None:
         respx.get("https://a.test/x").mock(return_value=httpx.Response(200))
         make_client().get("https://a.test/x", params={"apikey": "TOPSECRET", "q": "1"})
     assert "TOPSECRET" not in caplog.text
+
+
+def test_httpx_request_log_masks_secrets(caplog: pytest.LogCaptureFixture) -> None:
+    # httpx itself logs the full request URL at INFO; the client must not leak query secrets.
+    caplog.set_level("INFO")
+    with respx.mock:
+        respx.get("https://a.test/x").mock(return_value=httpx.Response(200))
+        make_client().get("https://a.test/x", params={"apikey": "TOPSECRET", "q": "1"})
+    assert "HTTP Request" in caplog.text
+    assert "TOPSECRET" not in caplog.text

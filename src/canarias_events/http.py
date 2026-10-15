@@ -83,6 +83,20 @@ def mask_secrets(url: str) -> str:
     return urlunsplit(parts._replace(netloc=netloc, query="&".join(pairs)))
 
 
+class _MaskUrlSecrets(logging.Filter):
+    """httpx logs every request URL at INFO; mask key/token query values in those records."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        if isinstance(record.args, tuple):
+            record.args = tuple(
+                mask_secrets(str(arg)) if isinstance(arg, httpx.URL) else arg for arg in record.args
+            )
+        return True
+
+
+logging.getLogger("httpx").addFilter(_MaskUrlSecrets())
+
+
 def _default_resolver(host: str) -> list[str]:
     infos = socket.getaddrinfo(host, None, type=socket.SOCK_STREAM)
     return [str(info[4][0]) for info in infos]
