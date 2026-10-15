@@ -371,6 +371,8 @@ class Database:
         self, source_id: str, run_id: int, reason: str, events: list[Event], now: datetime
     ) -> int:
         """Hold ``events`` back; they replace what was pending for the source."""
+        if not events:
+            return 0  # nothing new to hold: keep what a person may still want to accept
         with self.conn:
             self.conn.execute(
                 "UPDATE quarantine SET status='superseded' WHERE source_id=? AND status='pending'",

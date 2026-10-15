@@ -265,6 +265,19 @@ def test_report_health_lists_each_source(tmp_path: Path) -> None:
     assert "failed" in lines["bad"] and "100%" in lines["bad"]
 
 
+def test_report_health_uses_history_runs_from_the_config(tmp_path: Path) -> None:
+    config = write_config(tmp_path, [fake_source("a")], crawl={"history_runs": 2})
+    for _ in range(3):
+        invoke(*import_args(tmp_path, config, "--from", "2026-10-19", "--to", "2026-10-25"))
+    db = str(tmp_path / "db.sqlite")
+    with Database(db) as check:
+        assert len(check.recent_source_runs("a", 50)) == 3
+    result = invoke("report", "--db", db, "--health", "--config", str(config))
+    assert result.exit_code == 0, result.output
+    row = next(line for line in result.output.splitlines() if line.startswith("a "))
+    assert row.split()[1] == "2"  # runs column, capped by crawl.history_runs
+
+
 def test_report_without_runs(tmp_path: Path) -> None:
     result = invoke("report", "--db", str(tmp_path / "empty.sqlite"))
     assert result.exit_code == 1

@@ -135,16 +135,17 @@ def _echo_report(report: dict[str, Any]) -> None:
     )
 
 
-def _echo_health(db: Database) -> None:
+def _echo_health(db: Database, history_runs: int) -> None:
     rows: list[list[Any]] = []
     for source_id, row in sorted(db.source_rows().items()):
-        h = summarize(db.recent_source_runs(source_id, CrawlSettings().history_runs))
+        h = summarize(db.recent_source_runs(source_id, history_runs))
         if not h["runs_considered"]:
             continue
         rate = h["error_rate"]
         rows.append(
             [
                 source_id,
+                h["runs_considered"],
                 h["last_status"],
                 row["last_success_at"] or "-",
                 "-" if h["last_events_found"] is None else h["last_events_found"],
@@ -156,7 +157,16 @@ def _echo_health(db: Database) -> None:
     if not rows:
         typer.echo("No source runs recorded yet.")
         return
-    headers = ["source", "last status", "last success", "events", "errors", "streak", "anomalies"]
+    headers = [
+        "source",
+        "runs",
+        "last status",
+        "last success",
+        "events",
+        "errors",
+        "streak",
+        "anomalies",
+    ]
     typer.echo(format_table(headers, rows))
 
 
@@ -251,11 +261,13 @@ def show_report(
     health: Annotated[
         bool, typer.Option("--health", help="Per-source health over the recent runs.")
     ] = False,
+    config: ConfigOption = DEFAULT_CONFIG,
 ) -> None:
     """Print the summary of an import run stored in the database."""
     with Database(db_path or default_db_path()) as db:
         if health:
-            _echo_health(db)
+            runs = _load_catalog(config).crawl.history_runs if config.exists() else None
+            _echo_health(db, runs or CrawlSettings().history_runs)
             return
         run = db.get_run(run_id)
     if run is None or run.report is None:

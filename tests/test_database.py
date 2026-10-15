@@ -186,3 +186,10 @@ def test_quarantine_status_changes_leave_the_pending_list() -> None:
         assert db.quarantine_close("q", "accepted") == 1
         assert db.quarantine_pending("q") == []
         assert db.quarantine_close("q", "accepted") == 0
+
+
+def test_an_empty_quarantine_does_not_discard_what_is_pending() -> None:
+    with Database(":memory:") as db:
+        db.quarantine_add("q", 1, "count_drop", [_quarantine_event("Uno")], NOW)
+        assert db.quarantine_add("q", 2, "empty_after_events", [], NOW) == 0
+        assert [i.event.title for i in db.quarantine_pending("q")] == ["Uno"]
