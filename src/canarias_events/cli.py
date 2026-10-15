@@ -21,6 +21,7 @@ from canarias_events.health import summarize
 from canarias_events.http import SafeHttpClient
 from canarias_events.logging_config import configure_logging
 from canarias_events.pipeline import accept_quarantine, run_import
+from canarias_events.social import load_social_registry, schedule_blocker
 from canarias_events.sources.registry import SourcesCatalog, load_catalog
 
 DEFAULT_CONFIG = Path("config/sources.yaml")
@@ -35,6 +36,10 @@ app = typer.Typer(
 ConfigOption = Annotated[Path, typer.Option("--config", help="Path to sources.yaml.")]
 DbOption = Annotated[
     Path | None, typer.Option("--db", help="SQLite file (default: $CANARIAS_DB_PATH or data/).")
+]
+SocialConfigOption = Annotated[
+    Path | None,
+    typer.Option("--social-config", help="Social registry (default: social_sources.yaml)."),
 ]
 OutputOption = Annotated[Path, typer.Option("--output-dir", help="Directory for the outputs.")]
 
@@ -68,6 +73,10 @@ def _load_catalog(path: Path) -> SourcesCatalog:
         return load_catalog(path)
     except (OSError, ValueError) as exc:
         raise typer.BadParameter(f"cannot load {path}: {exc}", param_hint="--config") from exc
+
+
+def _social_path(config: Path, social_config: Path | None) -> Path:
+    return social_config or config.parent / "social_sources.yaml"
 
 
 def _parse_day(value: str, option: str) -> date:
@@ -255,9 +264,39 @@ def import_events(
         raise typer.Exit(1)
 
 
+def _echo_social(path: Path) -> None:
+    try:
+        registry = load_social_registry(path)
+    except (OSError, ValueError) as exc:
+        raise typer.BadParameter(
+            f"cannot load {path}: {exc}", param_hint="--social-config"
+        ) from exc
+    if not registry.sources:
+        typer.echo(f"No social sources in {path}.")
+        return
+    rows = []
+    for s in registry.sources:
+        blocker = schedule_blocker(s)
+        rows.append(
+            [s.id, s.platform, s.kind, s.acquisition_mode, s.verification_state,
+             ",".join(s.islands) or "-", "yes" if blocker is None else f"no ({blocker})"]
+        )  # fmt: skip
+    headers = ["id", "platform", "kind", "mode", "state", "islands", "scheduled"]
+    typer.echo(format_table(headers, rows))
+
+
 @app.command("list-sources")
-def list_sources(config: ConfigOption = DEFAULT_CONFIG) -> None:
+def list_sources(
+    social: Annotated[
+        bool, typer.Option("--social", help="List the social source registry instead.")
+    ] = False,
+    config: ConfigOption = DEFAULT_CONFIG,
+    social_config: SocialConfigOption = None,
+) -> None:
     """List the configured sources and their status."""
+    if social:
+        _echo_social(_social_path(config, social_config))
+        return
     catalog = _load_catalog(config)
     rows = [
         [

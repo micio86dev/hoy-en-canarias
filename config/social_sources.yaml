@@ -1,0 +1,127 @@
+# Social source registry.
+#
+# Documents which social platforms can (and cannot) feed the importer, and holds the verified
+# accounts that may be scheduled. Rules:
+#   * Only entries verified in the research evidence (odd/tasks/adaptive-crawling.md, 2026-10-15)
+#     are seeded. Accounts are never invented and never registered automatically: a person adds
+#     an `account` row after checking the account and its terms.
+#   * `requires_authorization`, `manual_only` and `excluded` are never scheduled and never
+#     retried: no private sessions, cookies, automated browsers or unauthorised endpoints.
+#   * `import_url` is a one-off, human-driven import (`import-url <url>`), never scheduled.
+#   * Only `kind: account` rows with `acquisition_mode` api_public/rss, `verification_state:
+#     verified` and `enabled: true` are scheduled. Their events carry source_trust=social.
+sources:
+  - id: facebook_pages
+    kind: platform
+    platform: facebook
+    name: Facebook Pages (events)
+    url: https://developers.facebook.com/docs/graph-api/
+    acquisition_mode: requires_authorization
+    verification_state: verified
+    permissions: >-
+      Page events need a Meta app with Page Public Content Access (PPCA) and App Review, plus
+      authorisation from the page owner. No generic Facebook scraping.
+    notes: Use the organizer submission flow (submit-event) or a manual review instead.
+    last_checked: 2026-10-15
+  - id: facebook_groups
+    kind: platform
+    platform: facebook
+    name: Facebook Groups
+    url: https://developers.facebook.com/docs/graph-api/
+    acquisition_mode: excluded
+    verification_state: verified
+    permissions: Groups API removed by Meta on 2024-04-22; group content is private to members.
+    notes: Never read through private sessions, cookies or browsers.
+    last_checked: 2026-10-15
+  - id: instagram
+    kind: platform
+    platform: instagram
+    name: Instagram
+    url: https://developers.facebook.com/docs/instagram-platform/
+    acquisition_mode: requires_authorization
+    verification_state: verified
+    permissions: >-
+      Only professional accounts that authorise a Meta app (App Review); no public event data
+      and no scraping.
+    last_checked: 2026-10-15
+  - id: meetup
+    kind: platform
+    platform: meetup
+    name: Meetup
+    url: https://www.meetup.com/api/
+    acquisition_mode: requires_authorization
+    verification_state: verified
+    permissions: API access needs authorisation (OAuth / Pro plan); not used without credentials.
+    last_checked: 2026-10-15
+  - id: eventbrite_api
+    kind: platform
+    platform: eventbrite
+    name: Eventbrite API
+    url: https://www.eventbrite.com/platform/api/
+    acquisition_mode: excluded
+    verification_state: verified
+    permissions: Public event search is not offered by the API; organizer data needs OAuth.
+    notes: See eventbrite_pages for the supported manual route.
+    last_checked: 2026-10-15
+  - id: eventbrite_pages
+    kind: platform
+    platform: eventbrite
+    name: Eventbrite public event pages
+    url: https://www.eventbrite.com/
+    acquisition_mode: import_url
+    verification_state: verified
+    permissions: >-
+      Public /e/ pages carry JSON-LD Event data. Import one page at a time with
+      `import-url`, when a person hands us the link; never crawled or scheduled.
+    last_checked: 2026-10-15
+  - id: telegram
+    kind: platform
+    platform: telegram
+    name: Telegram channels and groups
+    url: https://telegram.org/tos
+    acquisition_mode: manual_only
+    verification_state: verified
+    permissions: No public event feed; reading needs a user or bot account. Manual only.
+    last_checked: 2026-10-15
+  - id: youtube_channel_rss
+    kind: platform
+    platform: youtube
+    name: YouTube channel RSS
+    url: https://www.youtube.com/
+    acquisition_mode: rss
+    verification_state: verified
+    permissions: Public per-channel Atom feeds. Low value for events (no event dates).
+    notes: None configured.
+    last_checked: 2026-10-15
+  - id: mastodon_rss
+    kind: platform
+    platform: mastodon
+    name: Mastodon account RSS
+    url: https://docs.joinmastodon.org/
+    acquisition_mode: rss
+    verification_state: verified
+    permissions: >-
+      Public account feeds (https://<instance>/@<user>.rss), no authentication. Supported by the
+      `mastodon` adapter; no verified Canarian accounts yet.
+    last_checked: 2026-10-15
+  - id: bluesky_public_api
+    kind: platform
+    platform: bluesky
+    name: Bluesky public API
+    url: https://docs.bsky.app/
+    acquisition_mode: api_public
+    verification_state: verified
+    permissions: >-
+      Public AppView (app.bsky.feed.getAuthorFeed), no authentication. Supported by the
+      `bluesky` adapter; no verified Canarian accounts yet.
+    last_checked: 2026-10-15
+  - id: radio_insular_feed
+    kind: account
+    platform: web
+    name: Radio Insular news feed
+    url: https://radioinsular.es/feed/
+    acquisition_mode: rss
+    verification_state: candidate
+    permissions: Terms of use not reviewed yet.
+    notes: News feed, a signal of what is happening; not an event source. Not enabled.
+    last_checked: 2026-10-15

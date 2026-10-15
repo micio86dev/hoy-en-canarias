@@ -276,6 +276,49 @@ def test_list_sources_shipped_config() -> None:
     assert "holaislascanarias" in result.output
 
 
+def social_args(tmp_path: Path, rows: list[dict[str, Any]] | None = None) -> list[str]:
+    config = write_config(tmp_path, [fake_source("a")])
+    args = ["list-sources", "--social", "--config", str(config)]
+    if rows is not None:
+        social = tmp_path / "social.yaml"
+        social.write_text(yaml.safe_dump({"sources": rows}), encoding="utf-8")
+        args += ["--social-config", str(social)]
+    return args
+
+
+def test_list_sources_social_prints_the_shipped_registry(tmp_path: Path) -> None:
+    result = invoke(*social_args(tmp_path, None), "--social-config", "config/social_sources.yaml")
+    assert result.exit_code == 0, result.output
+    lines = {line.split()[0]: line for line in result.output.splitlines() if line.strip()}
+    assert "requires_authorization" in lines["facebook_pages"]
+    assert "excluded" in lines["facebook_groups"]
+    assert "import_url" in lines["eventbrite_pages"]
+    assert "candidate" in lines["radio_insular_feed"]
+    assert not any(line.rstrip().endswith("yes") for line in lines.values())  # nothing scheduled
+    assert "adapter" not in result.output.splitlines()[0]  # the social table, not the sources one
+
+
+def test_list_sources_social_marks_what_is_scheduled(tmp_path: Path) -> None:
+    rows: list[dict[str, Any]] = [
+        {"id": "ok", "platform": "mastodon", "name": "Ok", "adapter": "mastodon",
+         "handle": "a@m.example", "acquisition_mode": "rss", "verification_state": "verified",
+         "enabled": True, "frequency": "daily"},
+        {"id": "fb", "platform": "facebook", "name": "Fb", "kind": "platform",
+         "acquisition_mode": "requires_authorization"},
+    ]  # fmt: skip
+    result = invoke(*social_args(tmp_path, rows))
+    lines = {line.split()[0]: line for line in result.output.splitlines() if line.strip()}
+    assert lines["ok"].rstrip().endswith("yes")
+    assert "no (platform description)" in lines["fb"]
+
+
+def test_list_sources_social_without_a_file_says_so(tmp_path: Path) -> None:
+    config = write_config(tmp_path, [fake_source("a")])
+    result = invoke("list-sources", "--social", "--config", str(config))
+    assert result.exit_code == 0
+    assert "No social sources" in result.output
+
+
 def test_report_prints_latest_run(tmp_path: Path) -> None:
     config = write_config(tmp_path, [fake_source("a"), fake_source("bad", params={"fail": True})])
     db = str(tmp_path / "db.sqlite")
