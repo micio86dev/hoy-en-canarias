@@ -101,3 +101,19 @@ def test_discovery_probes_cover_the_candidate_domains() -> None:
         if entry.url:
             host = urlsplit(entry.url).hostname
             assert host in probes or entry.name == "PredictHQ"
+
+
+def test_catalog_ai_section_defaults_to_disabled_and_local_only(tmp_path: Path) -> None:
+    plain = tmp_path / "a.yaml"
+    plain.write_text("sources: []\n", encoding="utf-8")
+    assert load_catalog(plain).ai.enabled is False
+    on = tmp_path / "b.yaml"
+    on.write_text("ai:\n  enabled: true\n  model: llama3.2:3b\nsources: []\n", encoding="utf-8")
+    catalog = load_catalog(on)
+    assert (catalog.ai.enabled, catalog.ai.model, catalog.ai.base_url) == (
+        True, "llama3.2:3b", "http://127.0.0.1:11434"
+    )  # fmt: skip
+    remote = tmp_path / "c.yaml"
+    remote.write_text("ai:\n  base_url: https://api.openai.com\nsources: []\n", encoding="utf-8")
+    with pytest.raises(ValueError):
+        load_catalog(remote)

@@ -161,7 +161,7 @@ def import_events(
         try:
             report = run_import(
                 db, catalog.sources, window, client=client, now=now, island=island,
-                source_ids=source or None,
+                source_ids=source or None, ai=catalog.ai,
             )  # fmt: skip
         except ValueError as exc:
             raise typer.BadParameter(str(exc)) from exc

@@ -15,6 +15,7 @@ from urllib.parse import urlsplit
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from canarias_events.date_range import DateWindow
+from canarias_events.extract.llm import AiSettings
 from canarias_events.geo import (
     island_for_coordinates,
     island_for_municipality,
@@ -76,6 +77,7 @@ class FetchContext:
     now: datetime
     logger: logging.Logger = field(default_factory=lambda: logging.getLogger("canarias_events"))
     env: Mapping[str, str] = field(default_factory=lambda: os.environ)
+    ai: AiSettings | None = None  # optional local model; None or disabled means never used
 
 
 @dataclass
@@ -85,6 +87,11 @@ class SourceFetchResult:
     discarded: list[tuple[str, str | None]] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
     pages: int = 0
+    # Set by acquisition adapters that try several strategies (the ``web`` adapter).
+    strategy_used: str | None = None
+    tiers: list[dict[str, Any]] = field(default_factory=list)  # per-tier candidates and timings
+    extraction_ok: bool | None = None  # False: extraction failed; True: worked (maybe 0 events)
+    status: str = "ok"  # ok | blocked | robots_disallowed | needs_manual_review
 
     def discard(self, reason: str, identifier: str | None) -> None:
         self.discarded.append((reason, identifier))

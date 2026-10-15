@@ -6,7 +6,9 @@
 - All code, comments, docs and commit messages are in English; Conventional Commits only.
 
 ## Security
-- Only http/https; every outbound request goes through `SafeHttpClient` (SSRF guard).
+- Only http/https; every outbound request goes through `SafeHttpClient` (SSRF guard). The only
+  exceptions are the optional browser renderers, which validate every request and redirect hop
+  with the same `validate_url`, and the loopback-only Ollama endpoint.
 - Never log secrets (API keys, tokens); mask query values of key/token params.
 - HTML is read only for configured sources, with deterministic parsers (JSON-LD, microdata,
   embedded JSON, repeated blocks); respect robots.txt and never bypass blocks, challenges,

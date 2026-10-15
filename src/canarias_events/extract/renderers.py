@@ -297,6 +297,8 @@ class Crawl4AIRenderer:
         return crawler
 
     async def _on_context(self, page: Any, context: Any = None, **_: Any) -> Any:
+        if context is None:  # a future crawl4ai that stops passing it must not run unfiltered
+            raise RendererUnavailable("crawl4ai did not provide a browser context to filter")
         await context.route("**/*", self._handle)
         await context.route_web_socket("**/*", self._handle_web_socket)
         return page

@@ -13,10 +13,16 @@ from typing import Any
 from canarias_events.database import Database, UpsertResult
 from canarias_events.date_range import TZ, DateWindow
 from canarias_events.deduplication import DEFAULT_MERGE_THRESHOLD, resolve
+from canarias_events.extract.llm import AiSettings
 from canarias_events.geo import normalize_island
 from canarias_events.http import SafeHttpClient
 from canarias_events.models import Event
-from canarias_events.sources.base import FetchContext, SourceAdapter, SourceConfig
+from canarias_events.sources.base import (
+    FetchContext,
+    SourceAdapter,
+    SourceConfig,
+    SourceFetchResult,
+)
 from canarias_events.sources.registry import create_adapter
 
 logger = logging.getLogger("canarias_events.pipeline")
@@ -97,6 +103,16 @@ def _select(
     return chosen, skipped
 
 
+def _record_extraction(stats: dict[str, Any], result: SourceFetchResult) -> None:
+    """Acquisition details of adapters that try several strategies (the ``web`` adapter)."""
+    if result.strategy_used is None and result.extraction_ok is None and not result.tiers:
+        return
+    stats["strategy"] = result.strategy_used
+    stats["extraction_ok"] = result.extraction_ok
+    stats["source_status"] = result.status
+    stats["tiers"] = list(result.tiers)
+
+
 def _ingest(
     db: Database,
     events: list[Event],
@@ -139,6 +155,7 @@ def run_import(
     source_ids: Sequence[str] | None = None,
     env: Mapping[str, str] | None = None,
     merge_threshold: float = DEFAULT_MERGE_THRESHOLD,
+    ai: AiSettings | None = None,
 ) -> dict[str, Any]:
     """Run every selected source, isolate failures and return (and store) the import report."""
     environment: Mapping[str, str] = os.environ if env is None else env
@@ -165,14 +182,22 @@ def run_import(
         per_source[cfg.id] = stats
         began = time.monotonic()
         try:
-            ctx = FetchContext(client=client, window=window, now=now, env=environment)
+            ctx = FetchContext(client=client, window=window, now=now, env=environment, ai=ai)
             result = adapter_factory(cfg).fetch(ctx)
             stats["records_received"] = result.records_received
             stats["valid_events"] = len(result.events)
             stats["pages"] = result.pages
             stats["warnings"] = list(result.warnings)
             stats["discarded"] = dict(Counter(reason for reason, _ in result.discarded))
+            _record_extraction(stats, result)
             _ingest(db, result.events, cfg, window, island_name, now, merge_threshold, stats)
+            if result.status == "blocked":  # 401/403/429 or challenge page: not bypassed
+                stats["status"] = "failed"
+                stats["error"] = next(
+                    (w for w in result.warnings if w.startswith("blocked")),
+                    "blocked: access denied",
+                )
+                errors.append({"source": cfg.id, "error": stats["error"]})
         except Exception as exc:  # isolation: one broken source must not stop the run
             stats["status"] = "failed"
             stats["error"] = f"{type(exc).__name__}: {exc}"

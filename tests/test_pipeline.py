@@ -344,3 +344,85 @@ def test_all_sources_failing_is_reflected_in_the_report(
     report = run(db, client, {"a": fake("a", error=RuntimeError("boom"))})
     assert report["sources_succeeded"] == []
     assert report["sources"]["a"]["error"] == "RuntimeError: boom"
+
+
+def test_blocked_web_source_is_a_failure_and_ingests_nothing(
+    db: Database, client: SafeHttpClient
+) -> None:
+    class Blocked(FakeAdapter):
+        def fetch(self, ctx: FetchContext) -> SourceFetchResult:
+            return SourceFetchResult(
+                status="blocked",
+                extraction_ok=False,
+                warnings=["blocked: HTTP 403 for https://x.example.org/ (not bypassed)"],
+            )
+
+    cfg = make_cfg("web1")
+    report = run_import(
+        db, [cfg], WINDOW, client=client, now=NOW, adapter_factory=lambda c: Blocked(c)
+    )
+    assert report["sources_failed"] == ["web1"]
+    stats = report["sources"]["web1"]
+    assert stats["status"] == "failed"
+    assert "blocked" in stats["error"] and "403" in stats["error"]
+    assert stats["strategy"] is None and stats["extraction_ok"] is False
+    assert stats["source_status"] == "blocked"
+
+
+def test_extraction_details_of_tiered_adapters_are_reported(
+    db: Database, client: SafeHttpClient
+) -> None:
+    class Tiered(FakeAdapter):
+        def fetch(self, ctx: FetchContext) -> SourceFetchResult:
+            result = super().fetch(ctx)
+            result.strategy_used = "blocks"
+            result.extraction_ok = True
+            result.tiers = [{"tier": "jsonld", "candidates": 0, "seconds": 0.01}]
+            return result
+
+    cfg = make_cfg("web2")
+    events = [ev("web2", "w1", "Concierto")]
+    report = run_import(
+        db,
+        [cfg],
+        WINDOW,
+        client=client,
+        now=NOW,
+        adapter_factory=lambda c: Tiered(c, events=events),
+    )
+    stats = report["sources"]["web2"]
+    assert stats["status"] == "succeeded"
+    assert (stats["strategy"], stats["extraction_ok"], stats["source_status"]) == (
+        "blocks",
+        True,
+        "ok",
+    )
+    assert stats["tiers"][0]["tier"] == "jsonld"
+
+
+def test_plain_adapters_keep_the_old_report_shape(db: Database, client: SafeHttpClient) -> None:
+    cfg = make_cfg("plain")
+    report = run_import(
+        db, [cfg], WINDOW, client=client, now=NOW,
+        adapter_factory=lambda c: FakeAdapter(c, events=[ev("plain", "p1", "Normal")]),
+    )  # fmt: skip
+    assert "strategy" not in report["sources"]["plain"]
+
+
+def test_ai_settings_reach_the_adapters(db: Database, client: SafeHttpClient) -> None:
+    from canarias_events.extract.llm import AiSettings
+
+    seen: list[object] = []
+
+    class Spy(FakeAdapter):
+        def fetch(self, ctx: FetchContext) -> SourceFetchResult:
+            seen.append(ctx.ai)
+            return super().fetch(ctx)
+
+    settings = AiSettings(enabled=True)
+    run_import(db, [make_cfg("spy")], WINDOW, client=client, now=NOW,
+               adapter_factory=lambda c: Spy(c), ai=settings)  # fmt: skip
+    run_import(
+        db, [make_cfg("spy")], WINDOW, client=client, now=NOW, adapter_factory=lambda c: Spy(c)
+    )
+    assert seen == [settings, None]

@@ -9,6 +9,7 @@ from typing import Any
 import yaml
 from pydantic import BaseModel, Field
 
+from canarias_events.extract.llm import AiSettings
 from canarias_events.sources.base import SourceAdapter, SourceConfig
 from canarias_events.sources.ckan import CkanAdapter
 from canarias_events.sources.drupal_jsonapi import DrupalJsonApiAdapter
@@ -16,6 +17,7 @@ from canarias_events.sources.ical import IcalAdapter
 from canarias_events.sources.rss import RssAdapter
 from canarias_events.sources.ticketmaster import TicketmasterAdapter
 from canarias_events.sources.tribe_events import TribeEventsAdapter
+from canarias_events.sources.web import WebAdapter
 
 ADAPTERS: dict[str, type[SourceAdapter]] = {
     "ckan": CkanAdapter,
@@ -24,6 +26,7 @@ ADAPTERS: dict[str, type[SourceAdapter]] = {
     "rss": RssAdapter,
     "ticketmaster": TicketmasterAdapter,
     "tribe_events": TribeEventsAdapter,
+    "web": WebAdapter,
 }
 
 
@@ -41,6 +44,7 @@ class SourcesCatalog(BaseModel):
     candidates: list[CatalogEntry] = Field(default_factory=list)
     excluded: list[CatalogEntry] = Field(default_factory=list)
     discovery_probes: list[str] = Field(default_factory=list)
+    ai: AiSettings = Field(default_factory=AiSettings)  # optional local model, off by default
 
 
 def create_adapter(config: SourceConfig) -> SourceAdapter:
