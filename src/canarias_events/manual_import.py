@@ -85,6 +85,8 @@ def import_url(client: SafeHttpClient, url: str, *, now: datetime) -> UrlImport:
         )
         found = found[:MAX_IMPORT_EVENTS]
     for event in found:
+        # A page with one event is that event's page; a listing page says nothing about each.
+        official = event.official_event_url or (page if len(found) == 1 else None)
         extra: dict[str, Any] = {
             **event.extra, "provenance": IMPORT_URL_SOURCE.id, "source_page": page,
         }  # fmt: skip
@@ -96,6 +98,7 @@ def import_url(client: SafeHttpClient, url: str, *, now: datetime) -> UrlImport:
                     "source_type": "import_url",
                     "source_license": None,
                     "extra": extra,
+                    "official_event_url": official,
                 }
             )  # fmt: skip
         )

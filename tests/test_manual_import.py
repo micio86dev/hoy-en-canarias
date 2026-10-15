@@ -73,6 +73,7 @@ def test_a_public_event_page_becomes_a_reviewable_event(make_ctx: MakeCtx) -> No
     assert event.source_type == "import_url" and event.source_url == URL
     assert event.extra["provenance"] == "import_url"
     assert event.extra["source_page"] == URL
+    assert event.official_event_url == URL  # a single event: the page is its own page
     assert event.price_min is None and event.description is None  # nothing is invented
 
 
@@ -156,6 +157,7 @@ def test_a_listing_page_is_capped(make_ctx: MakeCtx) -> None:
     page(body)
     outcome = import_url(make_ctx().client, URL, now=NOW)
     assert len(outcome.events) == 25 and any("first 25" in w for w in outcome.warnings)
+    assert all(e.official_event_url is None for e in outcome.events)  # a listing is no event page
 
 
 # --------------------------------------------------------------------------- review hold

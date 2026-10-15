@@ -243,6 +243,19 @@ def test_a_configured_source_is_validated_with_its_own_adapter(make_ctx: MakeCtx
     assert report.terms == "declared: CC-BY" and report.suggested_mode == "rss"
 
 
+@respx.mock
+def test_a_licence_field_that_says_unknown_is_not_a_declared_licence(make_ctx: MakeCtx) -> None:
+    respx.get("https://feeds.example.org/events.ics").mock(
+        return_value=httpx.Response(200, text=ICS, headers={"content-type": "text/calendar"})
+    )
+    source = SourceConfig(
+        id="ics1", name="Ics", adapter="ical", url="https://feeds.example.org/events.ics",
+        license="unknown – ToS not checked",
+    )  # fmt: skip
+    report = validate_source(client(make_ctx), source.url, now=NOW, source=source)
+    assert report.terms == "unknown"
+
+
 def test_the_report_is_plain_data() -> None:
     report = ValidationReport(url=URL)
     data = report.as_dict()

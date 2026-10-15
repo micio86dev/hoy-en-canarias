@@ -243,7 +243,7 @@ def _evaluate(
         week = next_week(now)
         report.in_next_30_days = sum(1 for e in events if event_overlaps(month, e))
         report.in_target_week = sum(1 for e in events if event_overlaps(week, e))
-    if source is not None and source.license:
+    if source is not None and source.license and not source.license.lower().startswith("unknown"):
         report.terms = f"declared: {source.license}"
     elif body and (declared := _terms(body)):
         report.terms = declared
