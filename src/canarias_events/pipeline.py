@@ -19,7 +19,7 @@ from canarias_events.date_range import TZ, DateWindow
 from canarias_events.deduplication import DEFAULT_MERGE_THRESHOLD, resolve
 from canarias_events.extract.llm import AiSettings
 from canarias_events.geo import normalize_island
-from canarias_events.health import INFORMATIONAL, detect_anomalies
+from canarias_events.health import BASELINE_RESET, INFORMATIONAL, detect_anomalies
 from canarias_events.http import HttpError, SafeHttpClient
 from canarias_events.models import Event
 from canarias_events.scheduling import skip_reason
@@ -32,6 +32,7 @@ from canarias_events.sources.base import (
 )
 from canarias_events.sources.registry import create_adapter
 from canarias_events.statuses import (
+    ADAPTER_OK,
     ANOMALOUS,
     BLOCKED,
     FAILED,
@@ -181,6 +182,14 @@ def accept_quarantine(
     stats = _new_stats()
     _ingest(db, [item.event for item in pending], source_id, now, threshold, stats)
     db.quarantine_close(source_id, "accepted")
+    # The accepted level is the new baseline (partial data from a blocked run is no level).
+    if any(item.reason != "blocked_partial" for item in pending):
+        db.record_source_run(
+            pending[0].run_id, source_id, now, status=SUCCEEDED, source_status=ADAPTER_OK,
+            events_found=len(pending), events_in_window=len(pending), duration_s=0.0,
+            error=None, strategy=None, extraction_ok=None, listing_hash=None,
+            anomalies=[BASELINE_RESET],
+        )  # fmt: skip
     return len(pending)
 
 

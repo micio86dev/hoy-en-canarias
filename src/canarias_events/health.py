@@ -8,15 +8,47 @@ from typing import Any
 
 from canarias_events.crawl_settings import CrawlSettings
 from canarias_events.database import SourceRun
-from canarias_events.statuses import NO_CONTENT_STATUSES, SUCCEEDED
+from canarias_events.statuses import ANOMALOUS, NO_CONTENT_STATUSES, SUCCEEDED
 
 EMPTY_MARKER = "empty-marker"  # strategy of a page that says, in its own words, "no events"
+# The run's count is the new normal: later runs are compared from here on, not with older ones.
+BASELINE_RESET = "baseline_reset"
+COUNT_DROP = "count_drop"
 # Codes that only inform; every other code keeps the run's events out of the exports.
-INFORMATIONAL = frozenset({"strategy_changed"})
+INFORMATIONAL = frozenset({"strategy_changed", BASELINE_RESET})
 
 
 def is_blocking(codes: Sequence[str]) -> bool:
     return any(code not in INFORMATIONAL for code in codes)
+
+
+def _baseline(history: Sequence[SourceRun], settings: CrawlSettings) -> list[SourceRun]:
+    """The successful runs that shape the baseline: newest first, back to the latest reset."""
+    good: list[SourceRun] = []
+    for run in history:
+        if run.status != SUCCEEDED:
+            continue
+        good.append(run)
+        if BASELINE_RESET in run.anomalies:
+            break
+    return good[: settings.history_runs]
+
+
+def _stable_new_level(history: Sequence[SourceRun], found: int, settings: CrawlSettings) -> bool:
+    """True when this run and the previous count_drop runs agree on a lower, steady level."""
+    needed = settings.anomaly_stable_runs - 1
+    previous: list[int] = []
+    for run in history:  # only an unbroken streak of count_drop runs counts
+        if run.status != ANOMALOUS or COUNT_DROP not in run.anomalies:
+            break
+        previous.append(run.events_found)
+    if len(previous) < needed:
+        return False
+    levels = [*previous[:needed], found]
+    centre = median(levels)
+    return all(
+        abs(level - centre) <= settings.anomaly_stable_tolerance * centre for level in levels
+    )
 
 
 def detect_anomalies(
@@ -36,7 +68,7 @@ def detect_anomalies(
     """
     if source_status in NO_CONTENT_STATUSES:
         return []
-    good = [r for r in history if r.status == SUCCEEDED][: settings.history_runs]
+    good = _baseline(history, settings)
     if not good:
         return []
     last = good[0]
@@ -53,7 +85,8 @@ def detect_anomalies(
         base = median(r.events_found for r in good)
         drop = round(1 - events_found / base, 6) if base else 0.0
         if base >= settings.anomaly_min_events and drop > settings.anomaly_drop_ratio:
-            codes.append("count_drop")
+            stable = _stable_new_level(history, events_found, settings)
+            codes.append(BASELINE_RESET if stable else COUNT_DROP)
     if events_found > 0 and strategy and last.strategy and strategy != last.strategy:
         codes.append("strategy_changed")
     return codes

@@ -647,6 +647,36 @@ def test_accepting_the_quarantine_publishes_the_events(
     assert accept_quarantine(db, "w", now=NOW) == 0
 
 
+def test_accepting_the_quarantine_makes_the_accepted_level_the_baseline(
+    db: Database, client: SafeHttpClient
+) -> None:
+    seed_history(db, "w", [10, 10, 10])
+    first = run_scripted(db, client, web_result(ev("w", "1", "Uno")))
+    assert first["sources"]["w"]["status"] == "anomalous"
+
+    assert accept_quarantine(db, "w", now=NOW) == 1
+    [baseline, *_] = db.recent_source_runs("w", limit=5)
+    assert baseline.status == "succeeded" and baseline.events_found == 1
+    assert baseline.anomalies == ["baseline_reset"]
+
+    again = run_scripted(db, client, web_result(ev("w", "1", "Uno")))
+    assert again["sources"]["w"]["status"] == "succeeded"
+    assert again["sources_anomalous"] == []
+
+
+def test_a_stable_shrunk_listing_recovers_by_itself_after_three_runs(
+    db: Database, client: SafeHttpClient
+) -> None:
+    seed_history(db, "w", [10, 10, 10])
+    statuses = [
+        run_scripted(db, client, web_result(ev("w", "1", "Uno")))["sources"]["w"]["status"]
+        for _ in range(4)
+    ]
+    assert statuses == ["anomalous", "anomalous", "succeeded", "succeeded"]
+    assert [e.title for e in db.all_events()] == ["Uno"]  # nothing was ever deleted
+    assert db.recent_source_runs("w", limit=2)[1].anomalies == ["baseline_reset"]
+
+
 def test_blocked_with_partial_events_is_partial_and_quarantined(
     db: Database, client: SafeHttpClient
 ) -> None:

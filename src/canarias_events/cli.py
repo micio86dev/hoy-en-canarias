@@ -317,7 +317,11 @@ def show_report(
 def review_quarantine(
     list_items: Annotated[bool, typer.Option("--list", help="Show what is held back.")] = False,
     accept: Annotated[
-        str | None, typer.Option("--accept", help="Publish the held-back events of this source.")
+        str | None,
+        typer.Option(
+            "--accept",
+            help="Publish a source's held-back events and make that count its baseline.",
+        ),
     ] = None,
     db_path: DbOption = None,
 ) -> None:

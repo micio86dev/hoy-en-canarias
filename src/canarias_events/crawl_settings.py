@@ -48,6 +48,10 @@ class CrawlSettings(BaseModel):
     anomaly_drop_ratio: float = Field(default=0.7, gt=0, lt=1)
     anomaly_min_runs: int = Field(default=3, ge=2, le=50)
     anomaly_min_events: int = Field(default=5, ge=1)
+    # Self-healing: after this many consecutive count_drop runs whose counts lie within the
+    # tolerance of their median, the new level becomes the baseline (events are never deleted).
+    anomaly_stable_runs: int = Field(default=3, ge=2, le=50)
+    anomaly_stable_tolerance: float = Field(default=0.2, gt=0, lt=1)
 
     # After this many consecutive temporary failures a source is skipped with exponential backoff.
     failure_threshold: int = Field(default=3, ge=1, le=20)

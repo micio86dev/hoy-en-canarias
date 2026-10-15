@@ -110,11 +110,16 @@ def test_summary_resets_the_streak_on_success() -> None:
 # --------------------------------------------------------------------------- anomaly detection
 
 
-def history(*counts: int, status: str = "succeeded", strategy: str = "blocks") -> list[SourceRun]:
+def history(
+    *counts: int,
+    status: str = "succeeded",
+    strategy: str = "blocks",
+    anomalies: list[str] | None = None,
+) -> list[SourceRun]:
     """Runs newest first, one per count."""
     with Database(":memory:") as db:
         for n, found in enumerate(reversed(counts), start=1):
-            record(db, "a", n, status=status, found=found, strategy=strategy)
+            record(db, "a", n, status=status, found=found, strategy=strategy, anomalies=anomalies)
         return db.recent_source_runs("a", limit=50)
 
 
@@ -198,3 +203,41 @@ def test_strategy_change_is_reported_but_is_not_blocking() -> None:
 def test_blocked_or_disallowed_sources_have_no_content_anomaly() -> None:
     for status in ("blocked", "robots_disallowed"):
         assert detect(history(12, 10), 0, source_status=status) == []
+
+
+# --------------------------------------------------------------------------- baseline recovery
+
+
+def shrunk(*counts: int) -> list[SourceRun]:
+    """Anomalous count_drop runs (newest first)."""
+    return history(*counts, status="anomalous", anomalies=["count_drop"])
+
+
+def test_a_stable_new_level_becomes_the_baseline_after_three_runs() -> None:
+    runs = shrunk(6, 5) + history(20, 20, 20)
+    codes = detect(runs, 5)
+    assert codes == ["baseline_reset"]
+    assert not is_blocking(codes)
+
+
+def test_an_unstable_or_too_short_shrink_stays_a_count_drop() -> None:
+    assert detect(shrunk(2, 6) + history(20, 20, 20), 5) == ["count_drop"]  # 2 is not near 5
+    assert detect(shrunk(5) + history(20, 20, 20), 5) == ["count_drop"]  # only two runs so far
+    assert detect(history(20, 20, 20), 5) == ["count_drop"]
+
+
+def test_a_success_between_anomalies_breaks_the_stable_streak() -> None:
+    runs = shrunk(5) + history(20) + shrunk(5) + history(20, 20)
+    assert detect(runs, 5) == ["count_drop"]
+
+
+def test_stable_runs_are_configurable() -> None:
+    settings = CrawlSettings(anomaly_stable_runs=2)
+    assert detect(shrunk(5) + history(20, 20, 20), 5, settings=settings) == ["baseline_reset"]
+
+
+def test_the_baseline_starts_at_the_latest_reset() -> None:
+    reset = history(5, anomalies=["baseline_reset"])
+    runs = history(5, 5) + reset + history(20, 20, 20)
+    assert detect(runs, 4) == []  # compared with the new level (median 5), not the old one
+    assert detect(history(5, 5) + history(20, 20, 20), 4) == ["count_drop"]  # no reset: old level
