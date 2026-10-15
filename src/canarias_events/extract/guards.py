@@ -70,5 +70,5 @@ def check_html_content_type(headers: Mapping[str, str]) -> None:
     """Reject responses that cannot be an HTML page. A missing header is accepted."""
     raw = headers.get("content-type") or headers.get("Content-Type") or ""
     kind = raw.split(";", 1)[0].strip().lower()
-    if kind and not any(kind == t or kind.endswith("+xml") for t in _HTML_TYPES):
+    if kind and kind not in _HTML_TYPES:
         raise ContentTypeRejected(f"unexpected content type: {kind}")

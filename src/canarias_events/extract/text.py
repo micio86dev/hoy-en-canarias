@@ -53,7 +53,8 @@ def _walk(el: Any, base: str | None, out: list[str], depth: int) -> None:
         out.append(el.text)
     for child in el:
         _walk(child, base, out, depth + 1)
-        if child.tail and isinstance(child.tag, str) and child.tag != "a":
+        # A comment or processing instruction is dropped, but the text after it is kept.
+        if child.tail and child.tag != "a":
             out.append(child.tail)
     if tag in _BLOCK:
         out.append("\n\n")

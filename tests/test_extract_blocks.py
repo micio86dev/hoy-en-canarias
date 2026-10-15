@@ -74,8 +74,19 @@ def test_arona_day_and_month_in_separate_elements() -> None:
         year_policy="infer",
     )
     events = _by_title(result)
-    folk = events["Folk Fest Arona - 2026/2027"]
-    assert folk.start_date in (date(2026, 10, 15), date(2026, 10, 8))
+    # The title appears twice: the dated card and the featured multi-month series.
+    folks = {
+        c.official_event_url: (c.start_date, c.end_date)
+        for c in result.candidates
+        if c.title == "Folk Fest Arona - 2026/2027"
+    }
+    assert folks == {
+        "https://www.arona.org/Agenda/ctl/Ver/mid/429?id=91690": (date(2026, 10, 15), None),
+        "https://www.arona.org/Agenda/ctl/Grupo/mid/429?id=1877": (
+            date(2026, 10, 8),
+            date(2027, 3, 18),
+        ),
+    }
     first_cards = [
         c for c in result.candidates if c.official_event_url and "Ver" in c.official_event_url
     ]
@@ -427,3 +438,27 @@ def test_year_policy_is_respected(policy: str) -> None:
     assert len(result.candidates) == (3 if policy == "infer" else 0)
     if policy == "infer":
         assert all(c.year_inferred for c in result.candidates)
+
+
+def test_unrelated_parents_do_not_form_a_group() -> None:
+    from canarias_events.extract.blocks import _find_groups
+    from canarias_events.extract.util import parse_html
+
+    html = "<html><body>" + "".join(
+        f"<section><div><p>item {i} 24 de octubre de 2026</p></div></section>" for i in range(60)
+    )
+    root = parse_html(html + "</body></html>")
+    assert root is not None
+    # Only the <section>s are siblings; every <div> and <p> has its own parent, so they never group.
+    groups = _find_groups(root)
+    assert [(g[0].tag, len(g)) for g in groups] == [("section", 60)]
+
+
+def test_siblings_under_one_parent_form_a_group() -> None:
+    from canarias_events.extract.blocks import _find_groups
+    from canarias_events.extract.util import parse_html
+
+    items = "".join(f"<li>item {i}</li>" for i in range(5))
+    root = parse_html(f"<html><body><ul>{items}</ul><ol><li>x</li></ol></body></html>")
+    assert root is not None
+    assert [len(g) for g in _find_groups(root)] == [5]

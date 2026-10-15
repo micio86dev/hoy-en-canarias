@@ -243,7 +243,7 @@ def _map_location(obj: dict[str, Any], cand: CandidateEvent) -> None:
         cand.longitude = as_number(geo.get("longitude"))
 
 
-def _map_offers(obj: dict[str, Any], cand: CandidateEvent) -> None:
+def _map_offers(obj: dict[str, Any], cand: CandidateEvent, page_url: str | None) -> None:
     free_flag = obj.get("isAccessibleForFree")
     free_flag = free_flag if isinstance(free_flag, bool) else None
     lows: list[float] = []
@@ -271,7 +271,7 @@ def _map_offers(obj: dict[str, Any], cand: CandidateEvent) -> None:
         if offer_currency and currency is None and (price is not None or low or high):
             currency = offer_currency.upper()
         if cand.ticket_url is None:
-            cand.ticket_url = resolve_url(None, offer.get("url"))
+            cand.ticket_url = resolve_url(page_url, offer.get("url"))
         availability = text_of(offer.get("availability"))
         if availability and "availability" not in cand.extra:
             cand.extra["availability"] = availability.rsplit("/", 1)[-1]
@@ -343,7 +343,7 @@ def candidate_from_schema(
     if cand.official_event_url is None and url_fallback:
         cand.official_event_url = resolve_url(None, page_url)
     _map_location(obj, cand)
-    _map_offers(obj, cand)
+    _map_offers(obj, cand, page_url)
     cand.raw = fragment(obj)
     return cand, None
 

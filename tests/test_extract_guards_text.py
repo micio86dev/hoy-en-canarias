@@ -70,6 +70,22 @@ def test_content_type_guard() -> None:
             check_html_content_type({"content-type": bad})
 
 
+@pytest.mark.parametrize(
+    "bad", ["image/svg+xml", "application/rss+xml", "application/atom+xml", "application/json"]
+)
+def test_content_type_guard_rejects_other_xml_flavours(bad: str) -> None:
+    with pytest.raises(ContentTypeRejected):
+        check_html_content_type({"content-type": f"{bad}; charset=utf-8"})
+
+
+def test_text_after_html_comments_and_instructions_is_kept() -> None:
+    text = html_to_markdownish("<p>Concierto<!-- x --> 24 de octubre</p>", None)
+    assert text == "Concierto 24 de octubre"
+    text = html_to_markdownish("<div>Fecha<?php echo 1 ?> 24 oct<!-- y --></div>", None)
+    assert text == "Fecha 24 oct"
+    assert "php" not in text and "x" not in text.split()
+
+
 def test_markdownish_text_keeps_headings_lists_and_links() -> None:
     html = (
         "<html><head><title>t</title><style>.a{}</style></head><body>"

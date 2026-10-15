@@ -247,6 +247,18 @@ def test_image_as_list_and_plain_string() -> None:
     assert plain.candidates[0].image_url == "https://x.example.org/p.png"
 
 
+def test_relative_offer_url_is_resolved_against_the_page() -> None:
+    doc = {
+        "@type": "Event", "name": "Tickets", "startDate": "2026-10-24",
+        "offers": {"@type": "Offer", "url": "/entradas/42"},
+    }  # fmt: skip
+    cand = extract_jsonld(_html(json.dumps(doc)), PAGE).candidates[0]
+    assert cand.ticket_url == "https://www.example.org/entradas/42"
+    doc["offers"] = [{"@type": "Offer", "url": "javascript:x()"}, {"url": "tickets?id=1"}]
+    cand = extract_jsonld(_html(json.dumps(doc)), PAGE).candidates[0]
+    assert cand.ticket_url == "https://www.example.org/agenda/evento/tickets?id=1"
+
+
 def test_unsafe_urls_are_dropped() -> None:
     doc = {
         "@type": "Event", "name": "Bad links", "startDate": "2026-10-24",

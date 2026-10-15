@@ -520,7 +520,9 @@ def _find_groups(root: Any) -> list[list[Any]]:
         tag, classes = _signature(el)
         if classes:
             by_key.setdefault((tag, classes), []).append(el)
-        by_key.setdefault((tag, id(el.getparent())), []).append(el)
+        # Key by the parent element itself (the dict keeps it alive): id() of a short-lived lxml
+        # proxy can be reused by a different parent.
+        by_key.setdefault((tag, el.getparent()), []).append(el)
     seen: set[frozenset[int]] = set()
     groups: list[list[Any]] = []
     for members in by_key.values():

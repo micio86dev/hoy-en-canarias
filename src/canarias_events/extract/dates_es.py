@@ -65,9 +65,7 @@ _RANGE_CUE = (
     r"|(?<=\bde )|(?<=\bfrom )|(?<=\blunes )|(?<=\bmartes )|(?<=\bmiercoles )|(?<=\bjueves )"
     r"|(?<=\bviernes )|(?<=\bsabado )|(?<=\bdomingo ))"
 )
-_RE_DAY_ONLY_BEFORE = re.compile(
-    rf"{_RANGE_CUE}(?P<d>\d{{1,2}})(?![\d:/]|\.\d){_SEP}$"
-)
+_RE_DAY_ONLY_BEFORE = re.compile(rf"{_RANGE_CUE}(?P<d>\d{{1,2}})(?![\d:/]|\.\d){_SEP}$")
 _RE_SEP_ONLY_BEFORE = re.compile(rf"{_SEP}$")
 _RE_WS_ONLY = re.compile(r"\s*$")
 
