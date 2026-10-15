@@ -261,6 +261,7 @@ class SafeHttpClient:
         self._clock = clock
         self._wall_clock = wall_clock or (lambda: datetime.now(UTC))
         self._last_request: dict[str, float] = {}
+        self._host_intervals: dict[str, float] = {}
         # trust_env=False: never route through env proxies, which would bypass IP validation.
         self._client = client or httpx.Client(
             follow_redirects=False, timeout=timeout, trust_env=False
@@ -268,6 +269,15 @@ class SafeHttpClient:
 
     def close(self) -> None:
         self._client.close()
+
+    def set_host_interval(self, host: str, seconds: float) -> None:
+        """Raise the minimum gap between requests to ``host`` (e.g. a robots.txt Crawl-delay)."""
+        key = host.lower()
+        self._host_intervals[key] = max(self._host_intervals.get(key, 0.0), seconds)
+
+    def host_interval(self, host: str) -> float:
+        """Effective minimum gap in seconds between requests to ``host``."""
+        return max(self.min_interval, self._host_intervals.get(host.lower(), 0.0))
 
     def __enter__(self) -> SafeHttpClient:
         return self
@@ -351,7 +361,7 @@ class SafeHttpClient:
         host = urlsplit(url).hostname or ""
         last = self._last_request.get(host)
         if last is not None:
-            wait = self.min_interval - (self._clock() - last)
+            wait = self.host_interval(host) - (self._clock() - last)
             if wait > 0:
                 self._sleep(wait)
         self._last_request[host] = self._clock()

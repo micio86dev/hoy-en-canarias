@@ -529,3 +529,24 @@ def test_httpx_request_log_masks_secrets(caplog: pytest.LogCaptureFixture) -> No
         make_client().get("https://a.test/x", params={"apikey": "TOPSECRET", "q": "1"})
     assert "HTTP Request" in caplog.text
     assert "TOPSECRET" not in caplog.text
+
+
+def test_host_interval_overrides_the_default_for_one_host() -> None:
+    rec = Recorder()
+    now = [0.0]
+
+    def fake_sleep(seconds: float) -> None:
+        rec.sleeps.append(seconds)
+        now[0] += seconds
+
+    client = make_client(sleep=fake_sleep, clock=lambda: now[0], min_interval=1.0)  # type: ignore[arg-type]
+    client.set_host_interval("slow.example.org", 4.0)
+    assert client.host_interval("slow.example.org") == 4.0
+    assert client.host_interval("fast.example.org") == 1.0
+    client.set_host_interval("slow.example.org", 2.0)  # never lowers an interval
+    assert client.host_interval("slow.example.org") == 4.0
+    with respx.mock:
+        respx.get("https://slow.example.org/a").mock(return_value=httpx.Response(200, text="x"))
+        client.get("https://slow.example.org/a")
+        client.get("https://slow.example.org/a")
+    assert rec.sleeps == [pytest.approx(4.0)]
