@@ -14,6 +14,8 @@ import respx
 from canarias_events.database import Database, SourceRun
 from canarias_events.http import InvalidPayload, SafeHttpClient
 from canarias_events.sources.base import FetchContext, SourceConfig
+from canarias_events.sources.ical import IcalAdapter
+from canarias_events.sources.rss import RssAdapter
 from canarias_events.validation import ValidationReport, validate_source
 from tests.conftest import NOW
 
@@ -343,12 +345,11 @@ def test_denied_access_is_a_definitive_answer_not_a_transient_error(make_ctx: Ma
 def test_a_parser_error_becomes_an_error_in_the_report(
     make_ctx: MakeCtx, monkeypatch: pytest.MonkeyPatch, failure: Exception
 ) -> None:
-    from canarias_events import validation
 
     def explode(self: object, body: bytes, window: object) -> None:
         raise failure
 
-    monkeypatch.setattr(validation.IcalAdapter, "read", explode)
+    monkeypatch.setattr(IcalAdapter, "read", explode)
     robots()
     html(ICS, ctype="text/calendar")
     report = validate_source(client(make_ctx), URL, now=NOW)
@@ -361,12 +362,11 @@ def test_a_parser_error_becomes_an_error_in_the_report(
 def test_an_invalid_feed_payload_becomes_an_error_in_the_report(
     make_ctx: MakeCtx, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from canarias_events import validation
 
     def reject(self: object, body: bytes) -> None:
         raise InvalidPayload("not a feed")
 
-    monkeypatch.setattr(validation.RssAdapter, "read", reject)
+    monkeypatch.setattr(RssAdapter, "read", reject)
     robots()
     html(RSS, ctype="application/rss+xml")
     report = validate_source(client(make_ctx), URL, now=NOW)

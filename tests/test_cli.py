@@ -26,6 +26,7 @@ from canarias_events.sources.base import (
     SourceConfig,
     SourceFetchResult,
 )
+from canarias_events.sources.ical import IcalAdapter
 from canarias_events.sources.registry import ADAPTERS
 from tests.conftest import NOW
 
@@ -1147,12 +1148,11 @@ def test_validate_source_save_keeps_the_state_after_a_transient_failure(
 def test_validate_source_reports_a_parser_error_without_a_traceback(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from canarias_events import validation
 
     def explode(self: object, body: bytes, window: object) -> None:
         raise ValueError("bad calendar")
 
-    monkeypatch.setattr(validation.IcalAdapter, "read", explode)
+    monkeypatch.setattr(IcalAdapter, "read", explode)
     respx.get("https://agenda.example.org/robots.txt").mock(return_value=httpx.Response(404))
     respx.get(SOURCE_URL).mock(
         return_value=httpx.Response(
