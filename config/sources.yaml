@@ -5,6 +5,9 @@
 # open data and municipal calendars 80, the sports federation site 70, tourism aggregator 60,
 # ticketing 30). `stale: true` marks datasets that no longer publish events.
 # `sources` are importable; `candidates` and `excluded` only feed the sources report.
+# `adapter: web` sources read HTML portals with tiered, deterministic extraction (see `params`
+# in each entry); the top-level `ai:` section (disabled by default, loopback Ollama only) is the
+# optional last tier and each source must also opt in with `params.ai: true`.
 # All endpoints below were checked with live GET requests on 2026-10-15.
 
 sources:
@@ -146,6 +149,191 @@ sources:
     license: null
     notes: Endpoint verified 2026-10-15; the calendar was empty (0 events).
 
+  # ---------------------------------------------------------------- HTML portals (adapter: web)
+  # Tiered extraction (JSON-LD, sitemap detail pages, embedded JSON, generic blocks, optional
+  # renderer, optional local model). Priority 40: below APIs and open data, so deduplication
+  # never overwrites better data with scraped data. robots.txt is always respected.
+
+  - id: webtenerife
+    priority: 40
+    name: Tenerife Tourism Corporation (webtenerife.com)
+    adapter: web
+    url: https://www.webtenerife.com/agenda/
+    homepage: https://www.webtenerife.com/agenda/
+    islands: [Tenerife]
+    license: "unknown – ToS not checked; HTML only"
+    params:
+      sitemap_url: https://www.webtenerife.com/sitemap.xml/
+      sitemap_url_pattern: '/agenda/\d{4}/\d{2}/[^/]+/$'
+      max_detail_pages: 40
+    notes: >-
+      Detail pages carry schema.org Event JSON-LD (dates are date-only; price "0" without a
+      currency is ignored). Candidate URLs come from the sitemap, window months first.
+
+  - id: auditorio_teatro_lpa
+    priority: 40
+    name: Auditorio Alfredo Kraus y Teatro Pérez Galdós (Las Palmas de Gran Canaria)
+    adapter: web
+    url: https://auditorioteatrolaspalmasgc.es/
+    homepage: https://auditorioteatrolaspalmasgc.es/
+    islands: [Gran Canaria]
+    municipality: Las Palmas de Gran Canaria
+    license: "unknown – ToS not checked; HTML only"
+    notes: >-
+      The home page embeds the productions as a Nuxt payload (__NUXT_DATA__, devalue format)
+      with dates, times, venue and links. The api subdomain is not documented, so it is not used.
+
+  - id: teatro_leal
+    priority: 40
+    name: Teatro Leal (San Cristóbal de La Laguna)
+    adapter: web
+    url: https://www.teatroleal.es/programacion/
+    homepage: https://www.teatroleal.es
+    islands: [Tenerife]
+    municipality: San Cristóbal de La Laguna
+    license: "unknown – ToS not checked; HTML only"
+    params:
+      venue_name: Teatro Leal
+      year_policy: strict
+    notes: Server-rendered listing, explicit years. No robots.txt (404 means allowed).
+
+  - id: tea_tenerife
+    priority: 40
+    name: TEA Tenerife Espacio de las Artes
+    adapter: web
+    url: https://teatenerife.es/actividades
+    homepage: https://teatenerife.es
+    islands: [Tenerife]
+    municipality: Santa Cruz de Tenerife
+    license: "unknown – ToS not checked; HTML only"
+    params:
+      venue_name: TEA Tenerife Espacio de las Artes
+    notes: Server-rendered listing with explicit dates and date ranges.
+
+  - id: adeje_agenda
+    priority: 40
+    name: Ayuntamiento de Adeje - agenda
+    adapter: web
+    url: https://www.adeje.es/contenido/91
+    homepage: https://www.adeje.es
+    islands: [Tenerife]
+    municipality: Adeje
+    license: "unknown – ToS not checked; HTML only"
+    params:
+      year_policy: infer
+    notes: >-
+      FLAGGED: the date circle often omits the year ("19-23 oct"), so years are inferred as the
+      occurrence closest to the run date (extra.extraction.year_inferred = true).
+
+  - id: arona_agenda
+    priority: 40
+    name: Ayuntamiento de Arona - agenda
+    adapter: web
+    url: https://www.arona.org/Agenda
+    homepage: https://www.arona.org
+    islands: [Tenerife]
+    municipality: Arona
+    license: "unknown – ToS not checked; HTML only"
+    params:
+      year_policy: infer
+    notes: >-
+      Day and month are printed without a year ("15 OCT."), so years are inferred (flagged).
+      Only the first page (10 items plus highlighted groups) is read.
+
+  - id: lpacultura
+    priority: 40
+    name: Las Palmas de Gran Canaria Cultura
+    adapter: web
+    url: https://lpacultura.com/events
+    homepage: https://lpacultura.com
+    islands: [Gran Canaria]
+    municipality: Las Palmas de Gran Canaria
+    license: "unknown – ToS not checked; HTML only"
+    params:
+      year_policy: infer
+    notes: >-
+      Livewire cards ("Jue. 15, Oct. de 17:30 - 18:30"); the Livewire snapshots hold no titles, so
+      the generic block tier reads the cards. Years are inferred (flagged).
+
+  - id: cact_lanzarote
+    priority: 40
+    name: Centros de Arte, Cultura y Turismo de Lanzarote (CACT)
+    adapter: web
+    url: https://cactlanzarote.com/es/eventos
+    homepage: https://cactlanzarote.com
+    islands: [Lanzarote]
+    license: "unknown – ToS not checked; HTML only"
+    params:
+      year_policy: infer
+    notes: Event cards with a day and month only; years are inferred (flagged).
+
+  - id: cabildo_fuerteventura_agenda
+    priority: 40
+    name: Cabildo de Fuerteventura - agenda
+    adapter: web
+    url: https://www.cabildofuer.es/cabildo/agenda-cabildo-2/
+    homepage: https://www.cabildofuer.es
+    islands: [Fuerteventura]
+    license: "unknown – ToS not checked; HTML only"
+    params:
+      year_policy: infer
+    notes: >-
+      Free-text dates ("1 de octubre-26 de noviembre", "Domingo 18 de octubre") without a year;
+      years are inferred (flagged). "Varias fechas" entries have no date and are discarded.
+
+  # Candidates that need a JS renderer: kept disabled because Playwright/Crawl4AI are optional
+  # extras (pip install 'canarias-events[render]' or '[crawl]'); `render: auto` only renders when
+  # static extraction finds nothing and the page looks JS-driven.
+
+  - id: grancanaria_agenda
+    priority: 40
+    name: Gran Canaria turismo - agenda
+    adapter: web
+    url: https://www.grancanaria.com/turismo/es/agenda/agenda/
+    homepage: https://www.grancanaria.com/turismo/es/agenda/
+    enabled: false
+    islands: [Gran Canaria]
+    license: "unknown – ToS not checked; HTML only"
+    params:
+      render: auto
+    notes: >-
+      Live check 2026-10-15: static extraction worked (12 events, 3 inside 2026-10-19..25) because
+      the first page is server-rendered; kept disabled until reviewed (flip `enabled` to use it).
+      robots.txt answers with an Imperva/Incapsula 404 page, which counts as "no robots.txt".
+
+  - id: tenerife_es_eventos
+    priority: 40
+    name: Cabildo de Tenerife - eventos
+    adapter: web
+    url: https://www.tenerife.es/eventos
+    homepage: https://www.tenerife.es/eventos
+    enabled: false
+    islands: [Tenerife]
+    license: "unknown – ToS not checked; HTML only"
+    params:
+      render: playwright
+    notes: >-
+      Live check 2026-10-15: 0 events statically; the page is a search form whose results are
+      loaded by JavaScript and `render: auto` does not detect it as JS-driven, so the renderer is
+      requested explicitly. Needs `pip install 'canarias-events[render]'`.
+
+  - id: auditorio_tenerife
+    priority: 40
+    name: Auditorio de Tenerife - programación
+    adapter: web
+    url: https://www.auditoriodetenerife.com/es/programacion-aaee/
+    homepage: https://www.auditoriodetenerife.com
+    enabled: false
+    islands: [Tenerife]
+    municipality: Santa Cruz de Tenerife
+    license: "unknown – ToS not checked; HTML only"
+    params:
+      render: auto
+    notes: >-
+      Live check 2026-10-15: 0 events statically; the programme is injected by an admin-ajax
+      call. `render: auto` triggers the optional renderer (not installed by default, so the
+      source ends as needs_manual_review). Needs `pip install 'canarias-events[render]'`.
+
   - id: ticketmaster
     priority: 30
     name: Ticketmaster Discovery API
@@ -203,25 +391,25 @@ sources:
       The field map follows the JSON resource and was only inspected, not run end to end.
 
 candidates:
-  - {name: webtenerife.com, url: "https://www.webtenerife.com", reason: "HTML only; no API, feed or iCal found. Scraping is out of scope.", checked_at: 2026-10-15}
-  - {name: grancanaria.com agenda, url: "https://www.grancanaria.com", reason: "HTML only; no API, feed or iCal found.", checked_at: 2026-10-15}
-  - {name: tenerife.es eventos, url: "https://www.tenerife.es/eventos", reason: "HTML only.", checked_at: 2026-10-15}
-  - {name: Auditorio de Tenerife, url: "https://www.auditoriodetenerife.com", reason: "HTML only.", checked_at: 2026-10-15}
-  - {name: Auditorio Alfredo Kraus, url: "https://www.auditorioalfredokraus.es", reason: "HTML only.", checked_at: 2026-10-15}
-  - {name: Teatro Pérez Galdós, url: "https://teatroperezgaldos.es", reason: "HTML only.", checked_at: 2026-10-15}
-  - {name: Teatro Leal, url: "https://teatroleal.es", reason: "HTML only.", checked_at: 2026-10-15}
-  - {name: TEA Tenerife Espacio de las Artes, url: "https://teatenerife.es", reason: "HTML only.", checked_at: 2026-10-15}
+  - {name: webtenerife.com, url: "https://www.webtenerife.com", reason: "Integrated as source `webtenerife` (sitemap URLs plus schema.org Event JSON-LD on each detail page).", checked_at: 2026-10-15}
+  - {name: grancanaria.com agenda, url: "https://www.grancanaria.com", reason: "Source `grancanaria_agenda` (disabled): the first page is server-rendered and static extraction worked on 2026-10-15; kept disabled until reviewed.", checked_at: 2026-10-15}
+  - {name: tenerife.es eventos, url: "https://www.tenerife.es/eventos", reason: "Source `tenerife_es_eventos` (disabled): the results are loaded by JavaScript; needs the optional renderer.", checked_at: 2026-10-15}
+  - {name: Auditorio de Tenerife, url: "https://www.auditoriodetenerife.com", reason: "Source `auditorio_tenerife` (disabled): the programme is injected by an admin-ajax call; needs the optional renderer.", checked_at: 2026-10-15}
+  - {name: Auditorio Alfredo Kraus, url: "https://www.auditorioalfredokraus.es", reason: "Integrated through `auditorio_teatro_lpa` (Nuxt payload on auditorioteatrolaspalmasgc.es lists its productions).", checked_at: 2026-10-15}
+  - {name: Teatro Pérez Galdós, url: "https://teatroperezgaldos.es", reason: "Integrated through `auditorio_teatro_lpa` (Nuxt payload on auditorioteatrolaspalmasgc.es lists its productions).", checked_at: 2026-10-15}
+  - {name: Teatro Leal, url: "https://teatroleal.es", reason: "Integrated as source `teatro_leal` (server-rendered programme, repeated-block extraction).", checked_at: 2026-10-15}
+  - {name: TEA Tenerife Espacio de las Artes, url: "https://teatenerife.es", reason: "Integrated as source `tea_tenerife` (server-rendered activities, repeated-block extraction).", checked_at: 2026-10-15}
   - {name: Ayuntamiento de La Laguna, url: "https://www.lalaguna.es", reason: "HTML only.", checked_at: 2026-10-15}
-  - {name: Ayuntamiento de Arona, url: "https://www.arona.org", reason: "HTML only.", checked_at: 2026-10-15}
+  - {name: Ayuntamiento de Arona, url: "https://www.arona.org", reason: "Integrated as source `arona_agenda` (repeated blocks; years inferred and flagged).", checked_at: 2026-10-15}
   - {name: Ayuntamiento de Arrecife, url: "https://www.arrecife.es", reason: "HTML only.", checked_at: 2026-10-15}
-  - {name: Ayuntamiento de Adeje, url: "https://www.adeje.es", reason: "HTML only.", checked_at: 2026-10-15}
+  - {name: Ayuntamiento de Adeje, url: "https://www.adeje.es", reason: "Integrated as source `adeje_agenda` (repeated blocks; years inferred and flagged).", checked_at: 2026-10-15}
   - {name: visitlapalma.es, url: "https://visitlapalma.es", reason: "Verified 2026-10-15: same Drupal JSON:API /jsonapi/node/event as holaislascanarias (same field_id_events_repository platform); its 4 window events were all already in holaislascanarias. Subset, no added coverage; not integrated.", checked_at: 2026-10-15}
   - {name: lagomera.travel, url: "https://lagomera.travel", reason: "Verified 2026-10-15: same Drupal JSON:API /jsonapi/node/event as holaislascanarias (same field_id_events_repository platform); its 4 window events were all already in holaislascanarias. Subset, no added coverage; not integrated.", checked_at: 2026-10-15}
   - {name: elhierro.travel, url: "https://elhierro.travel", reason: "Verified 2026-10-15: same Drupal JSON:API /jsonapi/node/event as holaislascanarias (same field_id_events_repository platform); its 2 window events were all already in holaislascanarias. Subset, no added coverage; not integrated.", checked_at: 2026-10-15}
   - {name: PredictHQ, url: "https://www.predicthq.com", reason: "Free plan is limited and its terms were not checked; candidate only.", checked_at: 2026-10-15}
   - {name: Radio Insular, url: "https://www.radioinsular.es", reason: "Unreachable at check time (HTTP 503). Re-check with discover-sources.", checked_at: 2026-10-15}
   - {name: Ocio Canarias, url: "https://www.ociocanarias.com", reason: "Unreachable at check time. Re-check with discover-sources.", checked_at: 2026-10-15}
-  - {name: Cabildo de Fuerteventura, url: "https://www.cabildofuer.es", reason: "Unreachable at check time (HTTP 503). Re-check with discover-sources.", checked_at: 2026-10-15}
+  - {name: Cabildo de Fuerteventura, url: "https://www.cabildofuer.es", reason: "Integrated as source `cabildo_fuerteventura_agenda` (reachable on 2026-10-15; free-text dates, years inferred and flagged).", checked_at: 2026-10-15}
   - {name: Mueca, url: "https://mueca.es", reason: "Unreachable at check time. Re-check with discover-sources.", checked_at: 2026-10-15}
   - {name: Festival de Canarias, url: "https://festivaldecanarias.com", reason: "Unreachable at check time. Re-check with discover-sources.", checked_at: 2026-10-15}
 
@@ -238,7 +426,9 @@ excluded:
   - {name: Telde, url: "https://www.telde.es", reason: "API exists but returns events without dates.", checked_at: 2026-10-15}
   - {name: Tegueste, url: "https://www.tegueste.es", reason: "HTTP 401 Unauthorized.", checked_at: 2026-10-15}
   - {name: Puerto del Rosario, url: "https://www.puertodelrosario.org", reason: "HTTP 403 Forbidden.", checked_at: 2026-10-15}
-  - {name: lanzarote.com, url: "https://www.lanzarote.com", reason: "HTTP 403 Forbidden.", checked_at: 2026-10-15}
+  - {name: lanzarote.com, url: "https://www.lanzarote.com", reason: "HTTP 403 / Cloudflare challenge (\"Just a moment...\"): reported as blocked, never bypassed.", checked_at: 2026-10-15}
+  - {name: Tomaticket, url: "https://www.tomaticket.es", reason: "HTTP 403 / Cloudflare \"Attention Required\" page: reported as blocked, never bypassed.", checked_at: 2026-10-15}
+  - {name: Turismo Lanzarote, url: "https://www.turismolanzarote.com", reason: "Microdata Events carry placeholder dates; extracting them would invent data.", checked_at: 2026-10-15}
   - {name: Mogán, url: "https://www.mogan.es", reason: "HTTP 500 Internal Server Error.", checked_at: 2026-10-15}
   - {name: CAAM (MEC), url: "https://caam.net", reason: "Endpoint returns no events.", checked_at: 2026-10-15}
 

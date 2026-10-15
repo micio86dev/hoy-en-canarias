@@ -117,3 +117,44 @@ def test_catalog_ai_section_defaults_to_disabled_and_local_only(tmp_path: Path) 
     remote.write_text("ai:\n  base_url: https://api.openai.com\nsources: []\n", encoding="utf-8")
     with pytest.raises(ValueError):
         load_catalog(remote)
+
+
+WEB_SOURCES = {
+    "webtenerife", "auditorio_teatro_lpa", "teatro_leal", "tea_tenerife", "adeje_agenda",
+    "arona_agenda", "lpacultura", "cact_lanzarote", "cabildo_fuerteventura_agenda",
+    "grancanaria_agenda", "tenerife_es_eventos", "auditorio_tenerife",
+}  # fmt: skip
+
+
+def test_html_sources_are_configured_below_apis_and_open_data() -> None:
+    from canarias_events.sources.web import WebAdapter
+
+    by_id = {s.id: s for s in load_sources(CONFIG)}
+    assert WEB_SOURCES <= set(by_id)
+    for source_id in WEB_SOURCES:
+        source = by_id[source_id]
+        assert source.adapter == "web"
+        assert source.priority == 40
+        assert source.priority < by_id["holaislascanarias"].priority
+        assert source.notes
+        WebAdapter(source)  # params validate
+
+
+def test_html_sources_needing_a_renderer_are_disabled_by_default() -> None:
+    by_id = {s.id: s for s in load_sources(CONFIG)}
+    disabled = {i for i in WEB_SOURCES if not by_id[i].enabled}
+    assert disabled == {"grancanaria_agenda", "tenerife_es_eventos", "auditorio_tenerife"}
+    assert all(by_id[i].params["render"] in ("auto", "playwright") for i in disabled)
+    # sources whose years are missing on the page say so explicitly (and are flagged in output)
+    for source_id in ("adeje_agenda", "arona_agenda", "lpacultura", "cact_lanzarote"):
+        assert by_id[source_id].params["year_policy"] == "infer"
+    assert by_id["webtenerife"].params["sitemap_url_pattern"]
+
+
+def test_blocked_and_unreliable_portals_are_documented_as_excluded() -> None:
+    catalog = load_catalog(CONFIG)
+    excluded = {e.name: e.reason for e in catalog.excluded}
+    assert "never bypassed" in excluded["lanzarote.com"]
+    assert "never bypassed" in excluded["Tomaticket"]
+    assert "placeholder" in excluded["Turismo Lanzarote"]
+    assert not {s.id for s in catalog.sources} & {"lanzarote_com", "tomaticket", "turismolanzarote"}
