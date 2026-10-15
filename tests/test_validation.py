@@ -12,7 +12,7 @@ import pytest
 import respx
 
 from canarias_events.database import Database, SourceRun
-from canarias_events.http import SafeHttpClient
+from canarias_events.http import InvalidPayload, SafeHttpClient
 from canarias_events.sources.base import FetchContext, SourceConfig
 from canarias_events.validation import ValidationReport, validate_source
 from tests.conftest import NOW
@@ -68,7 +68,7 @@ def test_a_healthy_page_is_scored_and_suggested_as_verified(make_ctx: MakeCtx) -
     assert report.quality == 1.0
     assert report.in_next_30_days == 4
     assert report.terms == "unknown" and report.reliability is None
-    assert report.suggested_mode == "api_public" and report.suggested_state == "verified"
+    assert report.suggested_mode == "html" and report.suggested_state == "verified"
     assert 60 <= report.score <= 100
     assert report.as_dict()["url"] == URL
 
@@ -171,6 +171,7 @@ def test_temporary_trouble_leaves_the_candidate_as_it_is(make_ctx: MakeCtx, stat
     report = validate_source(client(make_ctx), URL, now=NOW)
     assert not report.reachable and report.http_status == status
     assert report.suggested_state == "candidate" and report.suggested_mode is None
+    assert report.transient and report.error is not None and str(status) in report.error
 
 
 @respx.mock
@@ -200,7 +201,7 @@ def test_an_ical_feed_is_read_as_a_feed(make_ctx: MakeCtx) -> None:
     html(ICS, ctype="text/calendar")
     report = validate_source(client(make_ctx), URL, now=NOW)
     assert report.kind == "ical" and report.events_found == 1 and report.strategy == "ical"
-    assert report.suggested_mode == "rss" and report.quality == 1.0
+    assert report.suggested_mode == "ical" and report.quality == 1.0
 
 
 @respx.mock
@@ -240,7 +241,7 @@ def test_a_configured_source_is_validated_with_its_own_adapter(make_ctx: MakeCtx
     )  # fmt: skip
     report = validate_source(client(make_ctx), source.url, now=NOW, source=source)
     assert report.source_id == "ics1" and report.events_found == 1
-    assert report.terms == "declared: CC-BY" and report.suggested_mode == "rss"
+    assert report.terms == "declared: CC-BY" and report.suggested_mode == "ical"
 
 
 @respx.mock
@@ -261,3 +262,128 @@ def test_the_report_is_plain_data() -> None:
     data = report.as_dict()
     assert data["url"] == URL and data["score"] == 0 and data["notes"] == []
     json.dumps(data)
+
+
+RSS = (
+    "<?xml version='1.0'?><rss version='2.0'><channel><title>Agenda</title><item>"
+    "<guid>1</guid><title>Concierto en Adeje</title><link>https://agenda.example.org/e/1</link>"
+    f"<pubDate>Sat, {soon(3):%d %b %Y} 20:00:00 +0000</pubDate>"
+    "<description>Concierto en Adeje</description></item></channel></rss>"
+)
+ATOM = "<?xml version='1.0'?><feed xmlns='http://www.w3.org/2005/Atom'><title>Agenda</title></feed>"
+
+
+@respx.mock
+@pytest.mark.parametrize(
+    ("body", "ctype"),
+    [(RSS, "application/rss+xml"), (RSS, "text/xml"), (ATOM, "application/atom+xml")],
+)
+def test_a_sniffed_feed_suggests_the_rss_mode(make_ctx: MakeCtx, body: str, ctype: str) -> None:
+    robots()
+    html(body, ctype=ctype)
+    report = validate_source(client(make_ctx), URL, now=NOW)
+    assert report.kind == "feed" and report.suggested_mode == "rss"
+
+
+@respx.mock
+@pytest.mark.parametrize(
+    ("adapter", "mode"),
+    [("web", "html"), ("ical", "ical"), ("rss", "rss"), ("ckan", "api_public")],
+)
+def test_the_mode_of_a_configured_source_follows_its_adapter(
+    make_ctx: MakeCtx, monkeypatch: pytest.MonkeyPatch, adapter: str, mode: str
+) -> None:
+    from canarias_events import validation
+    from canarias_events.models import Event
+    from canarias_events.sources.base import SourceAdapter, SourceFetchResult
+
+    class Fake(SourceAdapter):
+        source_type = "fake"
+
+        def fetch(self, ctx: FetchContext) -> SourceFetchResult:
+            result = SourceFetchResult(records_received=1)
+            result.events.append(
+                Event(title="E", start_datetime=soon(2), municipality="Adeje", source_name="s")
+            )
+            return result
+
+    monkeypatch.setattr(validation, "create_adapter", lambda cfg: Fake(cfg))
+    source = SourceConfig(id="s1", name="S", adapter=adapter, url="https://feeds.example.org/x")
+    report = validate_source(client(make_ctx), source.url, now=NOW, source=source)
+    assert report.events_found == 1 and report.suggested_mode == mode
+
+
+@respx.mock
+def test_an_unreadable_robots_txt_is_a_transient_error(make_ctx: MakeCtx) -> None:
+    robots(status=503)
+    page = html("<html></html>")
+    report = validate_source(client(make_ctx), URL, now=NOW)
+    assert page.call_count == 0 and report.robots == "unavailable"
+    assert report.transient and report.error is not None and "robots" in report.error
+
+
+@respx.mock
+def test_a_timeout_is_a_transient_error(make_ctx: MakeCtx) -> None:
+    robots()
+    respx.get(URL).mock(side_effect=httpx.ConnectTimeout("slow"))
+    report = validate_source(client(make_ctx), URL, now=NOW)
+    assert report.transient and report.error is not None and not report.reachable
+
+
+@respx.mock
+def test_denied_access_is_a_definitive_answer_not_a_transient_error(make_ctx: MakeCtx) -> None:
+    robots()
+    html("no", status=403)
+    report = validate_source(client(make_ctx), URL, now=NOW)
+    assert not report.transient and report.error is None and report.suggested_state == "rejected"
+
+
+@respx.mock
+@pytest.mark.parametrize("failure", [ValueError("bad calendar"), KeyError("x")])
+def test_a_parser_error_becomes_an_error_in_the_report(
+    make_ctx: MakeCtx, monkeypatch: pytest.MonkeyPatch, failure: Exception
+) -> None:
+    from canarias_events import validation
+
+    def explode(self: object, body: bytes, window: object) -> None:
+        raise failure
+
+    monkeypatch.setattr(validation.IcalAdapter, "read", explode)
+    robots()
+    html(ICS, ctype="text/calendar")
+    report = validate_source(client(make_ctx), URL, now=NOW)
+    assert report.error is not None and not report.transient
+    assert report.reachable and report.events_found == 0
+    assert report.suggested_state == "candidate"
+
+
+@respx.mock
+def test_an_invalid_feed_payload_becomes_an_error_in_the_report(
+    make_ctx: MakeCtx, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from canarias_events import validation
+
+    def reject(self: object, body: bytes) -> None:
+        raise InvalidPayload("not a feed")
+
+    monkeypatch.setattr(validation.RssAdapter, "read", reject)
+    robots()
+    html(RSS, ctype="application/rss+xml")
+    report = validate_source(client(make_ctx), URL, now=NOW)
+    assert report.error is not None and "not a feed" in report.error and not report.transient
+    assert report.suggested_state == "candidate"
+
+
+@respx.mock
+def test_a_broken_adapter_configuration_becomes_an_error(
+    make_ctx: MakeCtx, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from canarias_events import validation
+
+    def refuse(cfg: SourceConfig) -> None:
+        raise ValueError("invalid params")
+
+    monkeypatch.setattr(validation, "create_adapter", refuse)
+    source = SourceConfig(id="s1", name="S", adapter="web", url="https://feeds.example.org/x")
+    report = validate_source(client(make_ctx), source.url, now=NOW, source=source)
+    assert report.error is not None and "invalid params" in report.error

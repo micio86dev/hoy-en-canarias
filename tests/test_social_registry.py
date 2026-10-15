@@ -177,3 +177,11 @@ def test_a_malformed_handle_is_rejected() -> None:
         account(handle="not a handle")
     with pytest.raises(ValidationError, match="handle"):
         account(platform="bluesky", adapter="bluesky", handle="agenda@mastodon.example")
+
+
+@pytest.mark.parametrize("mode", ["html", "ical"])
+def test_candidate_formats_are_valid_modes_but_never_social_schedules(mode: str) -> None:
+    source = account(acquisition_mode=mode, kind="account")
+    blocker = schedule_blocker(source)
+    assert blocker is not None and "sources.yaml" in blocker
+    assert scheduled_sources(SocialRegistry(sources=[source])) == []

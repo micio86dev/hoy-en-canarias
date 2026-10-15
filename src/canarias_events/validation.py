@@ -8,6 +8,7 @@ request goes through ``SafeHttpClient`` and nothing is stored here.
 
 from __future__ import annotations
 
+import logging
 import re
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass, field
@@ -19,7 +20,7 @@ from canarias_events.extract.guards import is_challenge_page
 from canarias_events.extract.robots import RobotsPolicy
 from canarias_events.extract.util import parse_html
 from canarias_events.health import summarize
-from canarias_events.http import FetchError, HttpError, SafeHttpClient
+from canarias_events.http import FetchError, HttpError, SafeHttpClient, mask_secrets
 from canarias_events.models import Event
 from canarias_events.pipeline import event_overlaps
 from canarias_events.social import NOT_ACQUIRABLE, classify_social_url
@@ -30,10 +31,14 @@ from canarias_events.sources.rss import RssAdapter
 from canarias_events.sources.web import WebAdapter
 from canarias_events.statuses import BLOCKED, RATE_LIMITED, ROBOTS_DISALLOWED
 
+logger = logging.getLogger(__name__)
 COVERAGE_DAYS = 30
 MIN_QUALITY = 0.6  # share of events with title, date and place for a "verified" suggestion
 _RE_FEED = re.compile(rb"<(?:rss|feed)[\s>]", re.IGNORECASE)
-_FEED_ADAPTERS = frozenset({"ical", "rss"})
+# Acquisition mode (the social registry's vocabulary) each content kind or adapter suggests.
+_KIND_MODES = {"html": "html", "web": "html", "ical": "ical", "feed": "rss", "rss": "rss"}
+_FORMAT_KINDS = frozenset({"ical", "feed", "rss"})  # a feed is worth a mode even when empty
+TRANSIENT_HTTP = 429  # plus every 5xx and transport failures (no status)
 
 
 @dataclass
@@ -56,6 +61,10 @@ class ValidationReport:
     score: int = 0
     suggested_mode: str | None = None
     suggested_state: str = "candidate"
+    # Set when the check could not reach a verdict (outage, parse error): saving it must not
+    # overwrite what was known. ``transient`` marks the ones worth retrying later.
+    error: str | None = None
+    transient: bool = False
     notes: list[str] = field(default_factory=list)
 
     def as_dict(self) -> dict[str, Any]:
@@ -111,6 +120,12 @@ def _social(report: ValidationReport, platform: str, mode: str) -> ValidationRep
     return report
 
 
+def _inconclusive(report: ValidationReport, message: str, *, transient: bool) -> ValidationReport:
+    report.error, report.transient = mask_secrets(message), transient
+    report.notes.append(report.error)
+    return report
+
+
 def _deny(report: ValidationReport, status: int | None, why: str) -> None:
     report.http_status = status
     report.blocked = why
@@ -160,12 +175,14 @@ def validate_source(
             policy = RobotsPolicy(client)
             if not policy.allowed(url):
                 state = policy.status(url)
-                report.robots = "unavailable" if state == "unavailable" else "disallowed"
-                if report.robots == "disallowed":
-                    report.suggested_mode, report.suggested_state = "excluded", "rejected"
-                    report.notes.append("robots.txt does not allow fetching this URL")
-                else:
-                    report.notes.append("robots.txt could not be read: try again later")
+                if state == "unavailable":
+                    report.robots = "unavailable"
+                    return _inconclusive(
+                        report, "robots.txt could not be read: try again later", transient=True
+                    )
+                report.robots = "disallowed"
+                report.suggested_mode, report.suggested_state = "excluded", "rejected"
+                report.notes.append("robots.txt does not allow fetching this URL")
                 return report
             report.robots = "allowed"
             probe = client.get(url)
@@ -178,13 +195,16 @@ def validate_source(
         report.reachable, report.http_status = False, exc.status
         if exc.status in (401, 403):
             _deny(report, exc.status, f"access denied (HTTP {exc.status})")
-        else:
-            report.notes.append(f"temporary trouble: {exc}")
-        return report
+            return report
+        transient = exc.status is None or exc.status == TRANSIENT_HTTP or exc.status >= 500
+        label = "temporary trouble" if transient else "cannot read the page"
+        return _inconclusive(report, f"{label}: {exc}", transient=transient)
     except FetchError as exc:
         report.reachable = False
-        report.notes.append(f"cannot read the page: {exc}")
-        return report
+        return _inconclusive(report, f"cannot read the page: {exc}", transient=False)
+    except Exception as exc:  # adapter or parser failure: a report with the error, no traceback
+        logger.warning("validate-source %s: %s: %s", mask_secrets(url), type(exc).__name__, exc)
+        return _inconclusive(report, f"{type(exc).__name__}: {exc}", transient=False)
     return _evaluate(report, result, body, now, source)
 
 
@@ -228,6 +248,8 @@ def _evaluate(
         report.notes.extend(result.warnings)
         if result.status in (BLOCKED, RATE_LIMITED, ROBOTS_DISALLOWED):
             report.reachable = False
+            if result.status == RATE_LIMITED:
+                return _inconclusive(report, "rate limited (HTTP 429)", transient=True)
             if result.status == BLOCKED:
                 _deny(report, report.http_status, "the site refuses automated access")
             elif result.status == ROBOTS_DISALLOWED:
@@ -247,9 +269,8 @@ def _evaluate(
         report.terms = f"declared: {source.license}"
     elif body and (declared := _terms(body)):
         report.terms = declared
-    feed = report.kind in _FEED_ADAPTERS
-    if events:
-        report.suggested_mode = "rss" if feed else "api_public"
+    if events or (report.reachable and report.kind in _FORMAT_KINDS):
+        report.suggested_mode = _KIND_MODES.get(report.kind, "api_public")
     elif report.reachable:
         report.suggested_mode = "manual_only"
     verified = events and (report.quality or 0) >= MIN_QUALITY and report.in_next_30_days >= 1

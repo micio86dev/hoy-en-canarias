@@ -21,8 +21,17 @@ from canarias_events.crawl_settings import parse_frequency
 from canarias_events.geo import normalize_island, normalize_municipality
 from canarias_events.sources.base import SourceConfig
 
+# ``html`` and ``ical`` describe candidate sources (validate-source); they are configured in
+# sources.yaml like any portal, never as social accounts.
 AcquisitionMode = Literal[
-    "api_public", "rss", "import_url", "manual_only", "requires_authorization", "excluded"
+    "api_public",
+    "rss",
+    "html",
+    "ical",
+    "import_url",
+    "manual_only",
+    "requires_authorization",
+    "excluded",
 ]
 VerificationState = Literal["candidate", "verified", "rejected"]
 Adapter = Literal["mastodon", "bluesky", "rss"]
@@ -30,6 +39,7 @@ Adapter = Literal["mastodon", "bluesky", "rss"]
 # No credentials, no private session, no bypass: these are never fetched by the importer.
 NOT_ACQUIRABLE = frozenset({"manual_only", "requires_authorization", "excluded"})
 SCHEDULABLE_MODES = frozenset({"api_public", "rss"})
+CONFIGURED_MODES = frozenset({"html", "ical"})
 # Social events must never outrank an official source when dedup merges fields.
 SOCIAL_PRIORITY = 10
 BLUESKY_APPVIEW = "https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed"
@@ -156,6 +166,8 @@ def schedule_blocker(source: SocialSource) -> str | None:
         return "platform description"
     if source.acquisition_mode in NOT_ACQUIRABLE:
         return f"{source.acquisition_mode}: not acquirable"
+    if source.acquisition_mode in CONFIGURED_MODES:
+        return f"{source.acquisition_mode}: add it to sources.yaml, not the social registry"
     if source.acquisition_mode not in SCHEDULABLE_MODES:
         return f"{source.acquisition_mode}: human-driven"
     if source.verification_state != "verified":

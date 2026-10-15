@@ -10,6 +10,8 @@
 #   * `import_url` is a one-off, human-driven import (`import-url <url>`), never scheduled.
 #   * Only `kind: account` rows with `acquisition_mode` api_public/rss, `verification_state:
 #     verified` and `enabled: true` are scheduled. Their events carry source_trust=social.
+#   * `html` and `ical` are candidate formats suggested by validate-source; such sources are
+#     configured in sources.yaml, never here.
 #   * Account rows may set `link_hosts` (hosts whose event pages a post may link to; none by
 #     default) and `year_policy: infer` (posts rarely state the year; default is strict).
 sources:
