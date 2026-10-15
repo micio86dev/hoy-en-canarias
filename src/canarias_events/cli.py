@@ -127,6 +127,12 @@ def _echo_report(report: dict[str, Any]) -> None:
         typer.echo(f"error {error['source']}: {error['error']}")
     for warning in report["warnings"]:
         typer.echo(f"warning {warning['source']}: {warning['warning']}")
+    timings = report.get("timings")
+    if timings:
+        tiers = ", ".join(f"{t} {sec:.1f}s" for t, sec in timings["tiers"].items())
+        typer.echo(
+            f"Timing: total {timings['total_s']:.1f}s" + (f"; tiers: {tiers}" if tiers else "")
+        )
     totals = report["totals"]
     typer.echo(
         f"Events in window: {totals['events_in_window']} "
@@ -181,6 +187,22 @@ def import_events(
     source: Annotated[
         list[str] | None, typer.Option("--source", help="Only this source id (repeatable).")
     ] = None,
+    dry_run: Annotated[
+        bool,
+        typer.Option("--dry-run", help="Fetch and report only: no database writes or exports."),
+    ] = False,
+    no_ai: Annotated[
+        bool, typer.Option("--no-ai", help="Never use the local model, whatever the config says.")
+    ] = False,
+    force: Annotated[
+        bool, typer.Option("--force", help="Ignore source frequency, backoff and cool-downs.")
+    ] = False,
+    low_resource: Annotated[
+        bool,
+        typer.Option(
+            "--low-resource", help="One source at a time, no renderers or model, fewer pages."
+        ),
+    ] = False,
     db_path: DbOption = None,
     output_dir: OutputOption = DEFAULT_OUTPUT_DIR,
     config: ConfigOption = DEFAULT_CONFIG,
@@ -193,23 +215,37 @@ def import_events(
         "(Atlantic/Canary)"
     )
     now = datetime.now(TZ)
-    with Database(db_path or default_db_path()) as db:
-        client = make_client(SqliteHttpCache(db))
+    path = db_path or default_db_path()
+    ai = catalog.ai.model_copy(update={"enabled": False}) if no_ai else catalog.ai
+    snapshots = None if dry_run else output_dir / "snapshots"
+    # A dry run works on an in-memory copy: honest counts, and nothing is written to disk.
+    with Database.memory_copy(path) if dry_run else Database(path) as db:
+        client = make_client(None if dry_run else SqliteHttpCache(db))
         try:
             report = run_import(
                 db, catalog.sources, window, client=client, now=now, island=island,
-                source_ids=source or None, ai=catalog.ai, crawl=catalog.crawl,
-                snapshot_dir=output_dir / "snapshots",
+                source_ids=source or None, ai=ai, crawl=catalog.crawl, force=force,
+                low_resource=low_resource, snapshot_dir=snapshots,
             )  # fmt: skip
         except ValueError as exc:
             raise typer.BadParameter(str(exc)) from exc
         finally:
             client.close()
-        export_all(
-            db, catalog, window, report, output_dir, now=now, island=report["params"]["island"]
-        )
+        if dry_run:
+            report["dry_run"] = True
+            write_atomic(
+                output_dir / "dry-run-report.json",
+                (json.dumps(report, ensure_ascii=False, indent=2, default=str) + "\n").encode(),
+            )
+        else:
+            export_all(
+                db, catalog, window, report, output_dir, now=now, island=report["params"]["island"]
+            )
     _echo_report(report)
-    typer.echo(f"Outputs written to {output_dir}/")
+    if dry_run:
+        typer.echo(f"Dry run: nothing stored or exported. Report: {output_dir}/dry-run-report.json")
+    else:
+        typer.echo(f"Outputs written to {output_dir}/")
     if not report["sources_succeeded"]:
         typer.echo("No source succeeded.", err=True)
         raise typer.Exit(1)

@@ -87,6 +87,8 @@ class FetchContext:
     logger: logging.Logger = field(default_factory=lambda: logging.getLogger("canarias_events"))
     env: Mapping[str, str] = field(default_factory=lambda: os.environ)
     ai: AiSettings | None = None  # optional local model; None or disabled means never used
+    allow_render: bool = True  # False (low-resource mode): never start a browser renderer
+    page_cap: int | None = None  # lowers every per-run page limit of the web adapter
 
 
 @dataclass

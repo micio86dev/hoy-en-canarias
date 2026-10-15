@@ -1007,3 +1007,30 @@ def test_no_listing_hash_when_the_listing_is_not_fetched(make_ctx: Ctx) -> None:
     robots(body="User-agent: *\nDisallow: /")
     result = adapter().fetch(make_ctx())
     assert result.listing_hash is None and result.snapshot is None
+
+
+@respx.mock
+def test_low_resource_context_never_starts_a_renderer(make_ctx: Ctx) -> None:
+    robots("www.auditoriodetenerife.com")
+    url = "https://www.auditoriodetenerife.com/"
+    page(url, html_fixture("auditoriodetenerife_home.html"))
+    calls: list[str] = []
+
+    def factory(kind: str) -> FakeRenderer:
+        calls.append(kind)
+        return FakeRenderer(html_fixture("teatenerife_actividades.html"))
+
+    ctx = make_ctx()
+    ctx.allow_render = False
+    result = WebAdapter(cfg(url, render="playwright"), renderer_factory=factory).fetch(ctx)
+    assert calls == [] and result.status == "needs_manual_review"
+
+
+@respx.mock
+def test_context_page_cap_lowers_the_listing_and_detail_limits(make_ctx: Ctx) -> None:
+    routes = mock_webtenerife()
+    ctx = make_ctx()
+    ctx.page_cap = 4
+    result = WebAdapter(webtenerife_config(max_detail_pages=30)).fetch(ctx)
+    assert result.pages == 4  # listing + sitemap + 2 details
+    assert sum(r.call_count for u, r in routes.items() if "/agenda/2026/10/" in u) == 2

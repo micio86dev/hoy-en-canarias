@@ -806,3 +806,66 @@ def test_old_snapshots_are_pruned_at_run_start(
         db, client, web_result(ev("w", "1", "Uno")), crawl=crawl, snapshot_dir=tmp_path
     )
     assert not stale.exists()
+
+
+# --------------------------------------------------------------------------- low resource, timings
+
+
+class Spy(FakeAdapter):
+    seen: list[FetchContext] = []
+
+    def fetch(self, ctx: FetchContext) -> SourceFetchResult:
+        Spy.seen.append(ctx)
+        return super().fetch(ctx)
+
+
+def test_low_resource_mode_limits_concurrency_renderers_ai_and_pages(
+    db: Database, client: SafeHttpClient
+) -> None:
+    from canarias_events.crawl_settings import LOW_RESOURCE_PAGE_CAP
+    from canarias_events.extract.llm import AiSettings
+
+    Spy.seen = []
+    adapters = {n: Spy(make_cfg(n), [ev(n, "1", f"Evento {n}")]) for n in "ab"}
+    report = run(
+        db, client, adapters, crawl=CrawlSettings(concurrency=4), ai=AiSettings(enabled=True),
+        low_resource=True,
+    )  # fmt: skip
+    assert report["params"]["low_resource"] is True and report["params"]["concurrency"] == 1
+    assert all(
+        c.allow_render is False and c.page_cap == LOW_RESOURCE_PAGE_CAP and c.ai is None
+        for c in Spy.seen
+    )
+
+    Spy.seen = []
+    run(db, client, adapters, crawl=CrawlSettings(low_resource=True), force=True)
+    assert Spy.seen and all(c.allow_render is False for c in Spy.seen)
+
+    Spy.seen = []
+    run(db, client, adapters, force=True)
+    assert all(c.allow_render and c.page_cap is None for c in Spy.seen)
+
+
+def test_report_carries_per_source_and_per_tier_timings(
+    db: Database, client: SafeHttpClient
+) -> None:
+    class Tiered(FakeAdapter):
+        def fetch(self, ctx: FetchContext) -> SourceFetchResult:
+            result = super().fetch(ctx)
+            result.strategy_used, result.extraction_ok = "blocks", True
+            result.tiers = [
+                {"tier": "jsonld", "candidates": 0, "seconds": 0.25},
+                {"tier": "blocks", "candidates": 1, "seconds": 0.5},
+            ]
+            return result
+
+    adapters = {n: Tiered(make_cfg(n), [ev(n, "1", f"Evento {n}")]) for n in "ab"}
+    report = run(db, client, adapters)
+    stats = report["sources"]["a"]
+    assert set(stats["timings"]) == {"fetch_s", "store_s"}
+    assert stats["duration_s"] == pytest.approx(
+        stats["timings"]["fetch_s"] + stats["timings"]["store_s"], abs=0.002
+    )
+    assert report["timings"]["tiers"] == {"jsonld": 0.5, "blocks": 1.0}
+    assert report["timings"]["total_s"] >= 0
+    assert set(report["timings"]["sources"]) == {"a", "b"}

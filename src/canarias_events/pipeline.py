@@ -13,7 +13,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from canarias_events.crawl_settings import CrawlSettings
+from canarias_events.crawl_settings import LOW_RESOURCE_PAGE_CAP, CrawlSettings
 from canarias_events.database import Database, SourceRun, UpsertResult
 from canarias_events.date_range import TZ, DateWindow
 from canarias_events.deduplication import DEFAULT_MERGE_THRESHOLD, resolve
@@ -312,10 +312,16 @@ def run_import(
     crawl: CrawlSettings | None = None,
     force: bool = False,
     snapshot_dir: Path | None = None,
+    low_resource: bool = False,
 ) -> dict[str, Any]:
     """Run every selected source, isolate failures and return (and store) the import report."""
     environment: Mapping[str, str] = os.environ if env is None else env
     settings = crawl or CrawlSettings()
+    low = low_resource or settings.low_resource
+    if low:  # gentle on RAM and CPU: serial, static pages only, no local model
+        settings = settings.model_copy(update={"concurrency": 1})
+        ai = None
+    started = time.monotonic()
     island_name = None
     if island:
         island_name = normalize_island(island)
@@ -328,6 +334,9 @@ def run_import(
         "island": island_name,
         "sources": list(source_ids) if source_ids else None,
         "merge_threshold": merge_threshold,
+        "concurrency": settings.concurrency,
+        "low_resource": low,
+        "force": force,
     }
     run_id = db.start_run(now, window.start, window.end, params)
     per_source: dict[str, dict[str, Any]] = {}
@@ -341,7 +350,10 @@ def run_import(
     def fetch(cfg: SourceConfig) -> _Fetched:  # runs in a worker thread: network only, no DB
         began = time.monotonic()
         try:
-            ctx = FetchContext(client=client, window=window, now=now, env=environment, ai=ai)
+            ctx = FetchContext(
+                client=client, window=window, now=now, env=environment, ai=ai,
+                allow_render=not low, page_cap=LOW_RESOURCE_PAGE_CAP if low else None,
+            )  # fmt: skip
             result = adapter_factory(cfg).fetch(ctx)
             return _Fetched(result=result, seconds=time.monotonic() - began)
         except Exception as exc:  # isolation: one broken source must not stop the run
@@ -368,7 +380,9 @@ def run_import(
             stats["error"] = f"{type(exc).__name__}: {exc}"
             run.errors.append({"source": cfg.id, "error": stats["error"]})
             logger.error("source %s failed: %s", cfg.id, stats["error"])
-        stats["duration_s"] = round(got.seconds + time.monotonic() - began, 3)
+        store = time.monotonic() - began
+        stats["timings"] = {"fetch_s": round(got.seconds, 3), "store_s": round(store, 3)}
+        stats["duration_s"] = round(got.seconds + store, 3)
         run.warnings.extend({"source": cfg.id, "warning": w} for w in stats["warnings"])
         db.record_source_result(cfg.id, run_id, error=stats["error"], now=now)
         db.record_source_run(
@@ -389,6 +403,11 @@ def run_import(
     discarded_total: Counter[str] = Counter()
     for stats in per_source.values():
         discarded_total.update(stats["discarded"])
+    tier_seconds: dict[str, float] = {}
+    for stats in per_source.values():
+        for tier in stats.get("tiers", []):
+            name = str(tier["tier"])
+            tier_seconds[name] = tier_seconds.get(name, 0.0) + float(tier["seconds"])
     report: dict[str, Any] = {
         "run_id": run_id,
         "executed_at": now.isoformat(),
@@ -421,6 +440,11 @@ def run_import(
         },
         "errors": run.errors,
         "warnings": run.warnings,
+        "timings": {
+            "total_s": round(time.monotonic() - started, 3),
+            "sources": {i: s["duration_s"] for i, s in per_source.items()},
+            "tiers": {t: round(v, 3) for t, v in tier_seconds.items()},
+        },
     }
     db.finish_run(run_id, now, report)
     return report

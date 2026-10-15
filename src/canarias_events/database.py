@@ -264,6 +264,20 @@ class Database:
         self.conn.execute("PRAGMA journal_mode = WAL")
         self._migrate()
 
+    @classmethod
+    def memory_copy(cls, path: Path | str) -> Database:
+        """Throwaway in-memory copy of a database file (dry runs): the file is never written."""
+        copy = cls(":memory:")
+        source = Path(path)
+        if source.exists():
+            reader = sqlite3.connect(f"file:{source}?mode=ro", uri=True)
+            try:
+                reader.backup(copy.conn)
+            finally:
+                reader.close()
+            copy._migrate()  # an older file is upgraded in memory only
+        return copy
+
     def close(self) -> None:
         self.conn.close()
 

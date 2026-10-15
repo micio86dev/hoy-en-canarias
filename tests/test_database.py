@@ -208,3 +208,31 @@ def test_http_cache_can_be_used_from_worker_threads(tmp_path: Path) -> None:
         with ThreadPoolExecutor(max_workers=8) as pool:
             results = list(pool.map(work, range(40)))
     assert all(r is not None and r[2] == b"body" for r in results)
+
+
+def test_memory_copy_is_a_throwaway_snapshot_of_the_file(tmp_path: Path) -> None:
+    path = tmp_path / "real.sqlite"
+    with Database(path) as db:
+        db.record_source_run(
+            1, "a", NOW, status="succeeded", source_status="ok", events_found=1,
+            events_in_window=1, duration_s=0.1, error=None, strategy=None, extraction_ok=None,
+            listing_hash=None, anomalies=[],
+        )  # fmt: skip
+    before = path.read_bytes()
+    with Database.memory_copy(path) as copy:
+        assert [r.source_id for r in copy.recent_source_runs("a", 5)] == ["a"]
+        copy.record_source_run(
+            2, "a", NOW, status="failed", source_status=None, events_found=0,
+            events_in_window=0, duration_s=0.1, error="x", strategy=None, extraction_ok=None,
+            listing_hash=None, anomalies=[],
+        )  # fmt: skip
+    assert path.read_bytes() == before
+    with Database(path) as db:
+        assert len(db.recent_source_runs("a", 5)) == 1
+
+
+def test_memory_copy_of_a_missing_file_is_empty_and_creates_nothing(tmp_path: Path) -> None:
+    path = tmp_path / "nope" / "x.sqlite"
+    with Database.memory_copy(path) as copy:
+        assert copy.count("events") == 0
+    assert not path.parent.exists()

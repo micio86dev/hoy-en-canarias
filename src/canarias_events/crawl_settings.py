@@ -23,6 +23,9 @@ def parse_frequency(value: str) -> timedelta:
     return timedelta(hours=amount) if found.group(2) == "h" else timedelta(days=amount)
 
 
+LOW_RESOURCE_PAGE_CAP = 15  # pages per source in low-resource mode
+
+
 class SnapshotSettings(BaseModel):
     """Raw listing of failed/anomalous runs for debugging; off by default."""
 
@@ -55,3 +58,7 @@ class CrawlSettings(BaseModel):
     concurrency: int = Field(default=4, ge=1, le=16)  # sources fetched at the same time
 
     snapshots: SnapshotSettings = Field(default_factory=SnapshotSettings)
+
+    # Low-resource mode (also --low-resource): one source at a time, no browser renderer, no
+    # local model, at most LOW_RESOURCE_PAGE_CAP pages per source.
+    low_resource: bool = False

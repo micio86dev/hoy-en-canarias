@@ -19,6 +19,7 @@ from canarias_events.database import Database
 from canarias_events.date_range import TZ, next_week
 from canarias_events.http import SafeHttpClient
 from canarias_events.models import Event
+from canarias_events.pipeline import run_import
 from canarias_events.sources.base import (
     FetchContext,
     SourceAdapter,
@@ -380,3 +381,83 @@ def test_review_quarantine_lists_and_accepts(tmp_path: Path) -> None:
 def test_review_quarantine_requires_an_action(tmp_path: Path) -> None:
     result = invoke("review-quarantine", "--db", str(tmp_path / "x.sqlite"))
     assert result.exit_code != 0
+
+
+# --------------------------------------------------------------------------- import options
+
+
+def test_dry_run_changes_nothing_on_disk(tmp_path: Path) -> None:
+    config = write_config(tmp_path, [fake_source("a")])
+    window = ("--from", "2026-10-19", "--to", "2026-10-25")
+    assert invoke(*import_args(tmp_path, config, *window)).exit_code == 0
+    db_file, events_file = tmp_path / "db.sqlite", tmp_path / "out" / "events.json"
+    before = (db_file.read_bytes(), events_file.read_bytes())
+
+    changed = write_config(tmp_path, [fake_source("a", params={"titles": ["Nuevo", "Otro"]})])
+    result = invoke(*import_args(tmp_path, changed, *window, "--dry-run"))
+
+    assert result.exit_code == 0, result.output
+    assert "Dry run" in result.output
+    assert (db_file.read_bytes(), events_file.read_bytes()) == before
+    report = json.loads((tmp_path / "out" / "dry-run-report.json").read_text(encoding="utf-8"))
+    assert report["dry_run"] is True
+    assert (report["totals"]["new"], report["totals"]["updated"]) == (1, 1)  # honest counts
+    assert not (tmp_path / "out" / "snapshots").exists()
+
+
+def test_dry_run_creates_no_database(tmp_path: Path) -> None:
+    config = write_config(tmp_path, [fake_source("a")])
+    result = invoke(*import_args(tmp_path, config, "--dry-run"))
+    assert result.exit_code == 0, result.output
+    assert not (tmp_path / "db.sqlite").exists()
+    assert not (tmp_path / "out" / "events.json").exists()
+    assert (tmp_path / "out" / "dry-run-report.json").exists()
+
+
+def capture_run_import(monkeypatch: pytest.MonkeyPatch) -> list[dict[str, Any]]:
+    calls: list[dict[str, Any]] = []
+    real = run_import
+
+    def spy(*args: Any, **kwargs: Any) -> dict[str, Any]:
+        calls.append(kwargs)
+        return real(*args, **kwargs)
+
+    monkeypatch.setattr("canarias_events.cli.run_import", spy)
+    return calls
+
+
+def test_no_ai_disables_the_model_whatever_the_config_says(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls = capture_run_import(monkeypatch)
+    config = write_config(tmp_path, [fake_source("a")], ai={"enabled": True})
+    invoke(*import_args(tmp_path, config))
+    invoke(*import_args(tmp_path, config, "--no-ai", "--force"))
+    assert [c["ai"].enabled for c in calls] == [True, False]
+
+
+def test_force_ignores_the_source_frequency(tmp_path: Path) -> None:
+    config = write_config(tmp_path, [fake_source("a", frequency="weekly")])
+    assert invoke(*import_args(tmp_path, config)).exit_code == 0
+    second = invoke(*import_args(tmp_path, config))
+    assert "skipped a: frequency weekly" in second.output
+    forced = invoke(*import_args(tmp_path, config, "--force"))
+    assert forced.exit_code == 0, forced.output
+    assert "skipped" not in forced.output
+
+
+def test_low_resource_flag_and_config_switch(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls = capture_run_import(monkeypatch)
+    config = write_config(tmp_path, [fake_source("a")])
+    invoke(*import_args(tmp_path, config, "--low-resource"))
+    assert calls[-1]["low_resource"] is True
+    invoke(*import_args(tmp_path, config, "--force"))
+    assert calls[-1]["low_resource"] is False
+
+
+def test_the_report_shows_timings(tmp_path: Path) -> None:
+    config = write_config(tmp_path, [fake_source("a")])
+    result = invoke(*import_args(tmp_path, config))
+    assert "Timing: total" in result.output

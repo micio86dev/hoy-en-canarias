@@ -210,6 +210,13 @@ class _Run:
         self.block_reason: str | None = None
         self.limit_warned = False
         self.reference = ctx.now.date()
+        cap = ctx.page_cap
+        self.max_pages = (
+            self.p.max_pages_per_run if cap is None else min(cap, self.p.max_pages_per_run)
+        )
+        self.max_detail = (
+            self.p.max_detail_pages if cap is None else min(cap, self.p.max_detail_pages)
+        )
         self.hosts = self._allowed_hosts()
         self.hints = BlockHints(**self.p.hints.model_dump()) if self.p.hints is not None else None
 
@@ -241,10 +248,10 @@ class _Run:
         cached = self.cache.get(url)
         if cached is not None:
             return cached
-        if self.fetched >= self.p.max_pages_per_run:
+        if self.fetched >= self.max_pages:
             if not self.limit_warned:
                 self.limit_warned = True
-                self.warn(f"max_pages_per_run={self.p.max_pages_per_run} reached; fetching stopped")
+                self.warn(f"max_pages_per_run={self.max_pages} reached; fetching stopped")
             raise _PageLimit
         if not self.robots.allowed(url):
             state = self.robots.status(url)
@@ -365,7 +372,7 @@ class _Run:
             elif month == previous:
                 ranked.append((1, url))
         ranked.sort(key=lambda item: item[0])  # stable: sitemap order inside each class
-        return [url for _, url in ranked][: self.p.max_detail_pages]
+        return [url for _, url in ranked][: self.max_detail]
 
     def tier_detail(self) -> list[CandidateEvent] | None:
         if not self.p.sitemap_url:
@@ -494,7 +501,7 @@ class _Run:
         self.result.snapshot = pages[0].html if pages else None
 
     def render_wanted(self, pages: list[_Page]) -> bool:
-        if self.p.render == "none":
+        if self.p.render == "none" or not self.ctx.allow_render:
             return False
         if self.p.render == "auto":
             return any(looks_js_driven(page.html) for page in pages)
@@ -584,10 +591,10 @@ class _Run:
 
     def enrich(self, found: list[CandidateEvent]) -> None:
         """Fill gaps from detail-page JSON-LD (opt-in; never overrides or contradicts listings)."""
-        if not self.p.follow_detail_pages or self.p.max_detail_pages == 0:
+        if not self.p.follow_detail_pages or self.max_detail == 0:
             return
         window = self.ctx.window
-        budget = self.p.max_detail_pages
+        budget = self.max_detail
         for cand in found:
             if budget <= 0 or self.block_reason is not None:
                 break
