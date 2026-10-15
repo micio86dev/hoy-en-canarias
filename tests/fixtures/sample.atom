@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SYNTHETIC fixture: no verified real Canary Islands event feed exists. -->
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:ev="http://purl.org/rss/1.0/modules/event/">
+  <title>Agenda cultural (synthetic)</title>
+  <id>urn:example:agenda</id>
+  <updated>2026-10-14T10:00:00Z</updated>
+  <link rel="self" href="https://example.org/agenda.atom"/>
+  <entry>
+    <title>Exposición de fotografía</title>
+    <id>urn:example:agenda:100</id>
+    <link rel="alternate" href="https://example.org/agenda/exposicion-fotografia"/>
+    <updated>2026-10-10T08:00:00Z</updated>
+    <summary>Muestra colectiva.</summary>
+    <category term="Exposiciones"/>
+    <ev:startdate>2026-10-20T10:00:00+01:00</ev:startdate>
+    <ev:enddate>2026-10-30T20:00:00+01:00</ev:enddate>
+  </entry>
+  <entry>
+    <title>Entrada de blog sin fecha de evento</title>
+    <id>urn:example:agenda:101</id>
+    <link rel="alternate" href="https://example.org/blog/entrada"/>
+    <updated>2026-10-12T08:00:00Z</updated>
+    <summary>Sin campos estructurados.</summary>
+  </entry>
+</feed>

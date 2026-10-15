@@ -43,17 +43,23 @@ def _public_resolver(host: str) -> list[str]:
 def make_ctx() -> Callable[..., FetchContext]:
     """Build a FetchContext with an offline-friendly client (no sleeping, no retries)."""
 
-    def factory(**client_kwargs: Any) -> FetchContext:
+    def factory(
+        *,
+        window: DateWindow | None = None,
+        now: datetime | None = None,
+        env: dict[str, str] | None = None,
+        **client_kwargs: Any,
+    ) -> FetchContext:
         client_kwargs.setdefault("resolver", _public_resolver)
         client_kwargs.setdefault("min_interval", 0.0)
         client_kwargs.setdefault("retries", 0)
         client_kwargs.setdefault("sleep", lambda _seconds: None)
         return FetchContext(
             client=SafeHttpClient(**client_kwargs),
-            window=WINDOW,
-            now=NOW,
+            window=window or WINDOW,
+            now=now or NOW,
             logger=logging.getLogger("test"),
-            env={},
+            env=env or {},
         )
 
     return factory

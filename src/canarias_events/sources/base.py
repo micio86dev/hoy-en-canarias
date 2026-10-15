@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import math
 import os
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
@@ -123,6 +124,17 @@ def clean_text(value: object) -> str | None:
         return None
     text = str(value).strip()
     return None if text.casefold() in _PLACEHOLDERS else text
+
+
+def as_float(value: object) -> float | None:
+    """Finite float from numbers or numeric strings; anything else (nan, inf, text) is None."""
+    if value is None or isinstance(value, bool):
+        return None
+    try:
+        number = float(str(value).strip())
+    except ValueError:
+        return None
+    return number if math.isfinite(number) else None
 
 
 def resolve_island(

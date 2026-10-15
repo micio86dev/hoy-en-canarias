@@ -10,11 +10,19 @@ import yaml
 from pydantic import BaseModel, Field
 
 from canarias_events.sources.base import SourceAdapter, SourceConfig
+from canarias_events.sources.ckan import CkanAdapter
 from canarias_events.sources.drupal_jsonapi import DrupalJsonApiAdapter
+from canarias_events.sources.ical import IcalAdapter
+from canarias_events.sources.rss import RssAdapter
+from canarias_events.sources.ticketmaster import TicketmasterAdapter
 from canarias_events.sources.tribe_events import TribeEventsAdapter
 
 ADAPTERS: dict[str, type[SourceAdapter]] = {
+    "ckan": CkanAdapter,
     "drupal_jsonapi": DrupalJsonApiAdapter,
+    "ical": IcalAdapter,
+    "rss": RssAdapter,
+    "ticketmaster": TicketmasterAdapter,
     "tribe_events": TribeEventsAdapter,
 }
 

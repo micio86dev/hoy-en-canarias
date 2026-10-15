@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SYNTHETIC fixture: no verified real Canary Islands event feed exists. -->
+<rss version="2.0" xmlns:ev="http://purl.org/rss/1.0/modules/event/" xmlns:geo="http://www.w3.org/2003/01/geo/wgs84_pos#">
+  <channel>
+    <title>Agenda municipal (synthetic)</title>
+    <link>https://example.org/agenda</link>
+    <description>Synthetic event feed</description>
+    <item>
+      <title>Concierto de la Banda Municipal</title>
+      <link>https://example.org/agenda/concierto-banda</link>
+      <guid isPermaLink="false">evt-001</guid>
+      <description>&lt;p&gt;Concierto en la plaza.&lt;/p&gt;</description>
+      <category>Música</category>
+      <ev:startdate>2026-10-22T20:00:00+01:00</ev:startdate>
+      <ev:enddate>2026-10-22T22:00:00+01:00</ev:enddate>
+      <ev:location>Plaza de la Iglesia, Candelaria</ev:location>
+    </item>
+    <item>
+      <title>Mercadillo del agricultor</title>
+      <link>https://example.org/agenda/mercadillo</link>
+      <guid isPermaLink="false">evt-002</guid>
+      <description>Mercadillo semanal.</description>
+      <ev:startdate>2026-10-24</ev:startdate>
+    </item>
+    <item>
+      <title>Noticia: el ayuntamiento anuncia obras el sábado 24 de octubre</title>
+      <link>https://example.org/noticias/obras</link>
+      <guid isPermaLink="false">news-003</guid>
+      <pubDate>Wed, 14 Oct 2026 09:00:00 +0100</pubDate>
+      <description>Texto de noticia sin fecha estructurada de evento.</description>
+    </item>
+  </channel>
+</rss>

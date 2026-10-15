@@ -11,12 +11,13 @@ from typing import Any
 from urllib.parse import urlsplit
 
 from canarias_events.geo import normalize_municipality
-from canarias_events.http import InvalidPayload, same_host_as
+from canarias_events.http import InvalidPayload, mask_secrets, same_host_as
 from canarias_events.normalize import html_to_text, parse_datetime_any
 from canarias_events.sources.base import (
     FetchContext,
     SourceAdapter,
     SourceFetchResult,
+    as_float,
     clean_text,
     resolve_island,
 )
@@ -32,13 +33,6 @@ EVENT_FIELDS = (
 INCLUDE = "field_t_islands,field_t_municipality,field_event_category"
 
 Included = dict[tuple[str, str], str]
-
-
-def _as_float(value: object) -> float | None:
-    try:
-        return float(str(value).strip())
-    except ValueError:
-        return None
 
 
 def _link_uri(value: object) -> str | None:
@@ -98,7 +92,7 @@ class DrupalJsonApiAdapter(SourceAdapter):
         if not isinstance(href, str) or not href:
             return None
         if not same_host_as(self.config.url, href):
-            result.warnings.append(f"ignored links.next on a different host: {href}")
+            result.warnings.append(f"ignored links.next on a different host: {mask_secrets(href)}")
             return None
         if result.pages >= max_pages:
             result.warnings.append(f"stopped at max_pages={max_pages}; more pages are available")
@@ -162,8 +156,8 @@ class DrupalJsonApiAdapter(SourceAdapter):
             if len(municipalities) == 1
             else (normalize_municipality(city) if not municipalities else None)
         )
-        latitude = _as_float(attributes.get("field_event_latitude"))
-        longitude = _as_float(attributes.get("field_event_longitude"))
+        latitude = as_float(attributes.get("field_event_latitude"))
+        longitude = as_float(attributes.get("field_event_longitude"))
         island = resolve_island(
             config,
             island=islands[0] if len(islands) == 1 else None,

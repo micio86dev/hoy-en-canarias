@@ -1,0 +1,63 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Deportes Tenerife - ECPv6.17.2//NONSGML v1.0//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Deportes Tenerife
+X-ORIGINAL-URL:https://deportestenerife.es
+X-WR-CALDESC:Eventos para Deportes Tenerife
+REFRESH-INTERVAL;VALUE=DURATION:PT1H
+X-Robots-Tag:noindex
+X-PUBLISHED-TTL:PT1H
+BEGIN:VTIMEZONE
+TZID:UTC
+BEGIN:STANDARD
+TZOFFSETFROM:+0000
+TZOFFSETTO:+0000
+TZNAME:UTC
+DTSTART:20250101T000000
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+DTSTART;TZID=UTC:20261017T083000
+DTEND;TZID=UTC:20261017T140000
+DTSTAMP:20261013T204213Z
+CREATED:20261013T204213Z
+LAST-MODIFIED:20261013T204213Z
+UID:10002914-1792225800-1792245600@deportestenerife.es
+SUMMARY:Primera Jornada de Judo de los XL Juegos Cabildo
+DESCRIPTION:Primera jornada de Judo de los XL Juegos Cabildo\, con la participación de las categorías benjaminas y cadetes\, en el Pabellón Municipal Rosendo Alonso Tapia de Candelaria. \n  \n 
+URL:https://deportestenerife.es/evento/primera-jornada-de-judo-de-los-xl-juegos-cabildo/
+LOCATION:Pabellón Municipal Rosendo Alonso Tapia\, Rambla de los Menceyes\, 27\, Candelaria\, Tenerife
+CATEGORIES:Juegos Cabildo
+ATTACH;FMTTYPE=image/png:https://deportestenerife.es/wp-content/uploads/2026/04/Judo-1.png
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=UTC:20261017T090000
+DTEND;TZID=UTC:20261017T130000
+DTSTAMP:20261012T153427Z
+CREATED:20260826T102007Z
+LAST-MODIFIED:20261012T153427Z
+UID:10002899-1792227600-1792242000@deportestenerife.es
+SUMMARY:Jornada Mujeres y Deporte 2026 | Iniciación al Running
+DESCRIPTION:Jornada deportiva Mujeres y Deporte dedicada a la Iniciación al Running\, para mujeres mayores de 14 años\, que tendrá lugar en el Centro de Atletismo de Tenerife (CIAT) de Tíncer\, en Santa Cruz de Tenerife. \nInscripción gratuita \nIntroducción: El running es una actividad en pleno auge social que posee un alto componente conciliador\, libre y cómoda a la hora de llevar a la práctica\, que no requiere de un horario ni un espacio o equipamiento determinado\, por lo que la iniciación en su práctica puede resultar una forma muy eficiente para que las mujeres se incorporen a la vida activa. Pero su práctica no se puede desarrollar de cualquier manera. Es importante conocer sus particularidades y disponer de algunas nociones básicas de los fundamentos de la actividad física y el entrenamiento\, para que el inicio a la práctica se haga con garantías y sin riesgos. \nContenidos: \n\nBeneficios del Running para las Mujeres\nPrevención de lesiones más comunes\nCómo afecta el Running y el entrenamiento a la salud de las Mujeres\nTrabajo de Fuerza aplicado al Running\nCómo afrontar nuestra primera competición (preparación física y mental)\nFalsos mitos sobre la práctica habitual del Running\n\nImparten: \nDIANA DE LA ROSA JORGE\nLicenciada en Ciencias de la Actividad Física y del Deporte\nColegiada 53610\nEducadora física especializada en atletismo y triatlón\nTécnico Superior de Animación y Actividades Físicas y Deportivas \nTERESA LINARES HERNÁNDEZ\nLicenciada en Pedagogía\nLicenciada en Ciencias de la Información\nAtleta internacional referente en Canarias\nMedalla al Mérito Deportivo del Gobierno de Canarias \n 
+URL:https://deportestenerife.es/evento/jornada-mujeres-y-deporte-2026-iniciacion-al-running/
+LOCATION:Centro de Atletismo de Tenerife\, Plaza de las Nieves\, Tíncer\, Santa Cruz de Tenerife\, Santa Cruz de Tenerife
+CATEGORIES:Mujeres Deporte
+ATTACH;FMTTYPE=image/jpeg:https://deportestenerife.es/wp-content/uploads/2026/08/20261017_running_mujeresydeporte2026-scaled.jpg
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=UTC:20261017T090000
+DTEND;TZID=UTC:20261017T130000
+DTSTAMP:20261013T203040Z
+CREATED:20261013T203040Z
+LAST-MODIFIED:20261013T203040Z
+UID:10002911-1792227600-1792242000@deportestenerife.es
+SUMMARY:Tercera Jornada de Voleibol de los XL Juegos Cabildo
+DESCRIPTION:Tercera jornada de Voleibol de los XL Juegos Cabildo\, correspondiente a los encuentros de Liga Insular\, en diferentes pabellones de la Isla. \n  \n  \n  \n 
+URL:https://deportestenerife.es/evento/tercera-jornada-de-voleibol-de-los-xl-juegos-cabildo/
+LOCATION:Tenerife
+CATEGORIES:Juegos Cabildo
+ATTACH;FMTTYPE=image/png:https://deportestenerife.es/wp-content/uploads/2026/04/Voleibol.png
+END:VEVENT
+END:VCALENDAR

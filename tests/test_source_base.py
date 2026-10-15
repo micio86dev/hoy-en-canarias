@@ -12,6 +12,7 @@ from canarias_events.sources.base import (
     SourceAdapter,
     SourceConfig,
     SourceFetchResult,
+    as_float,
     clean_text,
     municipality_in_text,
     resolve_island,
@@ -140,6 +141,15 @@ def test_resolve_island_multiple_configured_islands_is_none() -> None:
 
 def test_resolve_island_unknown_is_none() -> None:
     assert resolve_island(config(), island="Atlantis", municipality="Nowhere") is None
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [("28.5", 28.5), (3, 3.0), (" -16.2 ", -16.2), (None, None), (True, None), ("x", None),
+     ("nan", None), ("inf", None), (float("nan"), None)],
+)  # fmt: skip
+def test_as_float_is_finite_or_none(value: object, expected: float | None) -> None:
+    assert as_float(value) == expected
 
 
 def test_municipality_in_text_uses_last_known_part() -> None:

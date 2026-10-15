@@ -9,27 +9,19 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from canarias_events.date_range import TZ
 from canarias_events.geo import normalize_municipality
-from canarias_events.http import InvalidPayload, same_host_as
+from canarias_events.http import InvalidPayload, mask_secrets, same_host_as
 from canarias_events.normalize import html_to_text, parse_datetime_any, parse_price
 from canarias_events.sources.base import (
     FetchContext,
     SourceAdapter,
     SourceFetchResult,
+    as_float,
     clean_text,
     resolve_island,
 )
 
 DEFAULT_MAX_PAGES = 20
 PER_PAGE = 50
-
-
-def _as_float(value: object) -> float | None:
-    if value is None or isinstance(value, bool):
-        return None
-    try:
-        return float(str(value).strip())
-    except ValueError:
-        return None
 
 
 def _first_dict(value: object) -> dict[str, Any]:
@@ -88,7 +80,9 @@ class TribeEventsAdapter(SourceAdapter):
         if not isinstance(next_url, str) or not next_url:
             return None
         if not same_host_as(self.config.url, next_url):
-            result.warnings.append(f"ignored next_rest_url on a different host: {next_url}")
+            result.warnings.append(
+                f"ignored next_rest_url on a different host: {mask_secrets(next_url)}"
+            )
             return None
         if result.pages >= max_pages:
             result.warnings.append(f"stopped at max_pages={max_pages}; more pages are available")
@@ -134,7 +128,7 @@ class TribeEventsAdapter(SourceAdapter):
             end_dt = end.value.astimezone(TZ) if end and end.value else None
 
         venue = _first_dict(item.get("venue"))
-        latitude, longitude = _as_float(venue.get("geo_lat")), _as_float(venue.get("geo_lng"))
+        latitude, longitude = as_float(venue.get("geo_lat")), as_float(venue.get("geo_lng"))
         city = clean_text(venue.get("city"))
         municipality = normalize_municipality(city) or normalize_municipality(config.municipality)
         organizer = _first_dict(item.get("organizer"))

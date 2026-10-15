@@ -1,0 +1,74 @@
+{
+  "_synthetic": "Hand-written following the documented Ticketmaster Discovery API v2 schema; not a real response.",
+  "_embedded": {
+    "events": [
+      {
+        "id": "G5vYZ9synth01",
+        "name": "Concierto Sinfonico de Otono",
+        "type": "event",
+        "url": "https://www.ticketmaster.es/event/synth01",
+        "images": [
+          {"ratio": "16_9", "url": "https://s1.ticketm.net/img/small.jpg", "width": 640, "height": 360},
+          {"ratio": "16_9", "url": "https://s1.ticketm.net/img/large.jpg", "width": 1136, "height": 639}
+        ],
+        "dates": {
+          "start": {"localDate": "2026-10-23", "localTime": "20:00:00", "dateTime": "2026-10-23T19:00:00Z", "dateTBD": false, "dateTBA": false, "timeTBA": false, "noSpecificTime": false},
+          "end": {"localDate": "2026-10-23", "localTime": "22:30:00", "dateTime": "2026-10-23T21:30:00Z"},
+          "timezone": "Atlantic/Canary",
+          "status": {"code": "onsale"}
+        },
+        "classifications": [
+          {"primary": true, "segment": {"id": "KZFzniwnSyZfZ7v7nJ", "name": "Music"}, "genre": {"id": "KnvZfZ7vAeJ", "name": "Classical"}}
+        ],
+        "priceRanges": [
+          {"type": "standard", "currency": "EUR", "min": 15.0, "max": 45.5}
+        ],
+        "_embedded": {
+          "venues": [
+            {
+              "name": "Auditorio de Tenerife",
+              "city": {"name": "Santa Cruz de Tenerife"},
+              "state": {"name": "Santa Cruz de Tenerife"},
+              "country": {"name": "Spain", "countryCode": "ES"},
+              "address": {"line1": "Av. de la Constitucion, 1"},
+              "postalCode": "38005",
+              "timezone": "Atlantic/Canary",
+              "location": {"longitude": "-16.2518", "latitude": "28.4636"}
+            }
+          ]
+        }
+      },
+      {
+        "id": "G5vYZ9synth02",
+        "name": "Final de Lucha Canaria",
+        "type": "event",
+        "url": "https://www.ticketmaster.es/event/synth02",
+        "dates": {
+          "start": {"localDate": "2026-10-25", "dateTBD": false, "dateTBA": false, "timeTBA": true, "noSpecificTime": true},
+          "timezone": "Atlantic/Canary",
+          "status": {"code": "onsale"}
+        },
+        "classifications": [
+          {"primary": true, "segment": {"name": "Sports"}, "genre": {"name": "Wrestling"}}
+        ],
+        "_embedded": {
+          "venues": [
+            {
+              "name": "Pabellon Insular",
+              "city": {"name": "Arrecife"},
+              "country": {"name": "Spain", "countryCode": "ES"}
+            }
+          ]
+        }
+      },
+      {
+        "id": "G5vYZ9synth03",
+        "name": "",
+        "type": "event",
+        "url": "https://www.ticketmaster.es/event/synth03",
+        "dates": {"start": {"localDate": "2026-10-24"}}
+      }
+    ]
+  },
+  "page": {"size": 100, "totalElements": 3, "totalPages": 1, "number": 0}
+}

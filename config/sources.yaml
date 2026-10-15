@@ -1,0 +1,223 @@
+# Source registry for the Canary Islands events importer.
+# Adding a municipality that runs The Events Calendar (WordPress) takes four lines:
+#   - id: x, name: Ayto. X, adapter: tribe_events, url: https://<site>/wp-json/tribe/events/v1/events
+# `sources` are importable; `candidates` and `excluded` only feed the sources report.
+# All endpoints below were checked with live GET requests on 2026-10-15.
+
+sources:
+  - id: holaislascanarias
+    name: Hola Islas Canarias (Turismo de Canarias)
+    adapter: drupal_jsonapi
+    url: https://www.holaislascanarias.com/jsonapi/node/event
+    homepage: https://www.holaislascanarias.com/eventos/
+    islands: [Tenerife, Gran Canaria, Lanzarote, Fuerteventura, La Palma, La Gomera, El Hierro, La Graciosa]
+    license: "unknown – ToS not published (aviso-legal 404 on 2026-10-15)"
+    notes: >-
+      Main source, all islands. Dates are date-only (no times). Some records have source typos
+      (year 0026) or multi-year ranges; the central overlap filter handles them.
+
+  - id: cabildo_tenerife_deportes
+    name: Cabildo de Tenerife - agenda deportiva (open data)
+    adapter: ckan
+    url: https://datos.tenerife.es/ckan/api/3/action/package_show?id=agenda-de-eventos-deportivos-en-tenerife
+    homepage: https://datos.tenerife.es/ckan/dataset/agenda-de-eventos-deportivos-en-tenerife
+    islands: [Tenerife]
+    categories: [sports]
+    license: CC-BY
+    notes: >-
+      JSON resource, ~3300 events (history included). Same events as deportes_tenerife
+      (deduplication test case). Organizer is sometimes a numeric id and is dropped.
+
+  - id: deportes_tenerife
+    name: Deportes Tenerife
+    adapter: tribe_events
+    url: https://deportestenerife.es/wp-json/tribe/events/v1/events
+    homepage: https://deportestenerife.es
+    islands: [Tenerife]
+    categories: [sports]
+    license: null
+    notes: >-
+      The site declares timezone "UTC+0" but publishes Canary wall-clock times; they are read
+      as Atlantic/Canary.
+
+  - id: deportes_tenerife_ical
+    name: Deportes Tenerife (iCal)
+    adapter: ical
+    url: https://deportestenerife.es/?ical=1
+    homepage: https://deportestenerife.es
+    enabled: false
+    islands: [Tenerife]
+    categories: [sports]
+    license: null
+    params:
+      force_timezone: Atlantic/Canary
+    notes: Duplicate of deportes_tenerife (REST); kept as a fallback. TZID=UTC is wrong in the feed.
+
+  - id: candelaria
+    name: Ayuntamiento de Candelaria
+    adapter: tribe_events
+    url: https://www.candelaria.es/wp-json/tribe/events/v1/events
+    homepage: https://www.candelaria.es
+    islands: [Tenerife]
+    municipality: Candelaria
+    license: null
+    notes: Declares timezone Europe/London (same UTC offset as Atlantic/Canary all year).
+
+  - id: santiago_del_teide
+    name: Ayuntamiento de Santiago del Teide
+    adapter: tribe_events
+    url: https://www.santiagodelteide.es/wp-json/tribe/events/v1/events
+    homepage: https://www.santiagodelteide.es
+    islands: [Tenerife]
+    municipality: Santiago del Teide
+    license: null
+
+  - id: granadilla_de_abona
+    name: Ayuntamiento de Granadilla de Abona
+    adapter: tribe_events
+    url: https://www.granadilladeabona.org/wp-json/tribe/events/v1/events
+    homepage: https://www.granadilladeabona.org
+    islands: [Tenerife]
+    municipality: Granadilla de Abona
+    license: null
+
+  - id: antigua
+    name: Ayuntamiento de Antigua
+    adapter: tribe_events
+    url: https://ayto-antigua.es/wp-json/tribe/events/v1/events
+    homepage: https://ayto-antigua.es
+    islands: [Fuerteventura]
+    municipality: Antigua
+    license: null
+
+  - id: antigua_ical
+    name: Ayuntamiento de Antigua (iCal)
+    adapter: ical
+    url: https://ayto-antigua.es/events/?ical=1
+    homepage: https://ayto-antigua.es
+    enabled: false
+    islands: [Fuerteventura]
+    municipality: Antigua
+    license: null
+    notes: Duplicate of antigua (REST); kept as a fallback.
+
+  - id: los_silos
+    name: Ayuntamiento de Los Silos
+    adapter: tribe_events
+    url: https://www.lossilos.es/wp-json/tribe/events/v1/events
+    homepage: https://www.lossilos.es
+    islands: [Tenerife]
+    municipality: Los Silos
+    license: null
+    notes: Endpoint verified 2026-10-15; the calendar was empty (0 events).
+
+  - id: santa_ursula
+    name: Ayuntamiento de Santa Úrsula
+    adapter: tribe_events
+    url: https://www.santaursula.es/wp-json/tribe/events/v1/events
+    homepage: https://www.santaursula.es
+    islands: [Tenerife]
+    municipality: Santa Úrsula
+    license: null
+    notes: Endpoint verified 2026-10-15; the calendar was empty (0 events).
+
+  - id: valle_gran_rey
+    name: Ayuntamiento de Valle Gran Rey
+    adapter: tribe_events
+    url: https://www.vallegranrey.es/wp-json/tribe/events/v1/events
+    homepage: https://www.vallegranrey.es
+    islands: [La Gomera]
+    municipality: Valle Gran Rey
+    license: null
+    notes: Endpoint verified 2026-10-15; the calendar was empty (0 events).
+
+  - id: ticketmaster
+    name: Ticketmaster Discovery API
+    adapter: ticketmaster
+    url: https://app.ticketmaster.com/discovery/v2/events.json
+    homepage: https://developer.ticketmaster.com/
+    islands: [Tenerife, Gran Canaria, Lanzarote, Fuerteventura, La Palma, La Gomera, El Hierro, La Graciosa]
+    categories: [concerts, sports]
+    license: Ticketmaster API terms of use (attribution and link back required)
+    auth_env: TICKETMASTER_API_KEY
+    notes: >-
+      Opt-in: skipped with a warning when TICKETMASTER_API_KEY is not set. Free key, 5000 calls
+      per day. Coverage in the Canary Islands is unmeasured.
+
+  - id: gobcan_agenda_cultural
+    name: Gobierno de Canarias - agenda cultural (open data)
+    adapter: ckan
+    url: https://datos.canarias.es/catalogos/general/api/3/action/package_show?id=agenda-cultural
+    homepage: https://datos.canarias.es/catalogos/general/dataset/agenda-cultural
+    enabled: false
+    license: gobcan-aviso-legal
+    params:
+      profile: gobcan_agenda
+      resource_id: d179079c-a2ed-40dc-a748-7b64d093c342
+    notes: >-
+      Stale: the "agendaproxima.csv" resource only holds 5 events ending 2022-03-17 and the
+      package metadata was last modified 2025-03-06. Adapter is ready if the dataset revives.
+
+  - id: santacruz_agenda_cultural
+    name: Ayuntamiento de Santa Cruz de Tenerife - agenda cultural (open data)
+    adapter: ckan
+    url: https://www.santacruzdetenerife.es/opendata/api/3/action/package_show?id=agenda-cultural
+    homepage: https://www.santacruzdetenerife.es/opendata/dataset/agenda-cultural
+    enabled: false
+    islands: [Tenerife]
+    municipality: Santa Cruz de Tenerife
+    license: cc-by
+    params:
+      resource_format: JSON
+      records_key: docs
+      field_map:
+        title: nombre
+        description: descripcion
+        start: fecha_inicio
+        end: fecha_fin
+        category: categoria
+        venue: lugar
+        image: imagen
+    notes: >-
+      Stale: package metadata last modified 2019-05-21 and the sample records are from 2019.
+      The field map follows the JSON resource and was only inspected, not run end to end.
+
+candidates:
+  - {name: webtenerife.com, url: "https://www.webtenerife.com", reason: "HTML only; no API, feed or iCal found. Scraping is out of scope.", checked_at: 2026-10-15}
+  - {name: grancanaria.com agenda, url: "https://www.grancanaria.com", reason: "HTML only; no API, feed or iCal found.", checked_at: 2026-10-15}
+  - {name: tenerife.es eventos, url: "https://www.tenerife.es/eventos", reason: "HTML only.", checked_at: 2026-10-15}
+  - {name: Auditorio de Tenerife, url: "https://www.auditoriodetenerife.com", reason: "HTML only.", checked_at: 2026-10-15}
+  - {name: Auditorio Alfredo Kraus, url: "https://www.auditorioalfredokraus.es", reason: "HTML only.", checked_at: 2026-10-15}
+  - {name: Teatro Pérez Galdós, url: "https://teatroperezgaldos.es", reason: "HTML only.", checked_at: 2026-10-15}
+  - {name: Teatro Leal, url: "https://teatroleal.es", reason: "HTML only.", checked_at: 2026-10-15}
+  - {name: TEA Tenerife Espacio de las Artes, url: "https://teatenerife.es", reason: "HTML only.", checked_at: 2026-10-15}
+  - {name: Ayuntamiento de La Laguna, url: "https://www.lalaguna.es", reason: "HTML only.", checked_at: 2026-10-15}
+  - {name: Ayuntamiento de Arona, url: "https://www.arona.org", reason: "HTML only.", checked_at: 2026-10-15}
+  - {name: Ayuntamiento de Arrecife, url: "https://www.arrecife.es", reason: "HTML only.", checked_at: 2026-10-15}
+  - {name: Ayuntamiento de Adeje, url: "https://www.adeje.es", reason: "HTML only.", checked_at: 2026-10-15}
+  - {name: visitlapalma.es, url: "https://www.visitlapalma.es", reason: "HTML only.", checked_at: 2026-10-15}
+  - {name: lagomera.travel, url: "https://www.lagomera.travel", reason: "HTML only.", checked_at: 2026-10-15}
+  - {name: elhierro.travel, url: "https://www.elhierro.travel", reason: "HTML only.", checked_at: 2026-10-15}
+  - {name: PredictHQ, url: "https://www.predicthq.com", reason: "Free plan is limited and its terms were not checked; candidate only.", checked_at: 2026-10-15}
+  - {name: Radio Insular, url: "https://www.radioinsular.es", reason: "Unreachable at check time (HTTP 503). Re-check with discover-sources.", checked_at: 2026-10-15}
+  - {name: Ocio Canarias, url: "https://www.ociocanarias.com", reason: "Unreachable at check time. Re-check with discover-sources.", checked_at: 2026-10-15}
+  - {name: Cabildo de Fuerteventura, url: "https://www.cabildofuer.es", reason: "Unreachable at check time (HTTP 503). Re-check with discover-sources.", checked_at: 2026-10-15}
+  - {name: Mueca, url: "https://mueca.es", reason: "Unreachable at check time. Re-check with discover-sources.", checked_at: 2026-10-15}
+  - {name: Festival de Canarias, url: "https://festivaldecanarias.com", reason: "Unreachable at check time. Re-check with discover-sources.", checked_at: 2026-10-15}
+
+excluded:
+  - {name: Eventbrite, url: "https://www.eventbrite.com", reason: "Public event search API closed in 2019.", checked_at: 2026-10-15}
+  - {name: Meetup, url: "https://www.meetup.com", reason: "OAuth client requires the paid Pro plan.", checked_at: 2026-10-15}
+  - {name: Songkick, url: "https://www.songkick.com", reason: "No free API for this use; not a coverage source.", checked_at: 2026-10-15}
+  - {name: Bandsintown, url: "https://www.bandsintown.com", reason: "API limited to artist-managed data; no area search.", checked_at: 2026-10-15}
+  - {name: Resident Advisor, url: "https://ra.co", reason: "No public API.", checked_at: 2026-10-15}
+  - {name: Fever, url: "https://feverup.com", reason: "No public API.", checked_at: 2026-10-15}
+  - {name: Eventim, url: "https://www.eventim.es", reason: "No public API.", checked_at: 2026-10-15}
+  - {name: allevents, url: "https://allevents.in", reason: "No public API.", checked_at: 2026-10-15}
+  - {name: SeatGeek, url: "https://seatgeek.com", reason: "No coverage in Spain.", checked_at: 2026-10-15}
+  - {name: Telde, url: "https://www.telde.es", reason: "API exists but returns events without dates.", checked_at: 2026-10-15}
+  - {name: Tegueste, url: "https://www.tegueste.es", reason: "HTTP 401 Unauthorized.", checked_at: 2026-10-15}
+  - {name: Puerto del Rosario, url: "https://www.puertodelrosario.org", reason: "HTTP 403 Forbidden.", checked_at: 2026-10-15}
+  - {name: lanzarote.com, url: "https://www.lanzarote.com", reason: "HTTP 403 Forbidden.", checked_at: 2026-10-15}
+  - {name: Mogán, url: "https://www.mogan.es", reason: "HTTP 500 Internal Server Error.", checked_at: 2026-10-15}
+  - {name: CAAM (MEC), url: "https://caam.net", reason: "Endpoint returns no events.", checked_at: 2026-10-15}

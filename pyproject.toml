@@ -51,3 +51,7 @@ python_version = "3.12"
 strict = true
 files = ["src"]
 plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = ["feedparser", "recurring_ical_events"]
+ignore_missing_imports = true

@@ -1,0 +1,139 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Ayuntamiento de Antigua - ECPv6.18.1//NONSGML v1.0//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Ayuntamiento de Antigua
+X-ORIGINAL-URL:https://ayto-antigua.es
+X-WR-CALDESC:Eventos para Ayuntamiento de Antigua
+REFRESH-INTERVAL;VALUE=DURATION:PT1H
+X-Robots-Tag:noindex
+X-PUBLISHED-TTL:PT1H
+BEGIN:VTIMEZONE
+TZID:Atlantic/Canary
+BEGIN:DAYLIGHT
+TZOFFSETFROM:+0000
+TZOFFSETTO:+0100
+TZNAME:WEST
+DTSTART:20250330T010000
+END:DAYLIGHT
+BEGIN:STANDARD
+TZOFFSETFROM:+0100
+TZOFFSETTO:+0000
+TZNAME:WET
+DTSTART:20251026T010000
+END:STANDARD
+BEGIN:DAYLIGHT
+TZOFFSETFROM:+0000
+TZOFFSETTO:+0100
+TZNAME:WEST
+DTSTART:20260329T010000
+END:DAYLIGHT
+BEGIN:STANDARD
+TZOFFSETFROM:+0100
+TZOFFSETTO:+0000
+TZNAME:WET
+DTSTART:20261025T010000
+END:STANDARD
+BEGIN:DAYLIGHT
+TZOFFSETFROM:+0000
+TZOFFSETTO:+0100
+TZNAME:WEST
+DTSTART:20270328T010000
+END:DAYLIGHT
+BEGIN:STANDARD
+TZOFFSETFROM:+0100
+TZOFFSETTO:+0000
+TZNAME:WET
+DTSTART:20271031T010000
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20261001
+DTEND;VALUE=DATE:20261021
+DTSTAMP:20261014T142130Z
+CREATED:20261014T125007Z
+LAST-MODIFIED:20261014T142130Z
+UID:10595-1790834400-1792529940@ayto-antigua.es
+SUMMARY:Concurso de Escaparates: Halloween y Finaos
+DESCRIPTION:Concurso de dinamización comercial Escaparates Halloween y Finaos convocado por el Ayuntamiento de Antigua a través de la Concejalía de Comercio. \n\n2.500 Euros en premios.\nCreatividad\, tradición y espíritu de Halloween en nuestros comercios.\nPlazo de inscripciones: Del 1 al 20 de octubre de 2026 (ambos incluidos).\nMontaje de escaparates: Del 26 de octubre al 6 de noviembre (ambos incluidos).\n\n¡Inscribe tu comercio y participa en la dinamización de nuestro municipio!
+URL:https://ayto-antigua.es/agenda/concurso-de-escaparates-halloween-y-finaos/
+ATTACH;FMTTYPE=image/jpeg:https://ayto-antigua.es/wp-content/uploads/2026/10/cartel-concurso-escaparates-halloween-antigua-2026.jpg
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Atlantic/Canary:20261015T080000
+DTEND;TZID=Atlantic/Canary:20261031T233000
+DTSTAMP:20261015T104757Z
+CREATED:20261015T104757Z
+LAST-MODIFIED:20261015T104757Z
+UID:10613-1792051200-1793489400@ayto-antigua.es
+SUMMARY:Actividades Centro Cultural Triquivijate
+DESCRIPTION:Actividades del Centro Cultural de Triquivijate para el mes de Octubre.
+URL:https://ayto-antigua.es/agenda/actividades-centro-cultural-triquivijate/
+CATEGORIES:Cultura,Cultura Educación
+ATTACH;FMTTYPE=image/jpeg:https://ayto-antigua.es/wp-content/uploads/2026/10/Cronograma-octubre-2026.jpg
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Atlantic/Canary:20261015T080000
+DTEND;TZID=Atlantic/Canary:20261031T233000
+DTSTAMP:20261015T105042Z
+CREATED:20261015T105042Z
+LAST-MODIFIED:20261015T105042Z
+UID:10616-1792051200-1793489400@ayto-antigua.es
+SUMMARY:Actividades Biblioteca Municipal
+DESCRIPTION:Actividades Biblioteca Municipal mes de Octubre
+URL:https://ayto-antigua.es/agenda/actividades-biblioteca-municipal/
+ATTACH;FMTTYPE=image/png:https://ayto-antigua.es/wp-content/uploads/2026/10/Screenshot-2026-10-15-114920.png
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Atlantic/Canary:20261015T080000
+DTEND;TZID=Atlantic/Canary:20261230T170000
+DTSTAMP:20261015T105243Z
+CREATED:20261015T105243Z
+LAST-MODIFIED:20261015T105243Z
+UID:10619-1792051200-1798650000@ayto-antigua.es
+SUMMARY:Biblioteca Viajera Triquivijate
+DESCRIPTION:Biblioteca Viajera Triquivijate
+URL:https://ayto-antigua.es/agenda/biblioteca-viajera-triquivijate/
+CATEGORIES:Cultura
+ATTACH;FMTTYPE=image/png:https://ayto-antigua.es/wp-content/uploads/2026/10/Screenshot-2026-10-15-115126.png
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Atlantic/Canary:20261015T080000
+DTEND;TZID=Atlantic/Canary:20261230T170000
+DTSTAMP:20261015T105753Z
+CREATED:20261015T105753Z
+LAST-MODIFIED:20261015T105753Z
+UID:10622-1792051200-1798650000@ayto-antigua.es
+SUMMARY:Biblioteca Viajera Caleta de Fuste
+DESCRIPTION:Biblioteca Viajera Caleta de Fuste
+URL:https://ayto-antigua.es/agenda/biblioteca-viajera-caleta-de-fuste/
+CATEGORIES:Cultura
+ATTACH;FMTTYPE=image/png:https://ayto-antigua.es/wp-content/uploads/2026/10/Screenshot-2026-10-15-115541.png
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Atlantic/Canary:20261015T080000
+DTEND;TZID=Atlantic/Canary:20261231T170000
+DTSTAMP:20261015T110031Z
+CREATED:20261015T104241Z
+LAST-MODIFIED:20261015T110031Z
+UID:10609-1792051200-1798736400@ayto-antigua.es
+SUMMARY:Proyecto Fórmate
+DESCRIPTION:Obtén tu titulo de Graduado en educación inicial\, educación secundaria y bachillerato.
+URL:https://ayto-antigua.es/agenda/proyecto-formate/
+CATEGORIES:Cultura Educación,Educación
+ATTACH;FMTTYPE=image/jpeg:https://ayto-antigua.es/wp-content/uploads/2026/10/3326-Cartel-A4-Proyecto-FORMATE-2026-_ANTIGUA-FV-_DEF-scaled.jpg
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Atlantic/Canary:20261024T170000
+DTEND;TZID=Atlantic/Canary:20261025T010000
+DTSTAMP:20261014T141424Z
+CREATED:20261014T125006Z
+LAST-MODIFIED:20261014T141424Z
+UID:10594-1792861200-1792890000@ayto-antigua.es
+SUMMARY:Noche en Blanco Antigua 2026
+DESCRIPTION:Celebración de la Noche en Blanco 2026 en Antigua el sábado 24 de octubre\, desde las 17:00 horas hasta la 01:00 h AM. \nActividades culturales\, música en vivo\, dinamización comercial y ambiente festivo en las calles de Antigua. \nOrganizado por el Ayuntamiento de Antigua a través de la Concejalía de Cultura.
+URL:https://ayto-antigua.es/agenda/noche-en-blanco-antigua-2026/
+ATTACH;FMTTYPE=image/jpeg:https://ayto-antigua.es/wp-content/uploads/2026/10/cartel-noche-en-blanco-antigua-2026.jpg
+END:VEVENT
+END:VCALENDAR

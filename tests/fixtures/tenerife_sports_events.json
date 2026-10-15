@@ -1,0 +1,74 @@
+{
+ "eventos": [
+  {
+   "evento_nombre": "Jornada Mujeres y Deporte 2026 | Iniciación al Senderismo y la Carrera de Montaña",
+   "evento_url": "https://deportestenerife.es/evento/jornada-mujeres-y-deporte-2026-iniciacion-al-senderismo/",
+   "evento_descripcion": "Jornada deportiva Mujeres y Deporte dedicada a la Iniciación al Senderismo y la Carrera de Montaña, para mujeres mayores de 14 años, que tendrá lugar en el Paisaje Protegido de Las Lagunetas, en El Rosario.",
+   "evento_lugar": "Las Lagunetas",
+   "municipio_nombre": "El Rosario",
+   "evento_organizador": "Cabildo de Tenerife",
+   "evento_fecha_inicio": "2026-10-24 09:00:00",
+   "evento_fecha_fin": "2026-10-24 13:00:00"
+  },
+  {
+   "evento_nombre": "Séptima jornada de Senderismo de los IX Juegos Máster",
+   "evento_url": "https://deportestenerife.es/evento/septima-jornada-de-senderismo-de-los-ix-juegos-master/",
+   "evento_descripcion": "Séptima jornada de senderismo de los IX Juegos Máster, con una ruta denominada ‘Nubes ardientes’ en el Parque Nacional del Teide.",
+   "evento_lugar": null,
+   "municipio_nombre": null,
+   "evento_organizador": "1938.0",
+   "evento_fecha_inicio": "2026-10-25 08:00:00",
+   "evento_fecha_fin": "2026-10-25 17:00:00"
+  },
+  {
+   "evento_nombre": "Segunda jornada de Cicloturismo BTT de los IX Juegos Máster",
+   "evento_url": "https://deportestenerife.es/evento/segunda-jornada-de-cicloturismo-btt-de-los-ix-juegos-master/",
+   "evento_descripcion": "Segunda jornada de cicloturismo BTT de los IX Juegos Máster que se celebrará en el municipio de Los Realejos, con una ruta circular desde el área recreativa de Chanajiga.",
+   "evento_lugar": "Área Recreativa Chanajiga",
+   "municipio_nombre": "Los Realejos",
+   "evento_organizador": "1938.0",
+   "evento_fecha_inicio": "2026-10-25 10:00:00",
+   "evento_fecha_fin": "2026-10-25 14:00:00"
+  },
+  {
+   "evento_nombre": "Jornada Mujeres y Deporte 2026 | Suelo Pélvico e Hipopresivos Nivel Iniciación",
+   "evento_url": "https://deportestenerife.es/evento/jornada-mujeres-y-deporte-2026-suelo-pelvico-e-hipopresivos-nivel-iniciacion/",
+   "evento_descripcion": "Jornada deportiva Mujeres y Deporte dedicada al Suelo Pélvico e Hipopresivos, nivel Iniciación, para mujeres mayores de 14 años, que tendrá lugar en una sede pendiente de confirmación.",
+   "evento_lugar": "Por determinar",
+   "municipio_nombre": null,
+   "evento_organizador": "Cabildo de Tenerife",
+   "evento_fecha_inicio": "2026-10-24 09:00:00",
+   "evento_fecha_fin": "2026-10-24 13:00:00"
+  },
+  {
+   "evento_nombre": "Séptima jornada de Senderismo de los IX Juegos Máster",
+   "evento_url": "https://www.deportestenerife.es/evento/septima-jornada-de-senderismo-de-los-ix-juegos-master/",
+   "evento_descripcion": "Séptima jornada de senderismo de los IX Juegos Máster, con una ruta denominada ‘Nubes ardientes’ en el Parque Nacional del Teide.",
+   "evento_lugar": "Parque Nacional del Teide",
+   "municipio_nombre": null,
+   "evento_organizador": "Cabildo de Tenerife",
+   "evento_fecha_inicio": "2026-10-25 08:00:00",
+   "evento_fecha_fin": "2026-10-25 17:00:00"
+  },
+  {
+   "evento_nombre": "Tercera jornada de Paddle Surf y Kayak de los IX Juegos Máster",
+   "evento_url": "https://deportestenerife.es/evento/tercera-jornada-de-paddle-surf-y-kayak-de-los-ix-juegos-master/",
+   "evento_descripcion": "Tercera jornada de paddle surf y kayak de los IX Juegos Máster en la playa de Los Cristianos, en Arona.",
+   "evento_lugar": "Playa de Los Cristianos",
+   "municipio_nombre": "Arona",
+   "evento_organizador": "1938.0",
+   "evento_fecha_inicio": "2026-10-04 10:00:00",
+   "evento_fecha_fin": "2026-10-04 14:00:00"
+  },
+  {
+   "evento_nombre": "European Tour of Bodyboard",
+   "evento_url": "https://deportestenerife.es/evento/european-tour-of-bodyboard/",
+   "evento_descripcion": "La playa de El Socorro, en Los Realejos, se convierte en el epicentro del longboard, surf y el bodyboard con la tercera edición de Socorro Classic, que reunirá algunas de las competiciones más importantes del calendario canario, nacional y europeo, entre ellas el European Tour of Bodyboard, evento subvencionado por el Área de Deportes del Cabildo de Tenerife.",
+   "evento_lugar": "Playa de El Socorro",
+   "municipio_nombre": "Los Realejos",
+   "evento_organizador": "Cabildo de Tenerife",
+   "evento_fecha_inicio": "2026-10-07 00:00:00",
+   "evento_fecha_fin": "2026-10-10 23:59:59"
+  }
+ ]
+}
