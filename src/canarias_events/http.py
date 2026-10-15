@@ -165,6 +165,16 @@ def same_host_as(base_url: str, candidate_url: str) -> bool:
     return bool(a) and bool(b) and a == b  # urlsplit lowercases hostname
 
 
+def _keeps_credentials(origin_url: str, target_url: str) -> bool:
+    """Custom headers may follow a redirect only on the same host without an https downgrade."""
+    if not same_host_as(origin_url, target_url):
+        return False
+    return not (
+        urlsplit(origin_url).scheme.lower() == "https"
+        and urlsplit(target_url).scheme.lower() != "https"
+    )
+
+
 def _parse_retry_after(value: str, now: datetime) -> float | None:
     text = value.strip()
     try:
@@ -283,7 +293,7 @@ class SafeHttpClient:
         while True:
             self._check_url(current, allowed)
             send = {"User-Agent": self.user_agent, "Accept": "*/*"}
-            if headers and same_host_as(full, current):
+            if headers and _keeps_credentials(full, current):
                 send.update(headers)
             if hop == 0 and cached is not None:
                 etag, last_modified, _ = cached

@@ -218,3 +218,12 @@ def test_canonical_url_equivalence() -> None:
 def test_canonical_url_empty() -> None:
     assert canonical_url("") == ""
     assert canonical_url("   ") == ""
+
+
+def test_canonical_url_drops_userinfo() -> None:
+    assert canonical_url("https://user:pw@a.test/x") == "https://a.test/x"
+
+
+def test_canonical_url_treats_www_as_equivalent() -> None:
+    assert canonical_url("https://www.a.test/x/") == canonical_url("https://a.test/x")
+    assert canonical_url("https://WWW.a.test/x") == "https://a.test/x"

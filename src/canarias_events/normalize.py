@@ -194,7 +194,8 @@ _DEFAULT_PORTS = {"http": 80, "https": 443}
 
 
 def canonical_url(url: str) -> str:
-    """Lowercase scheme/host, drop fragment, tracking params, default port, trailing slash."""
+    """Canonical form for matching: lowercase scheme/host, no userinfo, no ``www.``, no fragment,
+    tracking params, default port or trailing slash."""
     raw = url.strip()
     if not raw:
         return ""
@@ -204,15 +205,12 @@ def canonical_url(url: str) -> str:
     except ValueError:
         return raw
     scheme = parts.scheme.lower()
-    host = parts.hostname or ""
+    host = (parts.hostname or "").removeprefix("www.")
     if ":" in host:
         host = f"[{host}]"
     netloc = host
     if port is not None and port != _DEFAULT_PORTS.get(scheme):
         netloc = f"{host}:{port}"
-    userinfo = parts.netloc.rpartition("@")[0]
-    if userinfo:
-        netloc = f"{userinfo}@{netloc}"
     query = sorted(
         (k, v)
         for k, v in parse_qsl(parts.query, keep_blank_values=True)

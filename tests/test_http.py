@@ -190,6 +190,36 @@ def test_redirect_followed_and_revalidated() -> None:
 
 
 @respx.mock
+def test_custom_headers_dropped_on_https_to_http_downgrade() -> None:
+    respx.get("https://a.test/start").mock(
+        return_value=httpx.Response(302, headers={"Location": "http://a.test/final"})
+    )
+    final = respx.get("http://a.test/final").mock(return_value=httpx.Response(200, content=b"ok"))
+    make_client().get("https://a.test/start", headers={"X-Api-Key": "secret"})
+    assert "x-api-key" not in final.calls.last.request.headers
+
+
+@respx.mock
+def test_custom_headers_kept_on_same_host_same_scheme_redirect() -> None:
+    respx.get("https://a.test/start").mock(
+        return_value=httpx.Response(302, headers={"Location": "/final"})
+    )
+    final = respx.get("https://a.test/final").mock(return_value=httpx.Response(200, content=b"ok"))
+    make_client().get("https://a.test/start", headers={"X-Api-Key": "secret"})
+    assert final.calls.last.request.headers["x-api-key"] == "secret"
+
+
+@respx.mock
+def test_custom_headers_dropped_on_host_change() -> None:
+    respx.get("https://a.test/start").mock(
+        return_value=httpx.Response(302, headers={"Location": "https://b.test/final"})
+    )
+    final = respx.get("https://b.test/final").mock(return_value=httpx.Response(200, content=b"ok"))
+    make_client().get("https://a.test/start", headers={"X-Api-Key": "secret"})
+    assert "x-api-key" not in final.calls.last.request.headers
+
+
+@respx.mock
 def test_redirect_to_private_ip_blocked() -> None:
     respx.get("https://a.test/start").mock(
         return_value=httpx.Response(302, headers={"Location": "http://169.254.169.254/latest"})
