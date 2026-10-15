@@ -24,6 +24,9 @@ dev = [
     "types-PyYAML",
 ]
 
+[project.scripts]
+canarias-events = "canarias_events.cli:app"
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"

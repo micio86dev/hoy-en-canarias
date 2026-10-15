@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import io
 import logging
+from collections.abc import Iterator
 
 import httpx
 import pytest
@@ -10,7 +11,7 @@ from canarias_events.logging_config import configure_logging
 
 
 @pytest.fixture(autouse=True)
-def restore_logging() -> object:
+def restore_logging() -> Iterator[None]:
     root = logging.getLogger()
     before = (root.level, list(root.handlers))
     yield None
