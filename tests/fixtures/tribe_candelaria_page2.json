@@ -1,0 +1,311 @@
+{
+ "events": [
+  {
+   "id": 47182,
+   "global_id": "www.candelaria.es?id=47182",
+   "global_id_lineage": [
+    "www.candelaria.es?id=47182"
+   ],
+   "author": "13",
+   "status": "publish",
+   "date": "2026-09-30 13:43:34",
+   "date_utc": "2026-09-30 12:43:34",
+   "modified": "2026-09-30 13:43:34",
+   "modified_utc": "2026-09-30 12:43:34",
+   "url": "https://www.candelaria.es/event/concierto-final-de-la-canarias-gospel-summit-2026-con-la-actuacion-especial-de-robin-hodge-williams/",
+   "rest_url": "https://www.candelaria.es/wp-json/tribe/events/v1/events/47182",
+   "title": "Concierto final de la Canarias Gospel Summit 2026, con la actuación especial de Robin Hodge Williams",
+   "description": "<h3>Concierto final de la Canarias Gospel Summit 2026, con la actuación especial de Robin Hodge Williams</h3>\n<p><strong>Música</strong></p>\n<p><strong>Hora:</strong> 13.00 h.<br />\n<strong>Lugar:</strong> Plaza del Centro Comercial Punta Larga.</p>\n<p><strong>Coordina:</strong> Escuela Góspel de Canarias.<br />\n<strong>Información:</strong> Cultura – Ext. 4101.</p>",
+   "excerpt": "",
+   "slug": "concierto-final-de-la-canarias-gospel-summit-2026-con-la-actuacion-especial-de-robin-hodge-williams",
+   "image": {
+    "url": "https://www.candelaria.es/wp-content/uploads/Agenda-Octubre-2026-Pantallas-30-1.jpg",
+    "id": 47178,
+    "extension": "jpg",
+    "width": 1150,
+    "height": 835,
+    "filesize": 459408
+   },
+   "all_day": false,
+   "start_date": "2026-10-18 13:00:00",
+   "start_date_details": {
+    "year": "2026",
+    "month": "10",
+    "day": "18",
+    "hour": "13",
+    "minutes": "00",
+    "seconds": "00"
+   },
+   "end_date": "2026-10-18 17:00:00",
+   "end_date_details": {
+    "year": "2026",
+    "month": "10",
+    "day": "18",
+    "hour": "17",
+    "minutes": "00",
+    "seconds": "00"
+   },
+   "utc_start_date": "2026-10-18 12:00:00",
+   "utc_start_date_details": {
+    "year": "2026",
+    "month": "10",
+    "day": "18",
+    "hour": "12",
+    "minutes": "00",
+    "seconds": "00"
+   },
+   "utc_end_date": "2026-10-18 16:00:00",
+   "utc_end_date_details": {
+    "year": "2026",
+    "month": "10",
+    "day": "18",
+    "hour": "16",
+    "minutes": "00",
+    "seconds": "00"
+   },
+   "timezone": "Europe/London",
+   "timezone_abbr": "BST",
+   "cost": "",
+   "cost_details": {
+    "currency_symbol": "€",
+    "currency_code": "EU",
+    "currency_position": "prefix",
+    "values": []
+   },
+   "website": "",
+   "show_map": true,
+   "show_map_link": true,
+   "hide_from_listings": false,
+   "sticky": false,
+   "featured": false,
+   "categories": [
+    {
+     "name": "Cultura",
+     "slug": "cultura",
+     "term_group": 0,
+     "term_taxonomy_id": 236,
+     "taxonomy": "tribe_events_cat",
+     "description": "",
+     "parent": 0,
+     "count": 848,
+     "filter": "raw",
+     "id": 236,
+     "urls": {
+      "self": "https://www.candelaria.es/wp-json/tribe/events/v1/categories/236",
+      "collection": "https://www.candelaria.es/wp-json/tribe/events/v1/categories"
+     }
+    }
+   ],
+   "tags": [],
+   "venue": [],
+   "organizer": [],
+   "custom_fields": []
+  },
+  {
+   "id": 47184,
+   "global_id": "www.candelaria.es?id=47184",
+   "global_id_lineage": [
+    "www.candelaria.es?id=47184"
+   ],
+   "author": "13",
+   "status": "publish",
+   "date": "2026-09-30 13:49:49",
+   "date_utc": "2026-09-30 12:49:49",
+   "modified": "2026-09-30 13:49:49",
+   "modified_utc": "2026-09-30 12:49:49",
+   "url": "https://www.candelaria.es/event/presentacion-del-libro-finados-la-cultura-de-la-ausencia-en-candelaria-de-zebenzui-lopez-trujillo/",
+   "rest_url": "https://www.candelaria.es/wp-json/tribe/events/v1/events/47184",
+   "title": "Presentación del libro “Finados: la cultura de la ausencia en Candelaria”, de Zebenzui López Trujillo",
+   "description": "<h3>Presentación del libro “Finados: la cultura de la ausencia en Candelaria”, de Zebenzui López Trujillo</h3>\n<p><strong>Ánimas y rituales 2026</strong></p>\n<p><strong>Hora:</strong> 12.30 h.<br />\n<strong>Lugar:</strong> Biblioteca del Espacio Cultural Punta Larga.</p>\n<p><strong>Información:</strong> Cultura – Ext. 4101. Agenda Octubre 2026 (Web) (1)</p>\n<h3></h3>",
+   "excerpt": "",
+   "slug": "presentacion-del-libro-finados-la-cultura-de-la-ausencia-en-candelaria-de-zebenzui-lopez-trujillo",
+   "image": {
+    "url": "https://www.candelaria.es/wp-content/uploads/Agenda-Octubre-2026-Pantallas-32-1.jpg",
+    "id": 47179,
+    "extension": "jpg",
+    "width": 1150,
+    "height": 835,
+    "filesize": 346359
+   },
+   "all_day": false,
+   "start_date": "2026-10-21 12:00:00",
+   "start_date_details": {
+    "year": "2026",
+    "month": "10",
+    "day": "21",
+    "hour": "12",
+    "minutes": "00",
+    "seconds": "00"
+   },
+   "end_date": "2026-10-21 17:00:00",
+   "end_date_details": {
+    "year": "2026",
+    "month": "10",
+    "day": "21",
+    "hour": "17",
+    "minutes": "00",
+    "seconds": "00"
+   },
+   "utc_start_date": "2026-10-21 11:00:00",
+   "utc_start_date_details": {
+    "year": "2026",
+    "month": "10",
+    "day": "21",
+    "hour": "11",
+    "minutes": "00",
+    "seconds": "00"
+   },
+   "utc_end_date": "2026-10-21 16:00:00",
+   "utc_end_date_details": {
+    "year": "2026",
+    "month": "10",
+    "day": "21",
+    "hour": "16",
+    "minutes": "00",
+    "seconds": "00"
+   },
+   "timezone": "Europe/London",
+   "timezone_abbr": "BST",
+   "cost": "",
+   "cost_details": {
+    "currency_symbol": "€",
+    "currency_code": "EU",
+    "currency_position": "prefix",
+    "values": []
+   },
+   "website": "",
+   "show_map": true,
+   "show_map_link": true,
+   "hide_from_listings": false,
+   "sticky": false,
+   "featured": false,
+   "categories": [
+    {
+     "name": "Cultura",
+     "slug": "cultura",
+     "term_group": 0,
+     "term_taxonomy_id": 236,
+     "taxonomy": "tribe_events_cat",
+     "description": "",
+     "parent": 0,
+     "count": 848,
+     "filter": "raw",
+     "id": 236,
+     "urls": {
+      "self": "https://www.candelaria.es/wp-json/tribe/events/v1/categories/236",
+      "collection": "https://www.candelaria.es/wp-json/tribe/events/v1/categories"
+     }
+    }
+   ],
+   "tags": [],
+   "venue": [],
+   "organizer": [],
+   "custom_fields": []
+  },
+  {
+   "id": 47186,
+   "global_id": "www.candelaria.es?id=47186",
+   "global_id_lineage": [
+    "www.candelaria.es?id=47186"
+   ],
+   "author": "13",
+   "status": "publish",
+   "date": "2026-09-30 14:04:36",
+   "date_utc": "2026-09-30 13:04:36",
+   "modified": "2026-09-30 14:04:36",
+   "modified_utc": "2026-09-30 13:04:36",
+   "url": "https://www.candelaria.es/event/proyeccion-del-documental-curanderas-canarias-tradiciones-de-sanacion-de-beatriz-chinea-y-coloquio-con-su-directora-y-otros-invitados/",
+   "rest_url": "https://www.candelaria.es/wp-json/tribe/events/v1/events/47186",
+   "title": "Proyección del documental “Curanderas canarias. Tradiciones de sanación”, de Beatriz Chinea, y coloquio con su directora y otros invitados",
+   "description": "<h3>Proyección del documental “Curanderas canarias. Tradiciones de sanación”, de Beatriz Chinea, y coloquio con su directora y otros invitados</h3>\n<p><strong>Ánimas y rituales 2026</strong></p>\n<p><strong>Hora:</strong> 18.00 h.<br />\n<strong>Lugar:</strong> Salón de actos del Espacio Cultural Punta Larga.</p>\n<p><strong>Modera:</strong> José Gregorio González.<br />\n<strong>Información:</strong> Cultura – Ext. 4101.</p>",
+   "excerpt": "",
+   "slug": "proyeccion-del-documental-curanderas-canarias-tradiciones-de-sanacion-de-beatriz-chinea-y-coloquio-con-su-directora-y-otros-invitados",
+   "image": {
+    "url": "https://www.candelaria.es/wp-content/uploads/Agenda-Octubre-2026-Pantallas-35-2.jpg",
+    "id": 47187,
+    "extension": "jpg",
+    "width": 1150,
+    "height": 835,
+    "filesize": 413873
+   },
+   "all_day": false,
+   "start_date": "2026-10-22 17:30:00",
+   "start_date_details": {
+    "year": "2026",
+    "month": "10",
+    "day": "22",
+    "hour": "17",
+    "minutes": "30",
+    "seconds": "00"
+   },
+   "end_date": "2026-10-22 17:30:00",
+   "end_date_details": {
+    "year": "2026",
+    "month": "10",
+    "day": "22",
+    "hour": "17",
+    "minutes": "30",
+    "seconds": "00"
+   },
+   "utc_start_date": "2026-10-22 16:30:00",
+   "utc_start_date_details": {
+    "year": "2026",
+    "month": "10",
+    "day": "22",
+    "hour": "16",
+    "minutes": "30",
+    "seconds": "00"
+   },
+   "utc_end_date": "2026-10-22 16:00:00",
+   "utc_end_date_details": {
+    "year": "2026",
+    "month": "10",
+    "day": "22",
+    "hour": "16",
+    "minutes": "00",
+    "seconds": "00"
+   },
+   "timezone": "Europe/London",
+   "timezone_abbr": "BST",
+   "cost": "",
+   "cost_details": {
+    "currency_symbol": "€",
+    "currency_code": "EU",
+    "currency_position": "prefix",
+    "values": []
+   },
+   "website": "",
+   "show_map": true,
+   "show_map_link": true,
+   "hide_from_listings": false,
+   "sticky": false,
+   "featured": false,
+   "categories": [
+    {
+     "name": "Cultura",
+     "slug": "cultura",
+     "term_group": 0,
+     "term_taxonomy_id": 236,
+     "taxonomy": "tribe_events_cat",
+     "description": "",
+     "parent": 0,
+     "count": 848,
+     "filter": "raw",
+     "id": 236,
+     "urls": {
+      "self": "https://www.candelaria.es/wp-json/tribe/events/v1/categories/236",
+      "collection": "https://www.candelaria.es/wp-json/tribe/events/v1/categories"
+     }
+    }
+   ],
+   "tags": [],
+   "venue": [],
+   "organizer": [],
+   "custom_fields": []
+  }
+ ],
+ "rest_url": "https://www.candelaria.es/wp-json/tribe/events/v1/events/?page=2&per_page=3&start_date=2026-10-15 00:00:00&end_date=2028-10-15 23:59:59&status=publish",
+ "previous_rest_url": "https://www.candelaria.es/wp-json/tribe/events/v1/events/?per_page=3&start_date=2026-10-15+00%3A00%3A00&end_date=2028-10-15+23%3A59%3A59&status=publish",
+ "total": 22,
+ "total_pages": 8
+}

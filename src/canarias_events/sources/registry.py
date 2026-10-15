@@ -10,8 +10,13 @@ import yaml
 from pydantic import BaseModel, Field
 
 from canarias_events.sources.base import SourceAdapter, SourceConfig
+from canarias_events.sources.drupal_jsonapi import DrupalJsonApiAdapter
+from canarias_events.sources.tribe_events import TribeEventsAdapter
 
-ADAPTERS: dict[str, type[SourceAdapter]] = {}
+ADAPTERS: dict[str, type[SourceAdapter]] = {
+    "drupal_jsonapi": DrupalJsonApiAdapter,
+    "tribe_events": TribeEventsAdapter,
+}
 
 
 class CatalogEntry(BaseModel):

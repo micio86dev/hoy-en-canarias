@@ -87,6 +87,11 @@ def test_normalize_municipality_returns_canonical_name() -> None:
     assert normalize_municipality("nowhere") is None
 
 
+def test_frontera_alias_used_by_hola_islas_canarias() -> None:
+    assert normalize_municipality("La Frontera") == "Frontera"
+    assert island_for_municipality("La Frontera") == "El Hierro"
+
+
 def test_la_graciosa_is_part_of_teguise() -> None:
     assert island_for_municipality("Teguise") == "Lanzarote"
 

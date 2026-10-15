@@ -90,6 +90,7 @@ _ALIASES: dict[str, str] = {
     "Santa Cruz de la Palma": "Santa Cruz de La Palma",
     "Mazo": "Villa de Mazo",
     "San Sebastián de la Gomera": "San Sebastián de La Gomera",
+    "La Frontera": "Frontera",
     "El Pinar": "El Pinar de El Hierro",
     "Pinar de El Hierro": "El Pinar de El Hierro",
 }

@@ -11,10 +11,15 @@ from datetime import datetime
 from typing import Any, ClassVar
 from urllib.parse import urlsplit
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from canarias_events.date_range import DateWindow
-from canarias_events.geo import island_for_coordinates, island_for_municipality, normalize_island
+from canarias_events.geo import (
+    island_for_coordinates,
+    island_for_municipality,
+    normalize_island,
+    normalize_municipality,
+)
 from canarias_events.http import SafeHttpClient
 from canarias_events.models import Event
 
@@ -81,6 +86,18 @@ class SourceFetchResult:
     def discard(self, reason: str, identifier: str | None) -> None:
         self.discarded.append((reason, identifier))
 
+    def add_event(self, identifier: str | None, **fields: Any) -> Event | None:
+        """Build an Event; a record the model rejects is discarded instead of aborting the run."""
+        try:
+            event = Event(**fields)
+        except ValidationError as exc:
+            first = exc.errors()[0]
+            where = ".".join(str(part) for part in first["loc"]) or "record"
+            self.discard(f"invalid {where}: {first['msg']}", identifier)
+            return None
+        self.events.append(event)
+        return event
+
 
 class SourceAdapter(ABC):
     """Fetches one source and maps its records to :class:`Event`.
@@ -130,3 +147,18 @@ def resolve_island(
     if resolved is None and len(config.islands) == 1:
         resolved = config.islands[0]
     return resolved
+
+
+def municipality_in_text(text: str | None) -> str | None:
+    """Canonical municipality named by one of the comma-separated parts of ``text``.
+
+    Deterministic table lookup (last part first, as addresses end with the town); no fuzzy
+    matching, so an unrecognized text gives None.
+    """
+    if not text:
+        return None
+    for part in reversed([p.strip() for p in text.split(",")]):
+        canonical = normalize_municipality(part)
+        if canonical:
+            return canonical
+    return None

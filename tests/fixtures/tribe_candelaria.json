@@ -1,0 +1,327 @@
+{
+ "events": [
+  {
+   "id": 47164,
+   "global_id": "www.candelaria.es?id=47164",
+   "global_id_lineage": [
+    "www.candelaria.es?id=47164"
+   ],
+   "author": "13",
+   "status": "publish",
+   "date": "2026-09-30 13:26:58",
+   "date_utc": "2026-09-30 12:26:58",
+   "modified": "2026-09-30 13:27:14",
+   "modified_utc": "2026-09-30 12:27:14",
+   "url": "https://www.candelaria.es/event/encuentro-por-el-dia-internacional-de-la-mujer-rural/",
+   "rest_url": "https://www.candelaria.es/wp-json/tribe/events/v1/events/47164",
+   "title": "Encuentro por el Día Internacional de la Mujer Rural",
+   "description": "<h3>Encuentro por el Día Internacional de la Mujer Rural</h3>\n<p><strong>Mujer Rural</strong></p>\n<p><strong>Hora:</strong> 17.00 h.<br />\n<strong>Lugar:</strong> Espacio Cultural Cine Viejo.</p>\n<p>Presentación del calendario “Mujer rural 2027” con la participación de la humorista <strong>Delia Santana</strong>.</p>\n<p><strong>Información:</strong> Desarrollo Rural – Ext. 7106.</p>",
+   "excerpt": "",
+   "slug": "encuentro-por-el-dia-internacional-de-la-mujer-rural",
+   "image": {
+    "url": "https://www.candelaria.es/wp-content/uploads/Agenda-Octubre-2026-Pantallas-23-1.jpg",
+    "id": 47165,
+    "extension": "jpg",
+    "width": 1150,
+    "height": 835,
+    "filesize": 609528
+   },
+   "all_day": false,
+   "start_date": "2026-10-15 17:00:00",
+   "start_date_details": {
+    "year": "2026",
+    "month": "10",
+    "day": "15",
+    "hour": "17",
+    "minutes": "00",
+    "seconds": "00"
+   },
+   "end_date": "2026-10-15 17:00:00",
+   "end_date_details": {
+    "year": "2026",
+    "month": "10",
+    "day": "15",
+    "hour": "17",
+    "minutes": "00",
+    "seconds": "00"
+   },
+   "utc_start_date": "2026-10-15 16:00:00",
+   "utc_start_date_details": {
+    "year": "2026",
+    "month": "10",
+    "day": "15",
+    "hour": "16",
+    "minutes": "00",
+    "seconds": "00"
+   },
+   "utc_end_date": "2026-10-15 16:00:00",
+   "utc_end_date_details": {
+    "year": "2026",
+    "month": "10",
+    "day": "15",
+    "hour": "16",
+    "minutes": "00",
+    "seconds": "00"
+   },
+   "timezone": "Europe/London",
+   "timezone_abbr": "BST",
+   "cost": "",
+   "cost_details": {
+    "currency_symbol": "€",
+    "currency_code": "EU",
+    "currency_position": "prefix",
+    "values": []
+   },
+   "website": "",
+   "show_map": true,
+   "show_map_link": true,
+   "hide_from_listings": false,
+   "sticky": false,
+   "featured": false,
+   "categories": [
+    {
+     "name": "Desarrollo rural y pesquero",
+     "slug": "desarrollo-rural-pesquero",
+     "term_group": 0,
+     "term_taxonomy_id": 244,
+     "taxonomy": "tribe_events_cat",
+     "description": "",
+     "parent": 0,
+     "count": 99,
+     "filter": "raw",
+     "id": 244,
+     "urls": {
+      "self": "https://www.candelaria.es/wp-json/tribe/events/v1/categories/244",
+      "collection": "https://www.candelaria.es/wp-json/tribe/events/v1/categories"
+     }
+    },
+    {
+     "name": "Noticias",
+     "slug": "noticias",
+     "term_group": 0,
+     "term_taxonomy_id": 362,
+     "taxonomy": "tribe_events_cat",
+     "description": "",
+     "parent": 0,
+     "count": 34,
+     "filter": "raw",
+     "id": 362,
+     "urls": {
+      "self": "https://www.candelaria.es/wp-json/tribe/events/v1/categories/362",
+      "collection": "https://www.candelaria.es/wp-json/tribe/events/v1/categories"
+     }
+    }
+   ],
+   "tags": [],
+   "venue": [],
+   "organizer": [],
+   "custom_fields": []
+  },
+  {
+   "id": 47168,
+   "global_id": "www.candelaria.es?id=47168",
+   "global_id_lineage": [
+    "www.candelaria.es?id=47168"
+   ],
+   "author": "13",
+   "status": "publish",
+   "date": "2026-09-30 13:28:27",
+   "date_utc": "2026-09-30 12:28:27",
+   "modified": "2026-09-30 13:40:45",
+   "modified_utc": "2026-09-30 12:40:45",
+   "url": "https://www.candelaria.es/event/canarias-gospel-summit-2026/",
+   "rest_url": "https://www.candelaria.es/wp-json/tribe/events/v1/events/47168",
+   "title": "Campeonato de Canarias de skateboard",
+   "description": "<h3>Campeonato de Canarias de skateboard</h3>\n<p><strong>Skate</strong></p>\n<p><strong>Hora:</strong> 10.00 h.<br />\n<strong>Lugar:</strong> Skatepark de Punta Larga.</p>\n<p>Evento, en la modalidad park, que reunirá a los mejores deportistas procedentes de diferentes islas y clubs.</p>\n<p><strong>Organiza:</strong> Federación Canaria de Patinaje.<br />\n<strong>Información:</strong> Deportes – Ext. 4119.</p>",
+   "excerpt": "",
+   "slug": "canarias-gospel-summit-2026",
+   "image": {
+    "url": "https://www.candelaria.es/wp-content/uploads/Agenda-Octubre-2026-Pantallas-26-1.jpg",
+    "id": 47170,
+    "extension": "jpg",
+    "width": 1150,
+    "height": 835,
+    "filesize": 566838
+   },
+   "all_day": false,
+   "start_date": "2026-10-17 10:00:00",
+   "start_date_details": {
+    "year": "2026",
+    "month": "10",
+    "day": "17",
+    "hour": "10",
+    "minutes": "00",
+    "seconds": "00"
+   },
+   "end_date": "2026-10-17 17:00:00",
+   "end_date_details": {
+    "year": "2026",
+    "month": "10",
+    "day": "17",
+    "hour": "17",
+    "minutes": "00",
+    "seconds": "00"
+   },
+   "utc_start_date": "2026-10-17 09:00:00",
+   "utc_start_date_details": {
+    "year": "2026",
+    "month": "10",
+    "day": "17",
+    "hour": "09",
+    "minutes": "00",
+    "seconds": "00"
+   },
+   "utc_end_date": "2026-10-17 16:00:00",
+   "utc_end_date_details": {
+    "year": "2026",
+    "month": "10",
+    "day": "17",
+    "hour": "16",
+    "minutes": "00",
+    "seconds": "00"
+   },
+   "timezone": "Europe/London",
+   "timezone_abbr": "BST",
+   "cost": "",
+   "cost_details": {
+    "currency_symbol": "€",
+    "currency_code": "EU",
+    "currency_position": "prefix",
+    "values": []
+   },
+   "website": "",
+   "show_map": true,
+   "show_map_link": true,
+   "hide_from_listings": false,
+   "sticky": false,
+   "featured": false,
+   "categories": [
+    {
+     "name": "Cultura",
+     "slug": "cultura",
+     "term_group": 0,
+     "term_taxonomy_id": 236,
+     "taxonomy": "tribe_events_cat",
+     "description": "",
+     "parent": 0,
+     "count": 848,
+     "filter": "raw",
+     "id": 236,
+     "urls": {
+      "self": "https://www.candelaria.es/wp-json/tribe/events/v1/categories/236",
+      "collection": "https://www.candelaria.es/wp-json/tribe/events/v1/categories"
+     }
+    }
+   ],
+   "tags": [],
+   "venue": [],
+   "organizer": [],
+   "custom_fields": []
+  },
+  {
+   "id": 47176,
+   "global_id": "www.candelaria.es?id=47176",
+   "global_id_lineage": [
+    "www.candelaria.es?id=47176"
+   ],
+   "author": "13",
+   "status": "publish",
+   "date": "2026-09-30 13:42:53",
+   "date_utc": "2026-09-30 12:42:53",
+   "modified": "2026-09-30 13:42:53",
+   "modified_utc": "2026-09-30 12:42:53",
+   "url": "https://www.candelaria.es/event/jardineria-sostenible-convivencia-con-mayores-del-municipio/",
+   "rest_url": "https://www.candelaria.es/wp-json/tribe/events/v1/events/47176",
+   "title": "Jardinería sostenible. Convivencia con mayores del municipio",
+   "description": "<h3>Jardinería sostenible. Convivencia con mayores del municipio</h3>\n<p><strong>Programa de Voluntariado Ambiental Candelaria 2026</strong></p>\n<p><strong>Hora:</strong> 9.00 h.<br />\n<strong>Lugar:</strong> Asociación Antón Guanche.</p>\n<p>Mayores de la Asociación Antón Guanche y jóvenes del voluntariado ambiental plantarán juntos especies aromáticas y flora autóctona en las jardineras de la asociación, en una jornada que incluye charla ambiental.</p>\n<p><strong>Información:</strong> Medioambiente – Ext. 7102. Agenda Octubre 2026 (Web) (1)</p>\n<h3></h3>",
+   "excerpt": "",
+   "slug": "jardineria-sostenible-convivencia-con-mayores-del-municipio",
+   "image": {
+    "url": "https://www.candelaria.es/wp-content/uploads/Agenda-Octubre-2026-Pantallas-29-1.jpg",
+    "id": 47177,
+    "extension": "jpg",
+    "width": 1150,
+    "height": 835,
+    "filesize": 527556
+   },
+   "all_day": false,
+   "start_date": "2026-10-18 09:00:00",
+   "start_date_details": {
+    "year": "2026",
+    "month": "10",
+    "day": "18",
+    "hour": "09",
+    "minutes": "00",
+    "seconds": "00"
+   },
+   "end_date": "2026-10-18 17:00:00",
+   "end_date_details": {
+    "year": "2026",
+    "month": "10",
+    "day": "18",
+    "hour": "17",
+    "minutes": "00",
+    "seconds": "00"
+   },
+   "utc_start_date": "2026-10-18 08:00:00",
+   "utc_start_date_details": {
+    "year": "2026",
+    "month": "10",
+    "day": "18",
+    "hour": "08",
+    "minutes": "00",
+    "seconds": "00"
+   },
+   "utc_end_date": "2026-10-18 16:00:00",
+   "utc_end_date_details": {
+    "year": "2026",
+    "month": "10",
+    "day": "18",
+    "hour": "16",
+    "minutes": "00",
+    "seconds": "00"
+   },
+   "timezone": "Europe/London",
+   "timezone_abbr": "BST",
+   "cost": "",
+   "cost_details": {
+    "currency_symbol": "€",
+    "currency_code": "EU",
+    "currency_position": "prefix",
+    "values": []
+   },
+   "website": "",
+   "show_map": true,
+   "show_map_link": true,
+   "hide_from_listings": false,
+   "sticky": false,
+   "featured": false,
+   "categories": [
+    {
+     "name": "Medio ambiente natural",
+     "slug": "medio-ambiente-natural",
+     "term_group": 0,
+     "term_taxonomy_id": 250,
+     "taxonomy": "tribe_events_cat",
+     "description": "",
+     "parent": 0,
+     "count": 65,
+     "filter": "raw",
+     "id": 250,
+     "urls": {
+      "self": "https://www.candelaria.es/wp-json/tribe/events/v1/categories/250",
+      "collection": "https://www.candelaria.es/wp-json/tribe/events/v1/categories"
+     }
+    }
+   ],
+   "tags": [],
+   "venue": [],
+   "organizer": [],
+   "custom_fields": []
+  }
+ ],
+ "rest_url": "https://www.candelaria.es/wp-json/tribe/events/v1/events/?page=1&per_page=3&start_date=2026-10-15 00:00:00&end_date=2028-10-15 23:59:59&status=publish",
+ "next_rest_url": "https://www.candelaria.es/wp-json/tribe/events/v1/events/?per_page=3&start_date=2026-10-15+00%3A00%3A00&end_date=2028-10-15+23%3A59%3A59&status=publish&page=2",
+ "total": 22,
+ "total_pages": 8
+}

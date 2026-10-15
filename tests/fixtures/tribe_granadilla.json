@@ -1,0 +1,514 @@
+{
+ "events": [
+  {
+   "id": 45449,
+   "global_id": "www.granadilladeabona.org?id=45449",
+   "global_id_lineage": [
+    "www.granadilladeabona.org?id=45449"
+   ],
+   "author": "14",
+   "status": "publish",
+   "date": "2026-09-25 08:02:38",
+   "date_utc": "2026-09-25 07:02:38",
+   "modified": "2026-10-01 09:26:07",
+   "modified_utc": "2026-10-01 08:26:07",
+   "url": "https://www.granadilladeabona.org/event/i-feria-del-queso-de-granadilla-de-abona/",
+   "rest_url": "https://www.granadilladeabona.org/wp-json/tribe/events/v1/events/45449",
+   "title": "I Feria del Queso de Granadilla de Abona",
+   "description": "<hr />\n<p><strong>Granadilla celebra su I Feria de Quesos con una gran jornada de gastronomía, tradición y apoyo al sector primario</strong></p>\n<p>Los Hinojeros se convertirán el sábado 17 de octubre en un gran punto de encuentro para toda la familia, con cata popular, cocina en vivo, concurso de quesos, degustaciones, taller de ordeño, productos locales y música durante todo el día.</p>\n<p>Granadilla de Abona se prepara para vivir una jornada muy especial con la celebración de la I Feria de Quesos de Granadilla de Abona, una nueva apuesta del Ayuntamiento por acercar el sector primario a la ",
+   "excerpt": "",
+   "slug": "i-feria-del-queso-de-granadilla-de-abona",
+   "image": {
+    "url": "https://www.granadilladeabona.org/wp-content/uploads/2026/09/cartel-Feria-de-los-quesos-1.png",
+    "id": 45450,
+    "extension": "png",
+    "width": 915,
+    "height": 1373,
+    "filesize": 983831
+   },
+   "all_day": false,
+   "start_date": "2026-10-17 10:00:00",
+   "start_date_details": {
+    "year": "2026",
+    "month": "10",
+    "day": "17",
+    "hour": "10",
+    "minutes": "00",
+    "seconds": "00"
+   },
+   "end_date": "2026-10-17 19:00:00",
+   "end_date_details": {
+    "year": "2026",
+    "month": "10",
+    "day": "17",
+    "hour": "19",
+    "minutes": "00",
+    "seconds": "00"
+   },
+   "utc_start_date": "2026-10-17 09:00:00",
+   "utc_start_date_details": {
+    "year": "2026",
+    "month": "10",
+    "day": "17",
+    "hour": "09",
+    "minutes": "00",
+    "seconds": "00"
+   },
+   "utc_end_date": "2026-10-17 18:00:00",
+   "utc_end_date_details": {
+    "year": "2026",
+    "month": "10",
+    "day": "17",
+    "hour": "18",
+    "minutes": "00",
+    "seconds": "00"
+   },
+   "timezone": "Atlantic/Canary",
+   "timezone_abbr": "WEST",
+   "cost": "",
+   "cost_details": {
+    "currency_symbol": "$",
+    "currency_code": "USD",
+    "currency_position": "prefix",
+    "values": []
+   },
+   "website": "",
+   "show_map": true,
+   "show_map_link": true,
+   "hide_from_listings": false,
+   "sticky": false,
+   "featured": false,
+   "categories": [
+    {
+     "name": "Actividades",
+     "slug": "actividades",
+     "term_group": 0,
+     "term_taxonomy_id": 214,
+     "taxonomy": "tribe_events_cat",
+     "description": "",
+     "parent": 0,
+     "count": 17,
+     "filter": "raw",
+     "id": 214,
+     "urls": {
+      "self": "https://www.granadilladeabona.org/wp-json/tribe/events/v1/categories/214",
+      "collection": "https://www.granadilladeabona.org/wp-json/tribe/events/v1/categories"
+     }
+    },
+    {
+     "name": "Anuncios y Avisos",
+     "slug": "anuncios-y-avisos",
+     "term_group": 0,
+     "term_taxonomy_id": 64,
+     "taxonomy": "tribe_events_cat",
+     "description": "",
+     "parent": 0,
+     "count": 18,
+     "filter": "raw",
+     "id": 64,
+     "urls": {
+      "self": "https://www.granadilladeabona.org/wp-json/tribe/events/v1/categories/64",
+      "collection": "https://www.granadilladeabona.org/wp-json/tribe/events/v1/categories"
+     }
+    },
+    {
+     "name": "Sector Primario",
+     "slug": "sector-primario",
+     "term_group": 0,
+     "term_taxonomy_id": 217,
+     "taxonomy": "tribe_events_cat",
+     "description": "",
+     "parent": 0,
+     "count": 1,
+     "filter": "raw",
+     "id": 217,
+     "urls": {
+      "self": "https://www.granadilladeabona.org/wp-json/tribe/events/v1/categories/217",
+      "collection": "https://www.granadilladeabona.org/wp-json/tribe/events/v1/categories"
+     }
+    }
+   ],
+   "tags": [
+    {
+     "name": "Sector Primario",
+     "slug": "sector-primario",
+     "term_group": 0,
+     "term_taxonomy_id": 121,
+     "taxonomy": "post_tag",
+     "description": "",
+     "parent": 0,
+     "count": 49,
+     "filter": "raw",
+     "id": 121,
+     "urls": {
+      "self": "https://www.granadilladeabona.org/wp-json/tribe/events/v1/tags/121",
+      "collection": "https://www.granadilladeabona.org/wp-json/tribe/events/v1/tags"
+     }
+    }
+   ],
+   "venue": {
+    "id": 45451,
+    "author": "14",
+    "status": "publish",
+    "date": "2026-09-25 08:02:38",
+    "date_utc": "2026-09-25 07:02:38",
+    "modified": "2026-09-25 08:02:38",
+    "modified_utc": "2026-09-25 07:02:38",
+    "url": "https://www.granadilladeabona.org/local/instalaciones-deportivas-de-los-hinojeros/",
+    "venue": "Instalaciones Deportivas de Los Hinojeros",
+    "slug": "instalaciones-deportivas-de-los-hinojeros",
+    "address": "Dr. Antonio Pérez Díaz",
+    "city": "Granadilla de Abona",
+    "country": "Spain",
+    "province": "Santa Cruz de Tenerife",
+    "zip": "38600",
+    "phone": "922759993",
+    "stateprovince": "Santa Cruz de Tenerife",
+    "show_map": true,
+    "show_map_link": true,
+    "global_id": "www.granadilladeabona.org?id=45451",
+    "global_id_lineage": [
+     "www.granadilladeabona.org?id=45451"
+    ]
+   },
+   "organizer": [],
+   "custom_fields": []
+  },
+  {
+   "id": 45504,
+   "global_id": "www.granadilladeabona.org?id=45504",
+   "global_id_lineage": [
+    "www.granadilladeabona.org?id=45504"
+   ],
+   "author": "14",
+   "status": "publish",
+   "date": "2026-10-13 10:46:17",
+   "date_utc": "2026-10-13 09:46:17",
+   "modified": "2026-10-13 11:26:51",
+   "modified_utc": "2026-10-13 10:26:51",
+   "url": "https://www.granadilladeabona.org/event/celebracion-dia-internacional-del-mayor-2/",
+   "rest_url": "https://www.granadilladeabona.org/wp-json/tribe/events/v1/events/45504",
+   "title": "CELEBRACIÓN DIA INTERNACIONAL DEL MAYOR",
+   "description": "<hr />\n<p>El Ayuntamiento de Granadilla de Abona, a través de la Concejalía de Tercera Edad cuya responsable es Doña Eudita Mendoza Navarro, invita a los mayores de nuestro municipio a la celebración del DÍA INTERNACIONAL DEL MAYOR que tendrá lugar el día 23 de octubre en el SIEC de San Isidro a las 18:00 horas.Contaremos con las actuaciones de la cantante Josefina Alemán y sus Mariachis, el humorista Juanito Panchín y baile con Pepe Benavente.<br />\nSe contará con un servicio de transporte gratuito que requiere previa inscripción, la cuál se podrá realizar a través de las asociaciones Pro Ter",
+   "excerpt": "",
+   "slug": "celebracion-dia-internacional-del-mayor-2",
+   "image": {
+    "url": "https://www.granadilladeabona.org/wp-content/uploads/2026/10/cartel-1.png",
+    "id": 45505,
+    "extension": "png",
+    "width": 915,
+    "height": 1144,
+    "filesize": 950431
+   },
+   "all_day": false,
+   "start_date": "2026-10-23 18:00:00",
+   "start_date_details": {
+    "year": "2026",
+    "month": "10",
+    "day": "23",
+    "hour": "18",
+    "minutes": "00",
+    "seconds": "00"
+   },
+   "end_date": "2026-10-23 20:00:00",
+   "end_date_details": {
+    "year": "2026",
+    "month": "10",
+    "day": "23",
+    "hour": "20",
+    "minutes": "00",
+    "seconds": "00"
+   },
+   "utc_start_date": "2026-10-23 17:00:00",
+   "utc_start_date_details": {
+    "year": "2026",
+    "month": "10",
+    "day": "23",
+    "hour": "17",
+    "minutes": "00",
+    "seconds": "00"
+   },
+   "utc_end_date": "2026-10-23 19:00:00",
+   "utc_end_date_details": {
+    "year": "2026",
+    "month": "10",
+    "day": "23",
+    "hour": "19",
+    "minutes": "00",
+    "seconds": "00"
+   },
+   "timezone": "Atlantic/Canary",
+   "timezone_abbr": "WEST",
+   "cost": "",
+   "cost_details": {
+    "currency_symbol": "$",
+    "currency_code": "USD",
+    "currency_position": "prefix",
+    "values": []
+   },
+   "website": "",
+   "show_map": true,
+   "show_map_link": true,
+   "hide_from_listings": false,
+   "sticky": false,
+   "featured": false,
+   "categories": [
+    {
+     "name": "Actividades",
+     "slug": "actividades",
+     "term_group": 0,
+     "term_taxonomy_id": 214,
+     "taxonomy": "tribe_events_cat",
+     "description": "",
+     "parent": 0,
+     "count": 17,
+     "filter": "raw",
+     "id": 214,
+     "urls": {
+      "self": "https://www.granadilladeabona.org/wp-json/tribe/events/v1/categories/214",
+      "collection": "https://www.granadilladeabona.org/wp-json/tribe/events/v1/categories"
+     }
+    },
+    {
+     "name": "Anuncios y Avisos",
+     "slug": "anuncios-y-avisos",
+     "term_group": 0,
+     "term_taxonomy_id": 64,
+     "taxonomy": "tribe_events_cat",
+     "description": "",
+     "parent": 0,
+     "count": 18,
+     "filter": "raw",
+     "id": 64,
+     "urls": {
+      "self": "https://www.granadilladeabona.org/wp-json/tribe/events/v1/categories/64",
+      "collection": "https://www.granadilladeabona.org/wp-json/tribe/events/v1/categories"
+     }
+    },
+    {
+     "name": "Tercera edad",
+     "slug": "tercera-edad",
+     "term_group": 0,
+     "term_taxonomy_id": 68,
+     "taxonomy": "tribe_events_cat",
+     "description": "",
+     "parent": 0,
+     "count": 2,
+     "filter": "raw",
+     "id": 68,
+     "urls": {
+      "self": "https://www.granadilladeabona.org/wp-json/tribe/events/v1/categories/68",
+      "collection": "https://www.granadilladeabona.org/wp-json/tribe/events/v1/categories"
+     }
+    }
+   ],
+   "tags": [
+    {
+     "name": "Tercera Edad",
+     "slug": "tercera-edad",
+     "term_group": 0,
+     "term_taxonomy_id": 52,
+     "taxonomy": "post_tag",
+     "description": "",
+     "parent": 0,
+     "count": 49,
+     "filter": "raw",
+     "id": 52,
+     "urls": {
+      "self": "https://www.granadilladeabona.org/wp-json/tribe/events/v1/tags/52",
+      "collection": "https://www.granadilladeabona.org/wp-json/tribe/events/v1/tags"
+     }
+    }
+   ],
+   "venue": {
+    "id": 41247,
+    "author": "14",
+    "status": "publish",
+    "date": "2025-02-24 12:35:01",
+    "date_utc": "2025-02-24 12:35:01",
+    "modified": "2025-02-24 12:35:01",
+    "modified_utc": "2025-02-24 12:35:01",
+    "url": "https://www.granadilladeabona.org/local/auditorio-del-siec-de-san-isidro/",
+    "venue": "Auditorio del SIEC de San Isidro",
+    "slug": "auditorio-del-siec-de-san-isidro",
+    "address": "Calle Sta. María de la Cabeza, 3, San Isidro,",
+    "city": "San isidro",
+    "country": "España",
+    "province": "Santa Cruz de Tenerife",
+    "zip": "38611",
+    "phone": "922759995",
+    "stateprovince": "Santa Cruz de Tenerife",
+    "show_map": true,
+    "show_map_link": true,
+    "global_id": "www.granadilladeabona.org?id=41247",
+    "global_id_lineage": [
+     "www.granadilladeabona.org?id=41247"
+    ]
+   },
+   "organizer": [],
+   "custom_fields": []
+  },
+  {
+   "id": 45295,
+   "global_id": "www.granadilladeabona.org?id=45295",
+   "global_id_lineage": [
+    "www.granadilladeabona.org?id=45295"
+   ],
+   "author": "14",
+   "status": "publish",
+   "date": "2026-08-27 09:08:10",
+   "date_utc": "2026-08-27 08:08:10",
+   "modified": "2026-09-21 07:47:27",
+   "modified_utc": "2026-09-21 06:47:27",
+   "url": "https://www.granadilladeabona.org/event/granadilla-vuelve-a-romper-moldes-en-emergencias/",
+   "rest_url": "https://www.granadilladeabona.org/wp-json/tribe/events/v1/events/45295",
+   "title": "Miguel Assal imparte una charla en Granadilla de Abona",
+   "description": "<p>Una experiencia diferente para aprender conocimientos que pueden <strong>SALVAR VIDAS EN LOS PRIMEROS 5 MINUTOS.</strong></p>\n<p><strong>31 DE OCTUBRE</strong><br />\n<strong>SIEC – San Isidro</strong><br />\n<strong>Actividad gratuita</strong><br />\n<strong>Aforo limitado</strong></p>\n<p>La concejalía de Emergencias y Protección Civil continúa apostando por proyectos innovadores que acercan la prevención y la autoprotección directamente a nuestros vecinos.</p>\n<p>Miguel Assal, uno de los divulgadores de emergencias y primeros auxilios más reconocidos de España, nos enseñará de una manera din",
+   "excerpt": "",
+   "slug": "granadilla-vuelve-a-romper-moldes-en-emergencias",
+   "image": {
+    "url": "https://www.granadilladeabona.org/wp-content/uploads/2026/08/Cartel_Miguel_Assal_JPEG.jpg",
+    "id": 45296,
+    "extension": "jpg",
+    "width": 1054,
+    "height": 1492,
+    "filesize": 539883
+   },
+   "all_day": true,
+   "start_date": "2026-10-31 00:00:00",
+   "start_date_details": {
+    "year": "2026",
+    "month": "10",
+    "day": "31",
+    "hour": "00",
+    "minutes": "00",
+    "seconds": "00"
+   },
+   "end_date": "2026-10-31 23:59:59",
+   "end_date_details": {
+    "year": "2026",
+    "month": "10",
+    "day": "31",
+    "hour": "23",
+    "minutes": "59",
+    "seconds": "59"
+   },
+   "utc_start_date": "2026-10-31 00:00:00",
+   "utc_start_date_details": {
+    "year": "2026",
+    "month": "10",
+    "day": "31",
+    "hour": "00",
+    "minutes": "00",
+    "seconds": "00"
+   },
+   "utc_end_date": "2026-10-31 23:59:59",
+   "utc_end_date_details": {
+    "year": "2026",
+    "month": "10",
+    "day": "31",
+    "hour": "23",
+    "minutes": "59",
+    "seconds": "59"
+   },
+   "timezone": "Atlantic/Canary",
+   "timezone_abbr": "WET",
+   "cost": "",
+   "cost_details": {
+    "currency_symbol": "$",
+    "currency_code": "USD",
+    "currency_position": "prefix",
+    "values": []
+   },
+   "website": "",
+   "show_map": true,
+   "show_map_link": true,
+   "hide_from_listings": false,
+   "sticky": false,
+   "featured": false,
+   "categories": [
+    {
+     "name": "Actividades",
+     "slug": "actividades",
+     "term_group": 0,
+     "term_taxonomy_id": 214,
+     "taxonomy": "tribe_events_cat",
+     "description": "",
+     "parent": 0,
+     "count": 17,
+     "filter": "raw",
+     "id": 214,
+     "urls": {
+      "self": "https://www.granadilladeabona.org/wp-json/tribe/events/v1/categories/214",
+      "collection": "https://www.granadilladeabona.org/wp-json/tribe/events/v1/categories"
+     }
+    },
+    {
+     "name": "Emergencias y Protección Civil",
+     "slug": "emergencias-y-proteccion-civil",
+     "term_group": 0,
+     "term_taxonomy_id": 218,
+     "taxonomy": "tribe_events_cat",
+     "description": "",
+     "parent": 0,
+     "count": 2,
+     "filter": "raw",
+     "id": 218,
+     "urls": {
+      "self": "https://www.granadilladeabona.org/wp-json/tribe/events/v1/categories/218",
+      "collection": "https://www.granadilladeabona.org/wp-json/tribe/events/v1/categories"
+     }
+    }
+   ],
+   "tags": [
+    {
+     "name": "Seguridad y Emergencias",
+     "slug": "c117-seguridad",
+     "term_group": 0,
+     "term_taxonomy_id": 53,
+     "taxonomy": "post_tag",
+     "description": "",
+     "parent": 0,
+     "count": 84,
+     "filter": "raw",
+     "id": 53,
+     "urls": {
+      "self": "https://www.granadilladeabona.org/wp-json/tribe/events/v1/tags/53",
+      "collection": "https://www.granadilladeabona.org/wp-json/tribe/events/v1/tags"
+     }
+    }
+   ],
+   "venue": {
+    "id": 41247,
+    "author": "14",
+    "status": "publish",
+    "date": "2025-02-24 12:35:01",
+    "date_utc": "2025-02-24 12:35:01",
+    "modified": "2025-02-24 12:35:01",
+    "modified_utc": "2025-02-24 12:35:01",
+    "url": "https://www.granadilladeabona.org/local/auditorio-del-siec-de-san-isidro/",
+    "venue": "Auditorio del SIEC de San Isidro",
+    "slug": "auditorio-del-siec-de-san-isidro",
+    "address": "Calle Sta. María de la Cabeza, 3, San Isidro,",
+    "city": "San isidro",
+    "country": "España",
+    "province": "Santa Cruz de Tenerife",
+    "zip": "38611",
+    "phone": "922759995",
+    "stateprovince": "Santa Cruz de Tenerife",
+    "show_map": true,
+    "show_map_link": true,
+    "global_id": "www.granadilladeabona.org?id=41247",
+    "global_id_lineage": [
+     "www.granadilladeabona.org?id=41247"
+    ]
+   },
+   "organizer": [],
+   "custom_fields": []
+  }
+ ],
+ "rest_url": "https://www.granadilladeabona.org/wp-json/tribe/events/v1/events/?page=1&per_page=3&start_date=2026-10-15 00:00:00&end_date=2028-10-15 23:59:59&status=publish",
+ "next_rest_url": "https://www.granadilladeabona.org/wp-json/tribe/events/v1/events/?per_page=3&start_date=2026-10-15+00%3A00%3A00&end_date=2028-10-15+23%3A59%3A59&status=publish&page=2",
+ "total": 5,
+ "total_pages": 2
+}

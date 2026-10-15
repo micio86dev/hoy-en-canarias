@@ -1,0 +1,6 @@
+{
+ "events": [],
+ "rest_url": "https://www.lossilos.es/wp-json/tribe/events/v1/events/?page=1&per_page=3&start_date=2026-10-15 00:00:00&end_date=2028-10-15 23:59:59&status=publish",
+ "total": 0,
+ "total_pages": 0
+}

@@ -13,6 +13,7 @@ from canarias_events.sources.base import (
     SourceConfig,
     SourceFetchResult,
     clean_text,
+    municipality_in_text,
     resolve_island,
 )
 
@@ -139,6 +140,16 @@ def test_resolve_island_multiple_configured_islands_is_none() -> None:
 
 def test_resolve_island_unknown_is_none() -> None:
     assert resolve_island(config(), island="Atlantis", municipality="Nowhere") is None
+
+
+def test_municipality_in_text_uses_last_known_part() -> None:
+    text = "Pabellón Municipal, Rambla de los Menceyes, 27, Candelaria, Tenerife"
+    assert municipality_in_text(text) == "Candelaria"
+
+
+@pytest.mark.parametrize("text", [None, "", "Plaza Mayor", "Somewhere, Nowhere"])
+def test_municipality_in_text_unknown_is_none(text: str | None) -> None:
+    assert municipality_in_text(text) is None
 
 
 # --------------------------------------------------------------------------- registry
