@@ -27,7 +27,14 @@ from canarias_events.discovery import (
 )
 from canarias_events.exporters import export_all, source_status, write_atomic
 from canarias_events.health import summarize
-from canarias_events.http import FetchError, SafeHttpClient
+from canarias_events.http import (
+    FetchError,
+    InvalidPayload,
+    ResponseTooLarge,
+    SafeHttpClient,
+    UnsafeUrlError,
+    mask_secrets,
+)
 from canarias_events.logging_config import configure_logging
 from canarias_events.manual_import import (
     IMPORT_URL_SOURCE,
@@ -557,8 +564,11 @@ def import_url_command(
         raise _fail(str(exc), 2) from exc
     except ValueError as exc:
         raise _fail(str(exc), 2) from exc
+    except (UnsafeUrlError, InvalidPayload, ResponseTooLarge) as exc:
+        # The page is not something we may or can read (guards): a usage problem, not an outage.
+        raise _fail(f"cannot import {mask_secrets(url)}: {mask_secrets(str(exc))}", 2) from exc
     except FetchError as exc:
-        raise _fail(f"cannot read {url}: {exc}", 1) from exc
+        raise _fail(f"cannot read {mask_secrets(url)}: {mask_secrets(str(exc))}", 1) from exc
     finally:
         client.close()
     for warning in outcome.warnings:

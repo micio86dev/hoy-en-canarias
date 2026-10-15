@@ -1070,3 +1070,33 @@ def test_validate_source_social_url_needs_no_network(tmp_path: Path) -> None:
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     assert "requires_authorization" in result.output and "rejected" in result.output
+
+
+@respx.mock
+@pytest.mark.usefixtures("offline")
+@pytest.mark.parametrize(
+    "url", ["http://127.0.0.1/evento", "http://10.0.0.5/e", "http://169.254.169.254/latest"]
+)
+def test_import_url_refuses_private_addresses_cleanly(tmp_path: Path, url: str) -> None:
+    db = tmp_path / "db.sqlite"
+    result = invoke("import-url", url, "--db", str(db))
+    assert result.exit_code == 2, result.output
+    assert isinstance(result.exception, SystemExit)  # a clean exit, not a traceback
+    assert respx.calls.call_count == 0 and not db.exists()
+
+
+@respx.mock
+@pytest.mark.usefixtures("offline")
+def test_import_url_refuses_a_pdf_cleanly(tmp_path: Path) -> None:
+    url = "https://www.example.org/programa.pdf"
+    respx.get("https://www.example.org/robots.txt").mock(return_value=httpx.Response(404))
+    respx.get(url).mock(
+        return_value=httpx.Response(
+            200, content=b"%PDF-1.7 ...", headers={"content-type": "application/pdf"}
+        )
+    )
+    db = tmp_path / "db.sqlite"
+    result = invoke("import-url", url, "--db", str(db))
+    assert result.exit_code == 2, result.output
+    assert isinstance(result.exception, SystemExit)
+    assert "pdf" in result.output.lower() and not db.exists()
