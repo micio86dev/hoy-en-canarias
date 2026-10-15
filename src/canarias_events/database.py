@@ -506,6 +506,15 @@ class Database:
                  now.isoformat(), candidate_id),
             )  # fmt: skip
 
+    def touch_candidate(self, candidate_id: str, *, report: dict[str, Any], now: datetime) -> None:
+        """Record a check that reached no verdict: only when and why, never state or score."""
+        with self.conn:
+            self.conn.execute(
+                "UPDATE source_candidates SET report=?, last_validated_at=? WHERE id=?",
+                (json.dumps(report, ensure_ascii=False, default=str), now.isoformat(),
+                 candidate_id),
+            )  # fmt: skip
+
     # ------------------------------------------------------------------ import runs
 
     def start_run(

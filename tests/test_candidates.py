@@ -64,6 +64,23 @@ def test_lookup_by_id_or_url_and_update() -> None:
         assert updated.last_score == 0 and updated.last_validated_at == NOW.isoformat()
 
 
+def test_touching_a_candidate_keeps_its_state_mode_and_score() -> None:
+    with Database(":memory:") as db:
+        url = "https://example.org/agenda"
+        db.add_candidate(url, "web", "manual", NOW)
+        cid = candidate_id(url)
+        db.update_candidate(cid, state="verified", mode="html", score=80, report={"a": 1}, now=NOW)
+        later = NOW.replace(hour=NOW.hour - 1)
+        db.touch_candidate(cid, report={"error": "HTTP 503"}, now=later)
+        row = db.get_candidate(url)
+        assert row is not None
+        assert (row.verification_state, row.acquisition_mode, row.last_score) == (
+            "verified", "html", 80,
+        )  # fmt: skip
+        assert row.last_validated_at == later.isoformat()
+        assert row.report == {"error": "HTTP 503"}
+
+
 def test_migrating_an_older_database_adds_the_table(tmp_path: Path) -> None:
     import sqlite3
 

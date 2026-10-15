@@ -983,7 +983,7 @@ def test_validate_source_prints_a_scored_report_and_stores_nothing(tmp_path: Pat
     db = tmp_path / "db.sqlite"
     result = invoke("validate-source", SOURCE_URL, "--db", str(db), "--config", str(tmp_path / "x"))
     assert result.exit_code == 0, result.output
-    assert "Score:" in result.output and "acquisition_mode=api_public" in result.output
+    assert "Score:" in result.output and "acquisition_mode=html" in result.output
     assert "Not saved" in result.output
     assert not db.exists()
 
@@ -1008,7 +1008,7 @@ def test_validate_source_save_updates_the_candidate_state(tmp_path: Path) -> Non
     assert saved.exit_code == 0, saved.output
     with Database(db) as database:
         [after] = database.list_candidates()
-        assert after.verification_state == "verified" and after.acquisition_mode == "api_public"
+        assert after.verification_state == "verified" and after.acquisition_mode == "html"
         assert after.last_score is not None and after.last_score > 0
         assert after.report is not None and after.report["events_found"] == 1
 
@@ -1100,3 +1100,83 @@ def test_import_url_refuses_a_pdf_cleanly(tmp_path: Path) -> None:
     assert result.exit_code == 2, result.output
     assert isinstance(result.exception, SystemExit)
     assert "pdf" in result.output.lower() and not db.exists()
+
+
+def verified_candidate(tmp_path: Path, config: Path) -> tuple[Path, str]:
+    """A candidate that an earlier validation marked verified (html, score 80)."""
+    db_path = tmp_path / "db.sqlite"
+    with Database(db_path) as db:
+        db.add_candidate(SOURCE_URL, "web", "manual", NOW)
+        saved = db.get_candidate(SOURCE_URL)
+        assert saved is not None
+        db.update_candidate(
+            saved.id, state="verified", mode="html", score=80, report={"old": True}, now=NOW
+        )
+    return db_path, saved.id
+
+
+@respx.mock
+@pytest.mark.usefixtures("offline")
+@pytest.mark.parametrize("status", [429, 503])
+def test_validate_source_save_keeps_the_state_after_a_transient_failure(
+    tmp_path: Path, status: int
+) -> None:
+    respx.get("https://agenda.example.org/robots.txt").mock(return_value=httpx.Response(404))
+    respx.get(SOURCE_URL).mock(return_value=httpx.Response(status, text="later"))
+    config = write_config(tmp_path, [fake_source("a")])
+    db_path, cid = verified_candidate(tmp_path, config)
+
+    result = invoke("validate-source", cid, "--save", "--db", str(db_path), "--config", str(config))
+
+    assert result.exit_code == 0, result.output
+    with Database(db_path) as db:
+        row = db.get_candidate(cid)
+    assert row is not None
+    assert (row.verification_state, row.acquisition_mode, row.last_score) == (
+        "verified",
+        "html",
+        80,
+    )
+    assert row.last_validated_at != NOW.isoformat()  # last_checked moved
+    assert row.report is not None and str(status) in row.report["error"]
+    assert "unchanged" in result.output
+
+
+@respx.mock
+@pytest.mark.usefixtures("offline")
+def test_validate_source_reports_a_parser_error_without_a_traceback(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from canarias_events import validation
+
+    def explode(self: object, body: bytes, window: object) -> None:
+        raise ValueError("bad calendar")
+
+    monkeypatch.setattr(validation.IcalAdapter, "read", explode)
+    respx.get("https://agenda.example.org/robots.txt").mock(return_value=httpx.Response(404))
+    respx.get(SOURCE_URL).mock(
+        return_value=httpx.Response(
+            200, text="BEGIN:VCALENDAR\nEND:VCALENDAR\n", headers={"content-type": "text/calendar"}
+        )
+    )
+    result = invoke(
+        "validate-source", SOURCE_URL, "--save", "--db", str(tmp_path / "db.sqlite"),
+        "--config", str(tmp_path / "x"),
+    )  # fmt: skip
+    assert result.exit_code == 0, result.output
+    assert isinstance(result.exception, (SystemExit, type(None)))
+    assert "Error:" in result.output and "bad calendar" in result.output
+    with Database(tmp_path / "db.sqlite") as db:
+        [row] = db.list_candidates()
+    assert row.verification_state == "candidate" and row.last_score is None
+
+
+def test_validation_output_treats_an_unknown_error_rate_as_unknown(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    from canarias_events.validation import ValidationReport
+
+    report = ValidationReport(url=SOURCE_URL, reachable=True)
+    report.reliability = {"runs": 0, "error_rate": None, "last_status": None}
+    cli._echo_validation(report)
+    assert "unknown" in capsys.readouterr().out.split("Reliability:")[1].splitlines()[0]

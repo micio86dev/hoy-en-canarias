@@ -214,6 +214,7 @@ def _echo_health(db: Database, history_runs: int) -> None:
         if not h["runs_considered"]:
             continue
         rate = h["error_rate"]
+        errors = "-" if rate is None else f"{rate:.0%}"
         rows.append(
             [
                 source_id,
@@ -221,7 +222,7 @@ def _echo_health(db: Database, history_runs: int) -> None:
                 h["last_status"],
                 row["last_success_at"] or "-",
                 "-" if h["last_events_found"] is None else h["last_events_found"],
-                f"{rate:.0%}",
+                errors,
                 h["consecutive_failures"],
                 ",".join(h["last_anomalies"]) or "-",
             ]
@@ -609,10 +610,8 @@ def _echo_validation(r: ValidationReport) -> None:
         reach += f" (HTTP {r.http_status}" + (f", {r.content_type})" if r.content_type else ")")
     quality = "-" if r.quality is None else f"{r.quality:.0%}"
     history = "unknown (no history)"
-    if r.reliability:
-        history = (
-            f"{1 - (r.reliability['error_rate'] or 0):.0%} ok over {r.reliability['runs']} run(s)"
-        )
+    if r.reliability and r.reliability["error_rate"] is not None:
+        history = f"{1 - r.reliability['error_rate']:.0%} ok over {r.reliability['runs']} run(s)"
     rows = [
         ("Source", r.url + (f" [{r.source_id}]" if r.source_id else "")),
         ("Reachable", reach), ("Kind", r.kind), ("Robots", r.robots),
@@ -624,6 +623,8 @@ def _echo_validation(r: ValidationReport) -> None:
         ("Suggested", f"acquisition_mode={r.suggested_mode or 'unknown'}, "
                       f"verification_state={r.suggested_state}"),
     ]  # fmt: skip
+    if r.error:
+        rows.append(("Error", f"{r.error}" + (" (transient, retry later)" if r.transient else "")))
     for label, value in rows:
         typer.echo(f"{label + ':':<14}{value}")
     for note in r.notes:
@@ -680,7 +681,13 @@ def validate_source_command(
     with Database(path) as db:
         db.add_candidate(url, "web", "validate-source", now)
         saved = db.get_candidate(url)
-        assert saved is not None
+        if saved is None:  # pragma: no cover - add_candidate just stored it
+            raise _fail(f"cannot record {url}", 1)
+        if report.error:
+            # No verdict (outage, parse error): keep what was known, note when and why.
+            db.touch_candidate(saved.id, report=report.as_dict(), now=now)
+            typer.echo(f"Check inconclusive ({report.error}); {saved.id} left unchanged.", err=True)
+            return
         db.update_candidate(
             saved.id, state=report.suggested_state, mode=report.suggested_mode,
             score=report.score, report=report.as_dict(), now=now,
