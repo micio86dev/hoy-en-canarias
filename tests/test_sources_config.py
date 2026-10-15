@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import pytest
 
@@ -90,3 +91,13 @@ def test_priorities_and_stale_flags() -> None:
         "gobcan_agenda_cultural",
         "santacruz_agenda_cultural",
     }
+
+
+def test_discovery_probes_cover_the_candidate_domains() -> None:
+    catalog = load_catalog(CONFIG)
+    probes = set(catalog.discovery_probes)
+    assert len(probes) == len(catalog.discovery_probes) >= 30
+    for entry in catalog.candidates:
+        if entry.url:
+            host = urlsplit(entry.url).hostname
+            assert host in probes or entry.name == "PredictHQ"

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from datetime import date, datetime
 from pathlib import Path
 from typing import Any
@@ -63,3 +63,15 @@ def make_ctx() -> Callable[..., FetchContext]:
         )
 
     return factory
+
+
+@pytest.fixture(autouse=True)
+def _restore_logging() -> Iterator[None]:
+    """Commands configure logging globally; do not leak that into other tests."""
+    root = logging.getLogger()
+    level = root.level
+    yield
+    root.setLevel(level)
+    root.handlers[:] = [h for h in root.handlers if not getattr(h, "_canarias", False)]
+    for name in ("httpx", "httpcore"):
+        logging.getLogger(name).setLevel(logging.NOTSET)

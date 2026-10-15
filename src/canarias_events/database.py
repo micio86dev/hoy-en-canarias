@@ -553,7 +553,8 @@ class Database:
                 for member in members:
                     updates[member] = getattr(incoming, member)
                     result[member] = source_id
-        # The source that supplied the title owns the record; its rank decides `extra` conflicts.
+        # `extra` has no per-key provenance: the rank of the source that supplied `source_name`
+        # (the record's primary source) decides conflicts.
         union = list(dict.fromkeys([*current.tags, *incoming.tags]))
         extra = (
             {**current.extra, **incoming.extra}

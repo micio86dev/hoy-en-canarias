@@ -40,6 +40,7 @@ class SourcesCatalog(BaseModel):
     sources: list[SourceConfig] = Field(default_factory=list)
     candidates: list[CatalogEntry] = Field(default_factory=list)
     excluded: list[CatalogEntry] = Field(default_factory=list)
+    discovery_probes: list[str] = Field(default_factory=list)
 
 
 def create_adapter(config: SourceConfig) -> SourceAdapter:

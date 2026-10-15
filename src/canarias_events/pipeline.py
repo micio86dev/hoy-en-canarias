@@ -11,7 +11,7 @@ from datetime import datetime
 from typing import Any
 
 from canarias_events.database import Database, UpsertResult
-from canarias_events.date_range import DateWindow
+from canarias_events.date_range import TZ, DateWindow
 from canarias_events.deduplication import DEFAULT_MERGE_THRESHOLD, resolve
 from canarias_events.geo import normalize_island
 from canarias_events.http import SafeHttpClient
@@ -44,7 +44,8 @@ def events_in_window(db: Database, window: DateWindow, island: str | None = None
         for e in db.all_events()
         if event_overlaps(window, e) and (island is None or e.island == island)
     ]
-    found.sort(key=lambda e: (e.start_date or window.start_date, str(e.start_datetime), e.title))
+    far = datetime.max.replace(tzinfo=TZ)
+    found.sort(key=lambda e: (e.start_date or window.start_date, e.start_datetime or far, e.title))
     return found
 
 

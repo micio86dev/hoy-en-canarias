@@ -26,7 +26,6 @@ _CSV_COLUMNS = [
     for name in Event.model_fields
     if name not in _NOT_IN_CSV and not name.startswith("source_")
 ]
-_CSV_COLUMNS[2:2] = []
 _CSV_EXTRA = ["tags", "sources", "source_urls", "source_event_ids", "source_license"]
 
 
@@ -110,7 +109,7 @@ def events_csv(db: Database, events: list[Event]) -> bytes:
 # --------------------------------------------------------------------------- sources report
 
 
-def _source_status(cfg: SourceConfig, env: Mapping[str, str]) -> str:
+def source_status(cfg: SourceConfig, env: Mapping[str, str]) -> str:
     if cfg.stale:
         return "stale"
     if not cfg.enabled:
@@ -134,7 +133,7 @@ def build_sources_report(
                 "adapter": cfg.adapter,
                 "url": cfg.url,
                 "homepage": cfg.homepage,
-                "status": _source_status(cfg, env),
+                "status": source_status(cfg, env),
                 "enabled": cfg.enabled,
                 "islands": cfg.islands,
                 "license": cfg.license,

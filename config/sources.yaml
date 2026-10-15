@@ -241,3 +241,45 @@ excluded:
   - {name: lanzarote.com, url: "https://www.lanzarote.com", reason: "HTTP 403 Forbidden.", checked_at: 2026-10-15}
   - {name: Mogán, url: "https://www.mogan.es", reason: "HTTP 500 Internal Server Error.", checked_at: 2026-10-15}
   - {name: CAAM (MEC), url: "https://caam.net", reason: "Endpoint returns no events.", checked_at: 2026-10-15}
+
+# Domains probed by `discover-sources` for a Tribe REST, iCal or JSON:API endpoint (3 GET
+# requests each, rate limited). Probing never enables a source: positives need a manual check.
+discovery_probes:
+  # Domains of the `candidates` above
+  - www.webtenerife.com
+  - www.grancanaria.com
+  - www.tenerife.es
+  - www.auditoriodetenerife.com
+  - www.auditorioalfredokraus.es
+  - teatroperezgaldos.es
+  - teatroleal.es
+  - teatenerife.es
+  - www.lalaguna.es
+  - www.arona.org
+  - www.arrecife.es
+  - www.adeje.es
+  - www.visitlapalma.es
+  - www.lagomera.travel
+  - www.elhierro.travel
+  - www.radioinsular.es
+  - www.ociocanarias.com
+  - www.cabildofuer.es
+  - mueca.es
+  - festivaldecanarias.com
+  # Other municipal and island sites
+  - www.santacruzdetenerife.es
+  - www.laspalmasgc.es
+  - www.puertodelacruz.es
+  - www.losrealejos.es
+  - www.tacoronte.es
+  - www.aguimes.es
+  - www.arucas.es
+  - www.teguise.es
+  - www.tias.es
+  - www.pajara.es
+  - www.laoliva.es
+  - www.santacruzdelapalma.es
+  - www.losllanosdearidane.es
+  - www.sansebastiandelagomera.com
+  - www.cabildodelanzarote.com
+  - www.cabildodelapalma.es
