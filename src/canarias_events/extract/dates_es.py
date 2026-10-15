@@ -198,6 +198,28 @@ def _times_in(folded: str) -> tuple[time | None, time | None]:
     return None, None
 
 
+def find_times(text: str) -> set[time]:
+    """Every clock time written in ``text`` (used to verify model output against the page)."""
+    folded = _fold(text[:MAX_TEXT_CHARS])
+    found: set[time] = set()
+    for m in _RE_TIME_RANGE.finditer(folded):
+        for prefix in ("a", "b"):
+            value = _make_time(
+                m.group(f"{prefix}h"), m.group(f"{prefix}mi"), m.group(f"{prefix}ap")
+            )
+            if value is not None and (
+                m.group(f"{prefix}s") == ":" or m.group("ahs") or m.group("bhs")
+            ):
+                found.add(value)
+    for m in _RE_TIME.finditer(folded):
+        value = _make_time(m.group("ah"), m.group("ami"), m.group("aap"))
+        if value is not None and _token_ok(
+            m.group("as"), bool(m.group("ahs")), bool(m.group("aap"))
+        ):
+            found.add(value)
+    return found
+
+
 def parse_time_range(text: str) -> tuple[time | None, time | None]:
     """First time (or time range) in ``text``: ``20:30h``, ``de 10:00 a 14:00``, ``8:30 pm``."""
     if not text:
@@ -378,7 +400,7 @@ def find_date_ranges(
 
 def mentions_date_without_year(text: str) -> bool:
     """True when ``text`` has a day-and-month mention that carries no year (diagnostics only)."""
-    folded = _RE_WEEKDAY_GLUE.sub(" ", _fold(text))
+    folded = _RE_WEEKDAY_GLUE.sub(" ", _fold(text[:MAX_TEXT_CHARS]))
     return any(item.year is None for item in _scan_items(folded))
 
 
@@ -386,8 +408,10 @@ _RE_FALLBACK_SHAPE = re.compile(rf"\d.*(?:{_MON})(?![a-z]).*\d|\d.*\d.*(?:{_MON}
 
 
 def _dateparser_single(text: str) -> ParsedDateRange | None:
+    if len(text) > 80:
+        return None
     folded = _fold(text)
-    if len(text) > 80 or not _RE_FALLBACK_SHAPE.search(folded):
+    if not _RE_FALLBACK_SHAPE.search(folded):
         return None
     try:
         import dateparser
@@ -440,6 +464,7 @@ __all__ = [
     "ParsedDateRange",
     "YearPolicy",
     "find_date_ranges",
+    "find_times",
     "mentions_date_without_year",
     "parse_date_range",
     "parse_time_range",

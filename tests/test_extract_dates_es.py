@@ -237,3 +237,11 @@ def test_pathological_input_is_bounded() -> None:
         parse_date_range(payload)
         parse_time_range(payload)
     assert clock.monotonic() - started < 5
+
+
+def test_find_times_lists_every_clock_time_in_the_text() -> None:
+    from canarias_events.extract.dates_es import find_times
+
+    text = "Puertas 19:30 h, concierto a las 20:30 y fin 22.00 horas; llámanos al 922 123 456"
+    assert find_times(text) == {time(19, 30), time(20, 30), time(22, 0)}
+    assert find_times("sin horas") == set()
