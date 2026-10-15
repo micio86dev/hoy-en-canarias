@@ -9,7 +9,7 @@ from canarias_events.crawl_settings import CrawlSettings, parse_frequency
 from canarias_events.database import SourceRun
 from canarias_events.health import MANUAL_ACCEPT
 from canarias_events.sources.base import SourceConfig
-from canarias_events.statuses import BLOCKED, FAILED, NON_TEMPORARY
+from canarias_events.statuses import BLOCKED, FAILED, NON_TEMPORARY, SUCCEEDED
 
 
 def _is_non_temporary(run: SourceRun) -> bool:
@@ -28,12 +28,15 @@ def skip_reason(
     settings: CrawlSettings,
 ) -> str | None:
     """Why ``cfg`` should not run now (None: it is due). ``runs`` are newest first."""
+    # A manual accept is bookkeeping about the anomaly baseline, not an attempt to fetch.
+    accepted = {r.started_at for r in runs if MANUAL_ACCEPT in r.anomalies}
+    runs = [r for r in runs if MANUAL_ACCEPT not in r.anomalies]
+    if last_success_at in accepted:  # the stored time came from such a row: use a real fetch
+        last_success_at = next((r.started_at for r in runs if r.status == SUCCEEDED), None)
     if cfg.frequency and last_success_at:
         age = now - datetime.fromisoformat(last_success_at)
         if age < parse_frequency(cfg.frequency):
             return f"frequency {cfg.frequency}: last success {_hours(age)}h ago"
-    # A manual accept is bookkeeping about the anomaly baseline, not an attempt to fetch.
-    runs = [r for r in runs if MANUAL_ACCEPT not in r.anomalies]
     if not runs:
         return None
     latest = runs[0]

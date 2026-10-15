@@ -147,3 +147,15 @@ def test_a_real_baseline_reset_success_still_counts_as_a_run() -> None:
     blocked = [run_at(1, status="robots_disallowed", source_status="robots_disallowed")]
     assert real.anomalies == ["baseline_reset"]
     assert reason(None, [real, *blocked], None) is None  # the fresh success ends the cool-down
+
+
+def test_a_manual_accept_is_not_the_last_real_fetch_for_the_frequency() -> None:
+    synthetic = run_at(0.5, status="succeeded")
+    object.__setattr__(synthetic, "anomalies", ["baseline_reset", "manual_accept"])
+    # ``sources.last_success_at`` came from the accept row: it says nothing about a fetch.
+    assert reason("daily", [synthetic], synthetic.started_at) is None
+    earlier = run_at(30, status="succeeded")
+    assert reason("daily", [synthetic, earlier], synthetic.started_at) is None
+    recent = run_at(3, status="succeeded")
+    skipped = reason("daily", [synthetic, recent], synthetic.started_at) or ""
+    assert "frequency daily" in skipped and "3.0h" in skipped
