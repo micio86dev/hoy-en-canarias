@@ -209,3 +209,38 @@ def to_source_config(source: SocialSource) -> SourceConfig:
 def scheduled_sources(registry: SocialRegistry) -> list[SourceConfig]:
     """Accounts the importer may run: verified, enabled, public RSS or API only."""
     return [to_source_config(s) for s in registry.sources if schedule_blocker(s) is None]
+
+
+_FACEBOOK = ("facebook.com", "fb.com", "fb.me", "fb.watch")
+_PLATFORM_HOSTS: tuple[tuple[str, tuple[str, ...], str], ...] = (
+    ("instagram", ("instagram.com", "instagr.am"), "requires_authorization"),
+    ("meetup", ("meetup.com",), "requires_authorization"),
+    ("telegram", ("t.me", "telegram.me", "telegram.org"), "manual_only"),
+    ("bluesky", ("bsky.app",), "api_public"),
+    ("youtube", ("youtube.com", "youtu.be"), "rss"),
+)  # fmt: skip
+_RE_MASTODON_PATH = re.compile(r"^/@[^/@]+/?$")
+
+
+def classify_social_url(url: str) -> tuple[str, str] | None:
+    """(platform, acquisition mode) of a social-platform URL, else None. Never fetches."""
+    try:
+        parts = urlsplit(url.strip())
+        host = (parts.hostname or "").lower()
+    except ValueError:
+        return None
+
+    def on(*domains: str) -> bool:
+        return any(host == d or host.endswith(f".{d}") for d in domains)
+
+    if on(*_FACEBOOK):
+        groups = parts.path.lower().startswith("/groups/")
+        return "facebook", "excluded" if groups else "requires_authorization"
+    if "eventbrite" in host.split("."):
+        return "eventbrite", "import_url"
+    for platform, domains, mode in _PLATFORM_HOSTS:
+        if on(*domains):
+            return platform, mode
+    if _RE_MASTODON_PATH.match(parts.path):
+        return "mastodon", "rss"
+    return None

@@ -8,14 +8,21 @@ from collections.abc import Sequence
 from datetime import date, datetime
 from pathlib import Path
 from typing import Annotated, Any
+from urllib.parse import urlsplit
 
 import typer
 from dotenv import load_dotenv
 
+from canarias_events.candidates import FoundCandidate, candidates_from_report
 from canarias_events.crawl_settings import CrawlSettings
 from canarias_events.database import Database, SqliteHttpCache, default_db_path
 from canarias_events.date_range import TZ, DateWindow, explicit_window, next_week
-from canarias_events.discovery import run_discovery
+from canarias_events.discovery import (
+    configured_domains,
+    configured_urls,
+    discover_links,
+    run_discovery,
+)
 from canarias_events.exporters import export_all, source_status, write_atomic
 from canarias_events.health import summarize
 from canarias_events.http import FetchError, SafeHttpClient
@@ -30,7 +37,12 @@ from canarias_events.manual_import import (
 )
 from canarias_events.models import Event
 from canarias_events.pipeline import accept_quarantine, run_import
-from canarias_events.social import load_social_registry, schedule_blocker, scheduled_sources
+from canarias_events.social import (
+    classify_social_url,
+    load_social_registry,
+    schedule_blocker,
+    scheduled_sources,
+)
 from canarias_events.sources.base import SourceConfig
 from canarias_events.sources.registry import SourcesCatalog, load_catalog
 from canarias_events.submissions import SubmissionError, load_submission
@@ -312,17 +324,41 @@ def _echo_social(path: Path) -> None:
     typer.echo(format_table(headers, rows))
 
 
+def _echo_candidates(path: Path) -> None:
+    if not path.exists():
+        typer.echo("No source candidates yet (run discover-sources).")
+        return
+    with Database(path) as db:
+        rows = [
+            [c.id, c.kind, c.verification_state, c.acquisition_mode or "-",
+             "-" if c.last_score is None else c.last_score, c.discovered_via, c.url]
+            for c in db.list_candidates()
+        ]  # fmt: skip
+    if not rows:
+        typer.echo("No source candidates yet (run discover-sources).")
+        return
+    headers = ["id", "kind", "state", "mode", "score", "found via", "url"]
+    typer.echo(format_table(headers, rows))
+
+
 @app.command("list-sources")
 def list_sources(
     social: Annotated[
         bool, typer.Option("--social", help="List the social source registry instead.")
     ] = False,
+    candidates: Annotated[
+        bool, typer.Option("--candidates", help="List the discovered source candidates instead.")
+    ] = False,
     config: ConfigOption = DEFAULT_CONFIG,
     social_config: SocialConfigOption = None,
+    db_path: DbOption = None,
 ) -> None:
     """List the configured sources and their status."""
     if social:
         _echo_social(_social_path(config, social_config))
+        return
+    if candidates:
+        _echo_candidates(db_path or default_db_path())
         return
     catalog = _load_catalog(config)
     rows = [
@@ -339,26 +375,118 @@ def list_sources(
     typer.echo(format_table(["id", "adapter", "enabled", "islands", "license", "status"], rows))
 
 
+def _candidate_url(raw: str, option: str) -> str:
+    text = raw.strip()
+    parts = urlsplit(text)
+    if parts.scheme not in ("http", "https") or not parts.hostname:
+        raise typer.BadParameter(f"{raw!r} is not an http(s) URL", param_hint=option)
+    return text
+
+
+def _manual_candidates(
+    urls: Sequence[str], url_file: Path | None, social_urls: Sequence[str]
+) -> list[FoundCandidate]:
+    """Candidates a person typed in; validated before anything runs."""
+    raw = [_candidate_url(u, "--url") for u in urls]
+    if url_file is not None:
+        try:
+            lines = url_file.read_text(encoding="utf-8").splitlines()
+        except OSError as exc:
+            raise typer.BadParameter(
+                f"cannot read {url_file}: {exc}", param_hint="--url-file"
+            ) from exc
+        raw += [
+            _candidate_url(ln, "--url-file")
+            for ln in lines
+            if ln.strip() and not ln.lstrip().startswith("#")
+        ]
+    found = [
+        FoundCandidate(u, "social" if classify_social_url(u) else "web", "manual") for u in raw
+    ]
+    found += [
+        FoundCandidate(_candidate_url(u, "--social-url"), "social", "user_reported")
+        for u in social_urls
+    ]
+    return found
+
+
 @app.command("discover-sources")
 def discover_sources(
+    url: Annotated[
+        list[str] | None, typer.Option("--url", help="A page worth checking (repeatable).")
+    ] = None,
+    url_file: Annotated[
+        Path | None, typer.Option("--url-file", help="Text file with one URL per line.")
+    ] = None,
+    social_url: Annotated[
+        list[str] | None,
+        typer.Option("--social-url", help="A social account or page you know of (repeatable)."),
+    ] = None,
+    no_catalogs: Annotated[
+        bool, typer.Option("--no-catalogs", help="Skip the catalog searches and domain probes.")
+    ] = False,
+    no_links: Annotated[
+        bool, typer.Option("--no-links", help="Do not read the pages of configured sources.")
+    ] = False,
+    db_path: DbOption = None,
     output_dir: OutputOption = DEFAULT_OUTPUT_DIR,
     config: ConfigOption = DEFAULT_CONFIG,
 ) -> None:
-    """Search open-data catalogs and probe candidate domains. Never enables anything."""
+    """Find possible sources and keep them as candidates. Never enables anything."""
+    manual = _manual_candidates(url or [], url_file, social_url or [])
     catalog = _load_catalog(config)
+    now = datetime.now(TZ)
+    path = db_path or default_db_path()
+    known = configured_urls(catalog.sources)
+    notes: list[str] = []
     with make_client(discovery=True) as client:
-        report = run_discovery(client, probes=catalog.discovery_probes, now=datetime.now(TZ))
-    path = output_dir / "discovery-report.json"
-    write_atomic(path, (json.dumps(report, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
+        if no_catalogs:
+            report: dict[str, Any] = {
+                "generated_at": now.isoformat(), "notes": [], "results": [],
+                "summary": {"requests": 0, "needs_manual_check": 0, "errors": 0},
+            }  # fmt: skip
+        else:
+            report = run_discovery(client, probes=catalog.discovery_probes, now=now)
+        found = candidates_from_report(report)
+        if not no_links:
+            linked, notes = discover_links(
+                client,
+                catalog.sources,
+                known=known,
+                official_domains=configured_domains(catalog.sources),
+            )
+            found += linked
+    found += manual
+    stored: list[dict[str, Any]] = []
+    if found:
+        with Database(path) as db:
+            for item in dict.fromkeys(found):
+                social = classify_social_url(item.url)
+                mode = social[1] if social else None
+                is_new = db.add_candidate(item.url, item.kind, item.discovered_via, now, mode)
+                stored.append(
+                    {"url": item.url, "kind": item.kind, "via": item.discovered_via, "new": is_new}
+                )
+    new = sum(1 for c in stored if c["new"])
+    report["candidates"] = stored
+    report["link_notes"] = notes
+    report["summary"]["new_candidates"] = new
+    out = output_dir / "discovery-report.json"
+    write_atomic(out, (json.dumps(report, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
     summary = report["summary"]
     typer.echo(
         f"{summary['requests']} requests, {summary['errors']} errors, "
-        f"{summary['needs_manual_check']} need a manual check. Report: {path}"
+        f"{summary['needs_manual_check']} need a manual check; "
+        f"{len(stored)} candidate(s), {new} new. Report: {out}"
     )
     for result in report["results"]:
         if result["needs_manual_check"]:
             typer.echo(f"  manual check: {result['kind']} {result['endpoint']} -> "
                        f"{result['items_found']} item(s)")  # fmt: skip
+    for note in notes:
+        typer.echo(f"  link discovery: {note}")
+    if new:
+        typer.echo("Validate them with `validate-source <id|url>`; nothing is enabled.")
 
 
 def _fail(message: str, code: int) -> typer.Exit:

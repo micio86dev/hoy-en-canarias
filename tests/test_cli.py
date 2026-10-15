@@ -452,14 +452,113 @@ def test_discover_sources_writes_report(tmp_path: Path, monkeypatch: pytest.Monk
     config = write_config(tmp_path, [fake_source("a")], discovery_probes=["probe.test"])
 
     result = invoke(
-        "discover-sources", "--config", str(config), "--output-dir", str(tmp_path / "o")
-    )
+        "discover-sources", "--config", str(config), "--output-dir", str(tmp_path / "o"),
+        "--db", str(tmp_path / "db.sqlite"),
+    )  # fmt: skip
 
     assert result.exit_code == 0, result.output
     report = json.loads((tmp_path / "o" / "discovery-report.json").read_text(encoding="utf-8"))
     kinds = {r["kind"] for r in report["results"]}
     assert kinds == {"ckan_search", "datos_gob_es", "tribe_events", "ical", "drupal_jsonapi"}
     assert "manual check" in result.output
+
+
+def discover_args(tmp_path: Path, config: Path, *extra: str) -> list[str]:
+    return [
+        "discover-sources", "--config", str(config), "--output-dir", str(tmp_path / "o"),
+        "--db", str(tmp_path / "db.sqlite"), *extra,
+    ]  # fmt: skip
+
+
+def candidates(tmp_path: Path) -> dict[str, Any]:
+    with Database(tmp_path / "db.sqlite") as db:
+        return {c.url: c for c in db.list_candidates()}
+
+
+def test_manual_and_social_urls_are_stored_as_candidates_only(tmp_path: Path) -> None:
+    config = write_config(tmp_path, [fake_source("a")])
+    urls = tmp_path / "urls.txt"
+    urls.write_text("# organizers\nhttps://c.example.org/agenda\n\n", encoding="utf-8")
+    result = invoke(
+        *discover_args(
+            tmp_path, config, "--no-catalogs", "--no-links",
+            "--url", "https://a.example.org/eventos", "--url", "https://www.facebook.com/grupo",
+            "--url-file", str(urls), "--social-url", "https://mastodon.example/@agenda",
+        )
+    )  # fmt: skip
+    assert result.exit_code == 0, result.output
+    found = candidates(tmp_path)
+    assert set(found) == {
+        "https://a.example.org/eventos", "https://www.facebook.com/grupo",
+        "https://c.example.org/agenda", "https://mastodon.example/@agenda",
+    }  # fmt: skip
+    assert found["https://a.example.org/eventos"].kind == "web"
+    assert found["https://www.facebook.com/grupo"].kind == "social"
+    assert found["https://www.facebook.com/grupo"].acquisition_mode == "requires_authorization"
+    mastodon = found["https://mastodon.example/@agenda"]
+    assert (mastodon.kind, mastodon.discovered_via, mastodon.acquisition_mode) == (
+        "social", "user_reported", "rss",
+    )  # fmt: skip
+    assert all(c.verification_state == "candidate" for c in found.values())
+    with Database(tmp_path / "db.sqlite") as db:
+        assert db.count("sources") == 0  # nothing is enabled or registered
+    report = json.loads((tmp_path / "o" / "discovery-report.json").read_text(encoding="utf-8"))
+    assert len(report["candidates"]) == 4 and report["summary"]["new_candidates"] == 4
+
+    again = invoke(
+        *discover_args(tmp_path, config, "--no-catalogs", "--no-links", "--url", "https://a.example.org/eventos")
+    )  # fmt: skip
+    assert again.exit_code == 0 and "0 new" in again.output
+
+
+@pytest.mark.parametrize(
+    "extra", [["--url", "ftp://x.test/a"], ["--social-url", "not a url"], ["--url", "http://"]]
+)
+def test_invalid_candidate_urls_are_refused_before_anything_runs(
+    tmp_path: Path, extra: list[str]
+) -> None:
+    config = write_config(tmp_path, [fake_source("a")])
+    result = invoke(*discover_args(tmp_path, config, "--no-catalogs", "--no-links", *extra))
+    assert result.exit_code == 2
+    assert not (tmp_path / "db.sqlite").exists()
+
+
+@respx.mock
+@pytest.mark.usefixtures("offline")
+def test_discovery_follows_links_of_configured_sources(tmp_path: Path) -> None:
+    respx.get("https://www.example.org/robots.txt").mock(return_value=httpx.Response(404))
+    respx.get("https://www.example.org/").mock(
+        return_value=httpx.Response(
+            200,
+            text='<a href="/agenda/">Agenda</a><a href="https://elsewhere.test/agenda">Agenda</a>',
+            headers={"content-type": "text/html"},
+        )
+    )
+    config = write_config(tmp_path, [fake_source("portal", homepage="https://www.example.org/")])
+    result = invoke(*discover_args(tmp_path, config, "--no-catalogs"))
+    assert result.exit_code == 0, result.output
+    found = candidates(tmp_path)
+    assert set(found) == {"https://www.example.org/agenda/"}
+    assert found["https://www.example.org/agenda/"].discovered_via == "link:portal"
+
+
+def test_list_sources_candidates_prints_them(tmp_path: Path) -> None:
+    config = write_config(tmp_path, [fake_source("a")])
+    invoke(
+        *discover_args(
+            tmp_path,
+            config,
+            "--no-catalogs",
+            "--no-links",
+            "--url",
+            "https://a.example.org/eventos",
+        )
+    )
+    result = invoke(
+        "list-sources", "--candidates", "--config", str(config), "--db", str(tmp_path / "db.sqlite")
+    )
+    assert result.exit_code == 0, result.output
+    assert "https://a.example.org/eventos" in result.output and "candidate" in result.output
 
 
 # --------------------------------------------------------------------------- misc

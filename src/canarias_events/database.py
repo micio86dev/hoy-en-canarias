@@ -105,7 +105,16 @@ CREATE TABLE quarantine (
 );
 CREATE INDEX idx_quarantine_source ON quarantine(source_id, status);
 """
-_MIGRATIONS = (_SCHEMA_V1, _SCHEMA_V2, _SCHEMA_V3)
+_SCHEMA_V4 = """
+CREATE TABLE source_candidates (
+    id TEXT PRIMARY KEY, url TEXT NOT NULL UNIQUE, kind TEXT NOT NULL,
+    discovered_via TEXT NOT NULL, discovered_at TEXT NOT NULL,
+    verification_state TEXT NOT NULL DEFAULT 'candidate'
+        CHECK (verification_state IN ('candidate', 'verified', 'rejected')),
+    acquisition_mode TEXT, last_validated_at TEXT, last_score INTEGER, report TEXT
+);
+"""
+_MIGRATIONS = (_SCHEMA_V1, _SCHEMA_V2, _SCHEMA_V3, _SCHEMA_V4)
 
 _JSON_FIELDS = frozenset({"tags", "extra"})
 _BOOL_FIELDS = frozenset({"all_day", "is_free"})
@@ -200,6 +209,22 @@ class QuarantinedEvent:
     event: Event
 
 
+@dataclass(frozen=True)
+class SourceCandidate:
+    """A possible source found by discovery or given by a person; never run automatically."""
+
+    id: str
+    url: str
+    kind: str  # web | feed | api | dataset | social
+    discovered_via: str
+    discovered_at: str
+    verification_state: str  # candidate | verified | rejected
+    acquisition_mode: str | None
+    last_validated_at: str | None
+    last_score: int | None
+    report: dict[str, Any] | None
+
+
 def default_db_path() -> Path:
     return Path(os.environ.get(DB_PATH_ENV) or DEFAULT_DB_PATH)
 
@@ -239,6 +264,15 @@ def _decode(name: str, value: Any) -> Any:
     if name in _BOOL_FIELDS and value is not None:
         return bool(value)
     return value
+
+
+def _candidate_row(row: sqlite3.Row) -> SourceCandidate:
+    return SourceCandidate(
+        id=row["id"], url=row["url"], kind=row["kind"], discovered_via=row["discovered_via"],
+        discovered_at=row["discovered_at"], verification_state=row["verification_state"],
+        acquisition_mode=row["acquisition_mode"], last_validated_at=row["last_validated_at"],
+        last_score=row["last_score"], report=json.loads(row["report"]) if row["report"] else None,
+    )  # fmt: skip
 
 
 def row_to_event(row: sqlite3.Row) -> Event:
@@ -433,6 +467,44 @@ class Database:
                 (status, source_id),
             )
         return cur.rowcount
+
+    # ------------------------------------------------------------------ source candidates
+
+    def add_candidate(
+        self, url: str, kind: str, via: str, now: datetime, mode: str | None = None
+    ) -> bool:
+        """Remember a possible source; True when new. An existing one is never touched."""
+        from canarias_events.candidates import candidate_id  # avoid an import cycle
+
+        with self.conn:
+            cur = self.conn.execute(
+                "INSERT OR IGNORE INTO source_candidates (id, url, kind, discovered_via,"
+                " discovered_at, acquisition_mode) VALUES (?, ?, ?, ?, ?, ?)",
+                (candidate_id(url), url, kind, via, now.isoformat(), mode),
+            )
+        return cur.rowcount == 1
+
+    def get_candidate(self, id_or_url: str) -> SourceCandidate | None:
+        row = self.conn.execute(
+            "SELECT * FROM source_candidates WHERE id = ? OR url = ?", (id_or_url, id_or_url)
+        ).fetchone()
+        return _candidate_row(row) if row else None
+
+    def list_candidates(self) -> list[SourceCandidate]:
+        rows = self.conn.execute("SELECT * FROM source_candidates ORDER BY discovered_at, id")
+        return [_candidate_row(r) for r in rows]
+
+    def update_candidate(
+        self, candidate_id: str, *, state: str, mode: str | None, score: int,
+        report: dict[str, Any], now: datetime,
+    ) -> None:  # fmt: skip
+        with self.conn:
+            self.conn.execute(
+                "UPDATE source_candidates SET verification_state=?, acquisition_mode=?,"
+                " last_score=?, report=?, last_validated_at=? WHERE id=?",
+                (state, mode, score, json.dumps(report, ensure_ascii=False, default=str),
+                 now.isoformat(), candidate_id),
+            )  # fmt: skip
 
     # ------------------------------------------------------------------ import runs
 

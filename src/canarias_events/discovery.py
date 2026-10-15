@@ -11,9 +11,12 @@ import re
 from collections.abc import Sequence
 from datetime import datetime
 from typing import Any
-from urllib.parse import quote
+from urllib.parse import quote, urlsplit
 
-from canarias_events.http import FetchError, SafeHttpClient
+from canarias_events.candidates import FoundCandidate, extract_candidate_links, registrable_domain
+from canarias_events.extract.robots import RobotsPolicy
+from canarias_events.http import FetchError, SafeHttpClient, mask_secrets
+from canarias_events.sources.base import SourceConfig
 
 DEFAULT_TERMS = ("agenda", "eventos", "actividades", "fiestas")
 CKAN_PORTALS = (
@@ -172,6 +175,65 @@ def probe_domain(client: SafeHttpClient, domain: str) -> list[dict[str, Any]]:
         _failure(record, exc)
     results.append(record)
     return results
+
+
+MAX_LINK_SOURCES = 10
+LINKS_PER_SOURCE = 10
+
+
+def configured_domains(sources: Sequence[SourceConfig]) -> set[str]:
+    """Registrable domains of the configured sources: the only foreign domains links may use."""
+    urls = [u for s in sources for u in (s.url, s.homepage) if u]
+    return {registrable_domain(urlsplit(u).hostname or "") for u in urls}
+
+
+def configured_urls(sources: Sequence[SourceConfig]) -> set[str]:
+    urls: set[str] = set()
+    for s in sources:
+        urls.update(u for u in (s.url, s.homepage, *s.params.get("listing_urls", [])) if u)
+    return urls
+
+
+def discover_links(
+    client: SafeHttpClient,
+    sources: Sequence[SourceConfig],
+    *,
+    known: set[str],
+    official_domains: set[str],
+    max_sources: int = MAX_LINK_SOURCES,
+    per_source: int = LINKS_PER_SOURCE,
+) -> tuple[list[FoundCandidate], list[str]]:
+    """Agenda-like links on the pages of enabled, configured sources (one page each).
+
+    Bounded (``max_sources`` pages, ``per_source`` links), robots.txt respected, same
+    registrable domain or ``official_domains`` only. Returns candidates and notes about
+    pages that could not be read.
+    """
+    robots = RobotsPolicy(client)
+    found: list[FoundCandidate] = []
+    notes: list[str] = []
+    seen = set(known)
+    pages = [s for s in sources if s.enabled and (s.homepage or s.adapter == "web")]
+    for cfg in pages[:max_sources]:
+        page = cfg.homepage or cfg.url
+        host = urlsplit(page).hostname or ""
+        if not robots.allowed(page):
+            notes.append(f"{cfg.id}: robots.txt does not allow {mask_secrets(page)}")
+            continue
+        try:
+            response = client.get(page, allowed_hosts={host, f"www.{host.removeprefix('www.')}"})
+        except FetchError as exc:
+            notes.append(f"{cfg.id}: {exc}")
+            continue
+        if "html" not in response.headers.get("content-type", "").lower():
+            continue
+        html = response.content.decode("utf-8", errors="replace")
+        links = extract_candidate_links(
+            html, response.url, official_domains=official_domains, known=seen, limit=per_source
+        )
+        seen.update(links)
+        found.extend(FoundCandidate(link, "web", f"link:{cfg.id}") for link in links)
+    return found, notes
 
 
 def run_discovery(
