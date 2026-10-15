@@ -8,6 +8,7 @@ import pytest
 
 from canarias_events.extract.dates_es import (
     find_date_ranges,
+    find_times,
     parse_date_range,
     parse_time_range,
 )
@@ -268,9 +269,60 @@ def test_duration_next_to_a_date_does_not_become_start_time() -> None:
 
 def test_duration_does_not_hide_a_real_start_time() -> None:
     assert parse_time_range("Duración: 2 horas. A las 20:00 h") == (time(20, 0), None)
-    from canarias_events.extract.dates_es import find_times
-
     assert find_times("Duración: 2 horas. Hora: 20.00 h") == {time(20, 0)}
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("Viernes 24 de octubre, 21 horas", time(21, 0)),
+        ("24 de octubre de 2026 - 20 horas", time(20, 0)),
+        ("24 de octubre de 2026, 20 horas", time(20, 0)),
+        ("Sábado 24 de octubre 19 horas", time(19, 0)),
+        ("Hora: 21 horas", time(21, 0)),
+    ],
+)
+def test_bare_hour_after_a_date_is_a_clock_time(text: str, expected: time) -> None:
+    assert parse_time_range(text) == (expected, None)
+    assert find_times(text) == {expected}
+
+
+def test_bare_hour_after_a_date_is_the_start_time() -> None:
+    parsed = parse_date_range("Viernes 24 de octubre de 2026, 21 horas")
+    assert parsed is not None
+    assert parsed.start == date(2026, 10, 24)
+    assert parsed.start_time == time(21, 0)
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "24 de octubre de 2026. Duración: 2 horas",
+        "24 de octubre de 2026, 2 horas y 30 minutos",
+        "24 de octubre de 2026 - 2 horas y media de espectáculo",
+        "24 de octubre de 2026, aprox. 2 horas",
+        "24 de octubre de 2026, de duración 2 horas",
+        "Espectáculo de 2 horas",
+    ],
+)
+def test_durations_after_a_date_stay_durations(text: str) -> None:
+    assert parse_time_range(text) == (None, None)
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Título\n24 al 26 de octubre de 2026",
+        "Concierto\n  24 - 26 de octubre de 2026",
+        "Title\r\n24 al 26 de octubre",
+    ],
+)
+def test_range_starts_after_a_line_break(text: str) -> None:
+    assert _span(text, context_year=2026) == (date(2026, 10, 24), date(2026, 10, 26))
+
+
+def test_street_number_on_the_previous_line_is_not_a_range() -> None:
+    assert _span("Plaza 2\n- 15 de octubre de 2026") == (date(2026, 10, 15), None)
 
 
 def test_street_number_before_a_date_is_not_a_range() -> None:

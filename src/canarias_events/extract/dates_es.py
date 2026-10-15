@@ -59,11 +59,11 @@ _RE_MONTH_FIRST = re.compile(
 )
 _RE_WEEKDAY_GLUE = re.compile(r"(?<![a-z0-9])[lmxjvsd](?=\d{1,2}\s+(?:de\s+)?[a-z]{3})")
 # A leading bare day is a range start only after a range cue (string start, punctuation, "del",
-# "desde el", a weekday); "Plaza 2 - 15 de octubre" has a street number there instead.
+# "desde el", a weekday, a line start); "Plaza 2 - 15 de octubre" has a street number there.
 _RANGE_CUE = (
-    r"(?:^\s*|(?<=[,;:(\[!¡.])\s*|(?<=\bdel )|(?<=\bdesde el )|(?<=\bdesde )|(?<=\bel )"
-    r"|(?<=\bde )|(?<=\bfrom )|(?<=\blunes )|(?<=\bmartes )|(?<=\bmiercoles )|(?<=\bjueves )"
-    r"|(?<=\bviernes )|(?<=\bsabado )|(?<=\bdomingo ))"
+    r"(?:^\s*|(?<=[\r\n])[ \t]*|(?<=[,;:(\[!¡.])\s*|(?<=\bdel )|(?<=\bdesde el )|(?<=\bdesde )"
+    r"|(?<=\bel )|(?<=\bde )|(?<=\bfrom )|(?<=\blunes )|(?<=\bmartes )|(?<=\bmiercoles )"
+    r"|(?<=\bjueves )|(?<=\bviernes )|(?<=\bsabado )|(?<=\bdomingo ))"
 )
 _RE_DAY_ONLY_BEFORE = re.compile(rf"{_RANGE_CUE}(?P<d>\d{{1,2}})(?![\d:/]|\.\d){_SEP}$")
 _RE_SEP_ONLY_BEFORE = re.compile(rf"{_SEP}$")
@@ -189,6 +189,11 @@ def _token_ok(sep: str | None, has_h: bool, has_ap: bool) -> bool:
     return has_h or has_ap  # "18.00 horas", "20h", "8 pm"; a bare "1.2" is not a time
 
 
+_RE_LENGTH_AFTER = re.compile(r"\s*y\s+(?:\d{1,2}\s*min|media\b|cuarto\b)")
+# A bare "21 horas" right after a date, a year, a month, a comma or a dash is a clock time.
+_RE_DATE_CONTEXT = re.compile(rf"(?:[,\-–—]|\b(?:{_MON})|\b{_YEAR})\s*$")
+
+
 def _is_duration(folded: str, m: re.Match[str], p: str) -> bool:
     """True for "Duración: 2 horas", "dura 2 h", "de 2 horas": a length, not a clock time."""
     before = folded[max(0, m.start(f"{p}h") - _UNIT_LOOKBACK) : m.start(f"{p}h")]
@@ -196,8 +201,14 @@ def _is_duration(folded: str, m: re.Match[str], p: str) -> bool:
         return True
     unit = m.group(f"{p}hs") or ""
     bare = m.group(f"{p}s") is None
-    # A bare hour followed by the long unit ("2 horas") is a length unless introduced by "a las".
-    return bare and unit.rstrip(".").startswith("hora") and not _RE_AT_CUE.search(before)
+    if not (bare and unit.rstrip(".").startswith("hora")):
+        return False
+    # "2 horas y 30 minutos", "2 horas y media": a length wherever it stands.
+    if _RE_LENGTH_AFTER.match(folded, m.end(f"{p}hs")):
+        return True
+    # A bare hour with the long unit is a length unless it is introduced as a time ("a las") or
+    # stands right after a date, year, month, comma or dash ("24 de octubre, 21 horas").
+    return not (_RE_AT_CUE.search(before) or _RE_DATE_CONTEXT.search(before))
 
 
 def _times_in(folded: str) -> tuple[time | None, time | None]:
