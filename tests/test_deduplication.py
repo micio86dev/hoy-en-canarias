@@ -433,3 +433,77 @@ def test_half_a_coordinate_pair_never_replaces_a_complete_one(db: Database) -> N
     stored = db.get_event(first.event_id)
     assert stored is not None
     assert (stored.latitude, stored.longitude) == (28.1, -16.7)
+
+
+# --------------------------------------------------------------------------- social trust
+
+
+@pytest.fixture
+def social_db(db: Database) -> Database:
+    db.sync_sources([make_cfg("soc", priority=10)])
+    return db
+
+
+def social_event(**overrides: Any) -> Event:
+    data: dict[str, Any] = {
+        "source_name": "Source soc",
+        "source_event_id": "post-1",
+        "extra": {"source_trust": "social", "post_url": "https://social.test/1"},
+    }
+    data.update(overrides)
+    return make_event(**data)
+
+
+def test_a_social_event_is_never_fuzzy_merged_into_a_reliable_one(social_db: Database) -> None:
+    reliable = ingest(social_db, make_event(), "s1")
+    result = ingest(social_db, social_event(title="Concierto de Navidad!"), "soc")
+
+    assert result.outcome == "new" and result.event_id != reliable.event_id
+    assert result.possible_duplicates == 1
+    [pair] = social_db.possible_duplicates()
+    assert "social" in pair["reason"]
+    assert social_db.count("events") == 2
+
+
+def test_a_reliable_event_is_not_fuzzy_merged_into_a_social_one_either(
+    social_db: Database,
+) -> None:
+    ingest(social_db, social_event(), "soc")
+    result = ingest(social_db, make_event(), "s1")
+    assert result.outcome == "new" and result.possible_duplicates == 1
+
+
+def test_two_social_sources_are_never_merged_by_fuzzy_match(social_db: Database) -> None:
+    social_db.sync_sources([make_cfg("soc2", priority=10)])
+    ingest(social_db, social_event(), "soc")
+    result = ingest(social_db, social_event(source_event_id="post-2"), "soc2")
+    assert result.outcome == "new" and social_db.count("events") == 2
+
+
+def test_the_same_official_url_still_merges_and_social_never_overwrites(
+    social_db: Database,
+) -> None:
+    url = "https://teatro.test/evento/gala"
+    reliable = ingest(
+        social_db, make_event(official_event_url=url, description="Texto oficial"), "s1"
+    )
+    result = ingest(
+        social_db,
+        social_event(official_event_url=url, description="Tweet del fan", image_url="https://i/x"),
+        "soc",
+    )
+
+    assert result.outcome == "merged" and result.event_id == reliable.event_id
+    stored = social_db.get_event(reliable.event_id)
+    assert stored is not None
+    assert stored.description == "Texto oficial"  # the reliable value stays
+    assert stored.title == "Concierto de Navidad"
+    assert stored.image_url == "https://i/x"  # a gap may be filled; nothing is overwritten
+
+
+def test_a_reliable_source_overrides_what_a_social_one_wrote_first(social_db: Database) -> None:
+    url = "https://teatro.test/evento/gala"
+    first = ingest(social_db, social_event(official_event_url=url, description="Tweet"), "soc")
+    ingest(social_db, make_event(official_event_url=url, description="Texto oficial"), "s1")
+    stored = social_db.get_event(first.event_id)
+    assert stored is not None and stored.description == "Texto oficial"

@@ -34,6 +34,7 @@ SCHEDULABLE_MODES = frozenset({"api_public", "rss"})
 SOCIAL_PRIORITY = 10
 BLUESKY_APPVIEW = "https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed"
 
+_RE_HOST = re.compile(r"^[a-z0-9-]+(?:\.[a-z0-9-]+)+$")
 _RE_MASTODON = re.compile(
     r"^@?(?P<user>[A-Za-z0-9_.-]+)@(?P<host>[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+)$"
 )
@@ -52,6 +53,8 @@ class SocialSource(BaseModel):
     url: str | None = None
     handle: str | None = None  # mastodon: user@instance; bluesky: name.bsky.social
     adapter: Adapter | None = None
+    link_hosts: list[str] = Field(default_factory=list)  # hosts whose event pages may be read
+    year_policy: Literal["strict", "infer"] = "strict"
     islands: list[str] = Field(default_factory=list)
     municipalities: list[str] = Field(default_factory=list)
     categories: list[str] = Field(default_factory=list)
@@ -79,6 +82,15 @@ class SocialSource(BaseModel):
         if value is not None:
             parse_frequency(value)
         return value
+
+    @field_validator("link_hosts")
+    @classmethod
+    def _bare_hosts(cls, value: list[str]) -> list[str]:
+        hosts = [h.strip().lower() for h in value]
+        for host in hosts:
+            if not _RE_HOST.match(host):
+                raise ValueError(f"link_hosts takes bare host names, got {host!r}")
+        return hosts
 
     @field_validator("islands")
     @classmethod
@@ -170,7 +182,12 @@ def _endpoint(source: SocialSource) -> str:
 
 def to_source_config(source: SocialSource) -> SourceConfig:
     """The pipeline's view of a scheduled account (low priority, social licence note)."""
-    params: dict[str, Any] = {"handle": source.handle} if source.handle else {}
+    params: dict[str, Any] = {}
+    if source.adapter in ("mastodon", "bluesky"):
+        params = {
+            "handle": source.handle, "link_hosts": source.link_hosts,
+            "year_policy": source.year_policy,
+        }  # fmt: skip
     return SourceConfig(
         id=source.id,
         name=source.name,

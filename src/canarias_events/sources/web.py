@@ -105,6 +105,7 @@ class WebParams(BaseModel):
     ai: bool = False
     empty_marker: str | None = None
     venue_name: str | None = None
+    jsonld_only: bool = False  # single event pages: only trust structured data, never guess
 
     @field_validator("sitemap_url_pattern", "detail_url_pattern", "empty_marker")
     @classmethod
@@ -496,6 +497,9 @@ class _Run:
         steps: list[tuple[str, Callable[[], list[CandidateEvent] | None]]] = [
             ("jsonld", lambda: self.tier_jsonld(pages)),
         ]
+        if self.p.jsonld_only:
+            found = self.attempt(f"{prefix}jsonld", steps[0][1])
+            return (f"{prefix}jsonld", found) if found else ("", [])
         if not prefix:
             steps.append(("detail-jsonld", self.tier_detail))
         steps.extend(

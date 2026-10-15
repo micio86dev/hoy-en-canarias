@@ -168,6 +168,14 @@ class Event(BaseModel):
         return hashlib.sha256(blob.encode("utf-8")).hexdigest()
 
 
+SOCIAL_TRUST = "social"  # ``extra.source_trust`` of events derived from social posts
+
+
+def is_social(event: Event) -> bool:
+    """True for events read from social posts: they never outrank or fuzzy-merge with others."""
+    return event.extra.get("source_trust") == SOCIAL_TRUST
+
+
 def _hashable(value: Any) -> Any:
     if isinstance(value, datetime):
         return value.astimezone(TZ).isoformat() if value.tzinfo else value.isoformat()

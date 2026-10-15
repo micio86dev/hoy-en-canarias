@@ -362,6 +362,75 @@ def test_report_without_runs(tmp_path: Path) -> None:
     assert "No import runs" in result.output
 
 
+# --------------------------------------------------------------------------- social accounts
+
+
+def mastodon_row(**overrides: Any) -> dict[str, Any]:
+    row: dict[str, Any] = {
+        "id": "masto", "platform": "mastodon", "name": "Agenda Mastodon", "adapter": "mastodon",
+        "handle": "agenda@mastodon.example", "acquisition_mode": "rss",
+        "verification_state": "verified", "enabled": True, "islands": ["Tenerife"],
+        "year_policy": "infer",
+    }  # fmt: skip
+    row.update(overrides)
+    return row
+
+
+FEED_XML = (
+    "<?xml version='1.0'?><rss version='2.0'><channel><title>Agenda</title>"
+    "<item><guid>https://mastodon.example/@agenda/1</guid>"
+    "<link>https://mastodon.example/@agenda/1</link>"
+    "<pubDate>Wed, 14 Oct 2026 10:00:00 +0000</pubDate>"
+    "<description>&lt;p&gt;Concierto en Adeje el martes 20 de octubre a las 20:00&lt;/p&gt;"
+    "</description></item></channel></rss>"
+)
+
+
+@respx.mock
+def test_import_events_runs_verified_social_accounts(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(
+        cli,
+        "make_client",
+        lambda *_a, **_k: SafeHttpClient(
+            resolver=lambda _h: ["93.184.216.34"], min_interval=0, retries=0, sleep=lambda _s: None
+        ),
+    )
+    feed = respx.get("https://mastodon.example/@agenda.rss").mock(
+        return_value=httpx.Response(200, content=FEED_XML.encode())
+    )
+    config = write_config(tmp_path, [fake_source("a")])
+    social = tmp_path / "social.yaml"
+    rows = [
+        mastodon_row(),
+        mastodon_row(id="cand", handle="c@mastodon.example", verification_state="candidate"),
+        {"id": "fb", "platform": "facebook", "name": "Facebook", "kind": "platform",
+         "acquisition_mode": "requires_authorization"},
+    ]  # fmt: skip
+    social.write_text(yaml.safe_dump({"sources": rows}), encoding="utf-8")
+
+    result = invoke(
+        *import_args(tmp_path, config, "--from", "2026-10-19", "--to", "2026-10-25"),
+        "--social-config", str(social),
+    )  # fmt: skip
+
+    assert result.exit_code == 0, result.output
+    assert feed.call_count == 1  # the candidate and the Facebook row are never fetched
+    report = json.loads((tmp_path / "out" / "import-report.json").read_text(encoding="utf-8"))
+    assert report["sources_succeeded"] == ["a", "masto"]
+    events = json.loads((tmp_path / "out" / "events.json").read_text(encoding="utf-8"))
+    assert "Concierto en Adeje el martes 20 de octubre a las 20:00" in {e["title"] for e in events}
+
+
+def test_a_social_id_clashing_with_sources_yaml_is_refused(tmp_path: Path) -> None:
+    config = write_config(tmp_path, [fake_source("masto")])
+    social = tmp_path / "social.yaml"
+    social.write_text(yaml.safe_dump({"sources": [mastodon_row()]}), encoding="utf-8")
+    result = invoke(*import_args(tmp_path, config), "--social-config", str(social))
+    assert result.exit_code == 2 and "masto" in result.output
+
+
 # --------------------------------------------------------------------------- discover-sources
 
 

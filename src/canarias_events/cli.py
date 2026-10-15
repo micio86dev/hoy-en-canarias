@@ -21,7 +21,7 @@ from canarias_events.health import summarize
 from canarias_events.http import SafeHttpClient
 from canarias_events.logging_config import configure_logging
 from canarias_events.pipeline import accept_quarantine, run_import
-from canarias_events.social import load_social_registry, schedule_blocker
+from canarias_events.social import load_social_registry, schedule_blocker, scheduled_sources
 from canarias_events.sources.registry import SourcesCatalog, load_catalog
 
 DEFAULT_CONFIG = Path("config/sources.yaml")
@@ -77,6 +77,21 @@ def _load_catalog(path: Path) -> SourcesCatalog:
 
 def _social_path(config: Path, social_config: Path | None) -> Path:
     return social_config or config.parent / "social_sources.yaml"
+
+
+def _with_social(catalog: SourcesCatalog, path: Path) -> SourcesCatalog:
+    """The catalog plus the verified, enabled social accounts (never anything else)."""
+    try:
+        extra = scheduled_sources(load_social_registry(path))
+    except (OSError, ValueError) as exc:
+        raise typer.BadParameter(
+            f"cannot load {path}: {exc}", param_hint="--social-config"
+        ) from exc
+    taken = {s.id for s in catalog.sources}
+    clash = [s.id for s in extra if s.id in taken]
+    if clash:
+        raise typer.BadParameter(f"social source id(s) also in sources.yaml: {', '.join(clash)}")
+    return catalog.model_copy(update={"sources": [*catalog.sources, *extra]})
 
 
 def _parse_day(value: str, option: str) -> date:
@@ -215,10 +230,11 @@ def import_events(
     db_path: DbOption = None,
     output_dir: OutputOption = DEFAULT_OUTPUT_DIR,
     config: ConfigOption = DEFAULT_CONFIG,
+    social_config: SocialConfigOption = None,
 ) -> None:
     """Fetch the enabled sources, deduplicate, store and export the window's events."""
     window = _window(from_date, to_date)
-    catalog = _load_catalog(config)
+    catalog = _with_social(_load_catalog(config), _social_path(config, social_config))
     typer.echo(
         f"Window: {window.start_date.isoformat()} to {window.end_date_inclusive.isoformat()} "
         "(Atlantic/Canary)"

@@ -115,6 +115,18 @@ def normalize_municipality(name: str | None) -> str | None:
     return _MUNICIPALITY_KEYS.get(normalize_title(name))
 
 
+def municipalities_after_en(text: str) -> set[str]:
+    """Municipalities a text places an event in: only the explicit "en <name>" form counts.
+
+    Whole words only, so a saint's name ("Virgen de Candelaria") or a surname is not a place.
+    """
+    folded = f" {normalize_title(text)} "
+    hits = {key for key in _MUNICIPALITY_KEYS if f" en {key} " in folded}
+    # "San Bartolomé de Tirajana" also contains "San Bartolomé": the longest name wins.
+    hits = {k for k in hits if not any(o != k and o.startswith(f"{k} ") for o in hits)}
+    return {_MUNICIPALITY_KEYS[key] for key in hits}
+
+
 def island_for_municipality(name: str | None) -> str | None:
     canonical = normalize_municipality(name)
     return MUNICIPALITIES[canonical] if canonical else None

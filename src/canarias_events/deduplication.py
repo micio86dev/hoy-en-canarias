@@ -8,7 +8,10 @@ Order of the rules for an incoming event:
    Near misses (similar title but no location agreement, or a lower score) are kept as separate
    events and reported as possible duplicates.
 
-Two events of the same source are never merged automatically.
+Two events of the same source are never merged automatically. Events read from social posts
+(``extra.source_trust == "social"``) skip rule 3 on either side: a near match is only reported
+as a possible duplicate. Rules 1 and 2 are exact identities and still apply; field conflicts are
+settled by source priority, which social sources keep low (see ``social.SOCIAL_PRIORITY``).
 """
 
 from __future__ import annotations
@@ -26,7 +29,7 @@ from canarias_events.database import (
 )
 from canarias_events.date_range import TZ
 from canarias_events.geo import normalize_municipality
-from canarias_events.models import Event
+from canarias_events.models import Event, is_social
 from canarias_events.normalize import normalize_title
 
 DEFAULT_MERGE_THRESHOLD = 92.0
@@ -117,7 +120,11 @@ def resolve(
                 )
             continue
         if score >= merge_threshold:
-            if not location_agrees(event, cand.event):
+            if is_social(event) or is_social(cand.event):
+                possibles.append(
+                    PossibleDuplicate(cand.event.id, score, "social source, never auto-merged")
+                )
+            elif not location_agrees(event, cand.event):
                 possibles.append(
                     PossibleDuplicate(cand.event.id, score, "similar title, location differs")
                 )

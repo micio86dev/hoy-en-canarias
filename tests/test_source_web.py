@@ -812,6 +812,25 @@ def test_page_limit_warning_names_the_low_resource_cap_when_it_is_lower(make_ctx
 
 
 @respx.mock
+def test_jsonld_only_ignores_block_extraction(make_ctx: Ctx) -> None:
+    robots()
+    page(LISTING, cards(5))
+    result = adapter(jsonld_only=True).fetch(make_ctx())
+    assert result.events == []
+    assert [t["tier"] for t in result.tiers] == ["jsonld"]
+    assert result.status == "needs_manual_review"
+
+
+@respx.mock
+def test_jsonld_only_still_reads_json_ld(make_ctx: Ctx) -> None:
+    robots()
+    page(LISTING, f"<html><body>{jsonld_event('Gala', '2026-10-24T20:00:00+01:00')}</body></html>")
+    result = adapter(jsonld_only=True).fetch(make_ctx())
+    assert [e.title for e in result.events] == ["Gala"]
+    assert result.strategy_used == "jsonld"
+
+
+@respx.mock
 def test_failure_of_a_later_listing_page_is_only_a_warning(make_ctx: Ctx) -> None:
     robots()
     page(f"https://{HOST}/agenda/page/1", cards(5))

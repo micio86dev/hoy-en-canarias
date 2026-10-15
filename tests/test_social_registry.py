@@ -156,6 +156,22 @@ def test_everything_else_is_not_scheduled(overrides: dict[str, Any]) -> None:
     assert scheduled_sources(SocialRegistry(sources=[row])) == []
 
 
+def test_link_hosts_and_year_policy_reach_the_adapter_params() -> None:
+    row = account(link_hosts=["Teatro.Example.org"], year_policy="infer")
+    [cfg] = scheduled_sources(SocialRegistry(sources=[row]))
+    assert cfg.params == {
+        "handle": "agenda@mastodon.example", "link_hosts": ["teatro.example.org"],
+        "year_policy": "infer",
+    }  # fmt: skip
+    assert account().year_policy == "strict" and account().link_hosts == []
+
+
+@pytest.mark.parametrize("host", ["https://teatro.example.org", "teatro.example.org/agenda", "x"])
+def test_link_hosts_must_be_bare_host_names(host: str) -> None:
+    with pytest.raises(ValidationError, match="link_hosts"):
+        account(link_hosts=[host])
+
+
 def test_a_malformed_handle_is_rejected() -> None:
     with pytest.raises(ValidationError, match="handle"):
         account(handle="not a handle")

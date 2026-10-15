@@ -155,3 +155,19 @@ def test_coordinates_invalid_inputs() -> None:
     assert island_for_coordinates(None, -16.25) is None
     assert island_for_coordinates(28.46, None) is None
     assert island_for_coordinates(float("nan"), -16.25) is None
+
+
+def test_municipalities_named_after_en() -> None:
+    from canarias_events.geo import municipalities_after_en
+
+    assert municipalities_after_en("Concierto en Adeje el sábado") == {"Adeje"}
+    assert municipalities_after_en("Fiesta EN LA LAGUNA y en Candelaria") == {
+        "San Cristóbal de La Laguna",
+        "Candelaria",
+    }
+    assert municipalities_after_en("Misa a la Virgen de Candelaria") == set()  # a name, not a place
+    assert municipalities_after_en("Entradas en Adejeros") == set()  # whole words only
+    assert municipalities_after_en("") == set()
+    assert municipalities_after_en("Fiesta en San Bartolomé de Tirajana el sábado") == {
+        "San Bartolomé de Tirajana"
+    }  # the longest name wins over the shorter one it contains

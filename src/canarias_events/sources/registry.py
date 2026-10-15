@@ -12,18 +12,22 @@ from pydantic import BaseModel, Field
 from canarias_events.crawl_settings import CrawlSettings
 from canarias_events.extract.llm import AiSettings
 from canarias_events.sources.base import SourceAdapter, SourceConfig
+from canarias_events.sources.bluesky import BlueskyAdapter
 from canarias_events.sources.ckan import CkanAdapter
 from canarias_events.sources.drupal_jsonapi import DrupalJsonApiAdapter
 from canarias_events.sources.ical import IcalAdapter
+from canarias_events.sources.mastodon import MastodonAdapter
 from canarias_events.sources.rss import RssAdapter
 from canarias_events.sources.ticketmaster import TicketmasterAdapter
 from canarias_events.sources.tribe_events import TribeEventsAdapter
 from canarias_events.sources.web import WebAdapter
 
 ADAPTERS: dict[str, type[SourceAdapter]] = {
+    "bluesky": BlueskyAdapter,
     "ckan": CkanAdapter,
     "drupal_jsonapi": DrupalJsonApiAdapter,
     "ical": IcalAdapter,
+    "mastodon": MastodonAdapter,
     "rss": RssAdapter,
     "ticketmaster": TicketmasterAdapter,
     "tribe_events": TribeEventsAdapter,
