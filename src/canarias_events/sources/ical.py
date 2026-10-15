@@ -9,7 +9,7 @@ from zoneinfo import ZoneInfo
 import icalendar
 import recurring_ical_events
 
-from canarias_events.date_range import TZ
+from canarias_events.date_range import TZ, DateWindow
 from canarias_events.geo import normalize_municipality
 from canarias_events.http import InvalidPayload
 from canarias_events.normalize import html_to_text
@@ -59,8 +59,12 @@ class IcalAdapter(SourceAdapter):
 
     def fetch(self, ctx: FetchContext) -> SourceFetchResult:
         config = self.config
+        return self.read(ctx.client.get(config.url).content, ctx.window)
+
+    def read(self, content: bytes, window: DateWindow) -> SourceFetchResult:
+        """Events of an iCalendar document, recurrences expanded inside ``window``."""
+        config = self.config
         result = SourceFetchResult()
-        content = ctx.client.get(config.url).content
         try:
             calendar = icalendar.Calendar.from_ical(content)
         except ValueError as exc:
@@ -86,7 +90,7 @@ class IcalAdapter(SourceAdapter):
             c for c in calendar.subcomponents if not any(c is u for u in undated)
         ]
         reported: set[str] = set()
-        occurrences = recurring_ical_events.of(calendar).between(ctx.window.start, ctx.window.end)
+        occurrences = recurring_ical_events.of(calendar).between(window.start, window.end)
         for component in occurrences:
             self._map(component, recurring, reported, result)
         return result

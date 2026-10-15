@@ -607,3 +607,223 @@ def test_the_report_shows_timings(tmp_path: Path) -> None:
     config = write_config(tmp_path, [fake_source("a")])
     result = invoke(*import_args(tmp_path, config))
     assert "Timing: total" in result.output
+
+
+# --------------------------------------------------------------------------- import-url
+
+
+EVENT_URL = "https://www.eventbrite.es/e/concierto-de-gala-tickets-123456"
+
+
+def event_page_html(name: str = "Concierto de gala") -> str:
+    data = {
+        "@context": "https://schema.org", "@type": "Event", "name": name,
+        "startDate": "2026-10-24T20:30:00+01:00",
+        "location": {"@type": "Place", "name": "Teatro Leal", "address": "La Laguna"},
+    }  # fmt: skip
+    return (
+        f'<html><body><script type="application/ld+json">{json.dumps(data)}</script></body></html>'
+    )
+
+
+@pytest.fixture
+def offline(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        cli,
+        "make_client",
+        lambda *_a, **_k: SafeHttpClient(
+            resolver=lambda _h: ["93.184.216.34"], min_interval=0, retries=0, sleep=lambda _s: None
+        ),
+    )
+
+
+def serve_event_page(url: str = EVENT_URL, name: str = "Concierto de gala") -> None:
+    host = url.split("/")[2]
+    respx.get(f"https://{host}/robots.txt").mock(return_value=httpx.Response(404))
+    respx.get(url).mock(
+        return_value=httpx.Response(
+            200, text=event_page_html(name), headers={"content-type": "text/html"}
+        )
+    )
+
+
+def pending_titles(db: Path) -> list[str]:
+    with Database(db) as database:
+        return [i.event.title for i in database.quarantine_pending()]
+
+
+@respx.mock
+@pytest.mark.usefixtures("offline")
+def test_import_url_dry_run_prints_the_event_and_stores_nothing(tmp_path: Path) -> None:
+    serve_event_page()
+    db = tmp_path / "db.sqlite"
+    result = invoke("import-url", EVENT_URL, "--dry-run", "--db", str(db))
+    assert result.exit_code == 0, result.output
+    start = result.output.index("[")
+    shown = json.loads(result.output[start : result.output.rindex("]") + 1])
+    assert shown[0]["title"] == "Concierto de gala"
+    assert shown[0]["extra"]["provenance"] == "import_url"
+    assert "raw_data" not in shown[0]
+    assert not db.exists()
+
+
+@respx.mock
+@pytest.mark.usefixtures("offline")
+def test_import_url_holds_the_event_for_review_until_accepted(tmp_path: Path) -> None:
+    serve_event_page()
+    db = tmp_path / "db.sqlite"
+    result = invoke("import-url", EVENT_URL, "--db", str(db))
+    assert result.exit_code == 0, result.output
+    assert "review-quarantine" in result.output
+    with Database(db) as database:
+        assert database.count("events") == 0
+    assert pending_titles(db) == ["Concierto de gala"]
+
+    listing = invoke("review-quarantine", "--list", "--db", str(db))
+    assert "import_url" in listing.output and "needs_review" in listing.output
+
+    accepted = invoke("review-quarantine", "--accept", "import_url", "--db", str(db))
+    assert accepted.exit_code == 0, accepted.output
+    with Database(db) as database:
+        [event] = database.all_events()
+        assert event.title == "Concierto de gala" and event.source_type == "import_url"
+        assert database.recent_source_runs("import_url", 3) == []
+
+
+@respx.mock
+@pytest.mark.usefixtures("offline")
+def test_import_url_accept_publishes_at_once(tmp_path: Path) -> None:
+    serve_event_page()
+    db = tmp_path / "db.sqlite"
+    result = invoke("import-url", EVENT_URL, "--accept", "--db", str(db))
+    assert result.exit_code == 0, result.output
+    with Database(db) as database:
+        assert [e.title for e in database.all_events()] == ["Concierto de gala"]
+    assert pending_titles(db) == []
+
+
+@respx.mock
+@pytest.mark.usefixtures("offline")
+def test_two_imports_wait_side_by_side(tmp_path: Path) -> None:
+    other = "https://tickets.example.org/e/otro"
+    serve_event_page()
+    serve_event_page(other, "Otro concierto")
+    db = tmp_path / "db.sqlite"
+    invoke("import-url", EVENT_URL, "--db", str(db))
+    invoke("import-url", other, "--db", str(db))
+    invoke("import-url", EVENT_URL, "--db", str(db))  # again: not repeated
+    assert pending_titles(db) == ["Concierto de gala", "Otro concierto"]
+
+
+@respx.mock
+@pytest.mark.usefixtures("offline")
+@pytest.mark.parametrize(
+    "url", ["https://www.facebook.com/events/1", "https://www.instagram.com/p/abc/"]
+)
+def test_import_url_refuses_facebook_and_instagram(tmp_path: Path, url: str) -> None:
+    db = tmp_path / "db.sqlite"
+    result = invoke("import-url", url, "--db", str(db))
+    assert result.exit_code == 2
+    assert "submit-event" in result.output
+    assert respx.calls.call_count == 0 and not db.exists()
+
+
+@respx.mock
+@pytest.mark.usefixtures("offline")
+def test_import_url_reports_pages_it_cannot_read(tmp_path: Path) -> None:
+    respx.get("https://www.eventbrite.es/robots.txt").mock(
+        return_value=httpx.Response(200, text="User-agent: *\nDisallow: /e/\n")
+    )
+    result = invoke("import-url", EVENT_URL, "--db", str(tmp_path / "db.sqlite"))
+    assert result.exit_code == 1
+    assert "robots_disallowed" in result.output
+
+
+@pytest.mark.usefixtures("offline")
+def test_import_url_rejects_non_http_urls(tmp_path: Path) -> None:
+    result = invoke("import-url", "ftp://example.org/x", "--db", str(tmp_path / "db.sqlite"))
+    assert result.exit_code == 2
+
+
+# --------------------------------------------------------------------------- submit-event
+
+
+ORGANIZER_EVENT: dict[str, Any] = {
+    "title": "Taller de cerámica",
+    "start": "2026-10-24T18:00:00",
+    "organizer_name": "Asociación Alfareros",
+    "municipality": "Adeje",
+}
+
+
+def submission_file(tmp_path: Path, data: Any, name: str = "event.json") -> Path:
+    path = tmp_path / name
+    path.write_text(json.dumps(data), encoding="utf-8")
+    return path
+
+
+def test_submit_event_holds_the_event_until_accepted(tmp_path: Path) -> None:
+    db = tmp_path / "db.sqlite"
+    file = submission_file(tmp_path, ORGANIZER_EVENT)
+    result = invoke("submit-event", "--file", str(file), "--db", str(db))
+    assert result.exit_code == 0, result.output
+    assert "review-quarantine" in result.output
+    assert pending_titles(db) == ["Taller de cerámica"]
+
+    listing = invoke("review-quarantine", "--list", "--db", str(db))
+    assert "organizer_submission" in listing.output
+    assert (
+        invoke("review-quarantine", "--accept", "organizer_submission", "--db", str(db)).exit_code
+        == 0
+    )
+    with Database(db) as database:
+        [event] = database.all_events()
+        assert event.source_type == "organizer_submission" and event.island == "Tenerife"
+
+
+def test_submit_event_dry_run_and_accept(tmp_path: Path) -> None:
+    db = tmp_path / "db.sqlite"
+    file = submission_file(tmp_path, ORGANIZER_EVENT)
+    dry = invoke("submit-event", "--file", str(file), "--dry-run", "--db", str(db))
+    assert dry.exit_code == 0 and "Taller de cerámica" in dry.output and not db.exists()
+
+    done = invoke("submit-event", "--file", str(file), "--accept", "--db", str(db))
+    assert done.exit_code == 0, done.output
+    with Database(db) as database:
+        assert [e.title for e in database.all_events()] == ["Taller de cerámica"]
+
+
+def test_submit_event_rejects_an_invalid_file_and_stores_nothing(tmp_path: Path) -> None:
+    db = tmp_path / "db.sqlite"
+    file = submission_file(tmp_path, [ORGANIZER_EVENT, {**ORGANIZER_EVENT, "title": ""}])
+    result = invoke("submit-event", "--file", str(file), "--db", str(db))
+    assert result.exit_code == 2
+    assert "event 2: title" in result.output
+    assert not db.exists()
+
+
+def test_submit_event_reads_ics_with_the_organizer_name(tmp_path: Path) -> None:
+    ics = tmp_path / "event.ics"
+    ics.write_text(
+        "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//t//EN\nBEGIN:VEVENT\nUID:x@y\n"
+        "DTSTAMP:20261001T100000Z\nDTSTART;TZID=Atlantic/Canary:20261024T180000\n"
+        "SUMMARY:Taller\nLOCATION:Casa de la Cultura\\, Adeje\nEND:VEVENT\nEND:VCALENDAR\n",
+        encoding="utf-8",
+    )
+    db = tmp_path / "db.sqlite"
+    missing = invoke("submit-event", "--file", str(ics), "--db", str(db))
+    assert missing.exit_code == 2 and "--organizer" in missing.output
+    ok = invoke("submit-event", "--file", str(ics), "--organizer", "Alfareros", "--db", str(db))
+    assert ok.exit_code == 0, ok.output
+    assert pending_titles(db) == ["Taller"]
+
+
+def test_the_shipped_schema_and_example_match_the_model() -> None:
+    from canarias_events.submissions import OrganizerEvent, load_submission
+
+    docs = Path(__file__).parent.parent / "docs"
+    schema = json.loads((docs / "organizer-submission.schema.json").read_text(encoding="utf-8"))
+    assert schema == OrganizerEvent.model_json_schema()
+    example = docs / "organizer-submission.example.json"
+    [event] = load_submission(example, organizer=None, now=NOW)
+    assert event.source_type == "organizer_submission"

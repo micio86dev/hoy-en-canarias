@@ -21,6 +21,11 @@ RATE_LIMITED = "rate_limited"  # HTTP 429: temporary, retried with exponential b
 
 # Quarantine hold reason of a run that was blocked after it had read some events.
 BLOCKED_PARTIAL = "blocked_partial"
+# Quarantine hold reason of a one-off import (``import-url``, ``submit-event``): a person
+# reviews it before it is published. It says nothing about a source's health.
+HOLD_NEEDS_REVIEW = "needs_review"
+# Holds that are no evidence of a source's normal level: accepting them sets no baseline.
+NO_LEVEL_HOLDS = frozenset({BLOCKED_PARTIAL, HOLD_NEEDS_REVIEW})
 
 # A human has to look at these: neither success nor a crash, and never retried as temporary.
 NEEDS_REVIEW = frozenset({ROBOTS_DISALLOWED, NEEDS_MANUAL_REVIEW})

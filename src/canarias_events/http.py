@@ -272,6 +272,10 @@ class SafeHttpClient:
     def close(self) -> None:
         self._client.close()
 
+    def check_url(self, url: str) -> None:
+        """Raise :class:`UnsafeUrlError` unless ``url`` is a public http(s) URL."""
+        self._check_url(url, None)
+
     def set_host_interval(self, host: str, seconds: float) -> None:
         """Raise the minimum gap between requests to ``host`` (e.g. a robots.txt Crawl-delay)."""
         key = host.lower()

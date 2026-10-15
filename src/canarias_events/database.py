@@ -384,16 +384,19 @@ class Database:
     # ------------------------------------------------------------------ quarantine
 
     def quarantine_add(
-        self, source_id: str, run_id: int, reason: str, events: list[Event], now: datetime
-    ) -> int:
-        """Hold ``events`` back; they replace what was pending for the source."""
+        self, source_id: str, run_id: int, reason: str, events: list[Event], now: datetime,
+        *, replace: bool = True,
+    ) -> int:  # fmt: skip
+        """Hold ``events`` back; by default they replace what was pending for the source."""
         if not events:
             return 0  # nothing new to hold: keep what a person may still want to accept
         with self.conn:
-            self.conn.execute(
-                "UPDATE quarantine SET status='superseded' WHERE source_id=? AND status='pending'",
-                (source_id,),
-            )
+            if replace:
+                self.conn.execute(
+                    "UPDATE quarantine SET status='superseded'"
+                    " WHERE source_id=? AND status='pending'",
+                    (source_id,),
+                )
             self.conn.executemany(
                 "INSERT INTO quarantine (source_id, run_id, created_at, reason, event)"
                 " VALUES (?, ?, ?, ?, ?)",

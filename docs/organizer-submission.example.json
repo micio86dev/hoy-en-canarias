@@ -1,0 +1,14 @@
+{
+  "title": "Taller de cerámica tradicional",
+  "start": "2026-10-24T18:00:00",
+  "end": "2026-10-24T20:00:00",
+  "organizer_name": "Asociación de Alfareros de Candelaria",
+  "organizer_url": "https://alfareros.example.org/",
+  "contact_email": "info@alfareros.example.org",
+  "venue_name": "Casa de la Cultura",
+  "municipality": "Candelaria",
+  "description": "Taller práctico de modelado con barro para adultos.",
+  "url": "https://alfareros.example.org/taller-ceramica",
+  "price_min": 10,
+  "currency": "EUR"
+}

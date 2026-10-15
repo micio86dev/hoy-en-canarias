@@ -38,6 +38,7 @@ from canarias_events.statuses import (
     BLOCKED_PARTIAL,
     FAILED,
     NEEDS_REVIEW,
+    NO_LEVEL_HOLDS,
     PARTIAL,
     RATE_LIMITED,
     SUCCEEDED,
@@ -175,6 +176,19 @@ def _ingest(
         stats["possible_duplicates"] += result.possible_duplicates
 
 
+def ingest_events(
+    db: Database,
+    events: list[Event],
+    source_id: str,
+    now: datetime,
+    threshold: float = DEFAULT_MERGE_THRESHOLD,
+) -> dict[str, Any]:
+    """Deduplicate and store ``events`` of one source; returns the outcome counters."""
+    stats = _new_stats()
+    _ingest(db, events, source_id, now, threshold, stats)
+    return stats
+
+
 def accept_quarantine(
     db: Database, source_id: str, *, now: datetime, threshold: float = DEFAULT_MERGE_THRESHOLD
 ) -> int:
@@ -184,8 +198,8 @@ def accept_quarantine(
     _ingest(db, [item.event for item in pending], source_id, now, threshold, stats)
     db.quarantine_close(source_id, "accepted")
     # The accepted level of the latest quarantining run is the new baseline; partial data from
-    # a blocked run is no level, so it neither counts nor resets anything.
-    level = [item for item in pending if item.reason != BLOCKED_PARTIAL]
+    # a blocked run and one-off imports are no level, so they neither count nor reset anything.
+    level = [item for item in pending if item.reason not in NO_LEVEL_HOLDS]
     if level:
         latest = max(item.run_id for item in level)
         count = sum(1 for item in level if item.run_id == latest)

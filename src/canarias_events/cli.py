@@ -18,11 +18,22 @@ from canarias_events.date_range import TZ, DateWindow, explicit_window, next_wee
 from canarias_events.discovery import run_discovery
 from canarias_events.exporters import export_all, source_status, write_atomic
 from canarias_events.health import summarize
-from canarias_events.http import SafeHttpClient
+from canarias_events.http import FetchError, SafeHttpClient
 from canarias_events.logging_config import configure_logging
+from canarias_events.manual_import import (
+    IMPORT_URL_SOURCE,
+    ORGANIZER_SOURCE,
+    RefusedUrl,
+    hold_for_review,
+    import_url,
+    publish_now,
+)
+from canarias_events.models import Event
 from canarias_events.pipeline import accept_quarantine, run_import
 from canarias_events.social import load_social_registry, schedule_blocker, scheduled_sources
+from canarias_events.sources.base import SourceConfig
 from canarias_events.sources.registry import SourcesCatalog, load_catalog
+from canarias_events.submissions import SubmissionError, load_submission
 
 DEFAULT_CONFIG = Path("config/sources.yaml")
 DEFAULT_OUTPUT_DIR = Path("output")
@@ -348,6 +359,94 @@ def discover_sources(
         if result["needs_manual_check"]:
             typer.echo(f"  manual check: {result['kind']} {result['endpoint']} -> "
                        f"{result['items_found']} item(s)")  # fmt: skip
+
+
+def _fail(message: str, code: int) -> typer.Exit:
+    typer.echo(message, err=True)
+    return typer.Exit(code)
+
+
+def _store_manual(
+    events: list[Event], source: SourceConfig, db_path: Path | None, *, dry_run: bool, accept: bool
+) -> None:
+    """Show, hold for review (default) or publish the events of a one-off import."""
+    if dry_run:
+        shown = [e.model_dump(mode="json", exclude={"raw_data"}) for e in events]
+        typer.echo(json.dumps(shown, ensure_ascii=False, indent=2))
+        typer.echo("Dry run: nothing stored.", err=True)
+        return
+    now = datetime.now(TZ)
+    with Database(db_path or default_db_path()) as db:
+        if accept:
+            stats = publish_now(db, source, events, now)
+            typer.echo(
+                f"Published {len(events)} event(s): new {stats['new']}, "
+                f"updated {stats['updated']}, merged {stats['merged']}, "
+                f"unchanged {stats['unchanged']}. "
+                "Run import-events to re-export."
+            )
+            return
+        held = hold_for_review(db, source, events, now)
+    typer.echo(
+        f"Held {held} event(s) for review ({len(events) - held} already waiting). "
+        f"See them with `review-quarantine --list`, publish with "
+        f"`review-quarantine --accept {source.id}`."
+    )
+
+
+@app.command("import-url")
+def import_url_command(
+    url: Annotated[str, typer.Argument(help="Public event page (http/https).")],
+    dry_run: Annotated[
+        bool, typer.Option("--dry-run", help="Print the extracted events; store nothing.")
+    ] = False,
+    accept: Annotated[
+        bool, typer.Option("--accept", help="Publish at once instead of holding for review.")
+    ] = False,
+    db_path: DbOption = None,
+) -> None:
+    """Import one public event page given by a person. Held for review unless --accept."""
+    client = make_client()
+    try:
+        outcome = import_url(client, url, now=datetime.now(TZ))
+    except RefusedUrl as exc:
+        raise _fail(str(exc), 2) from exc
+    except ValueError as exc:
+        raise _fail(str(exc), 2) from exc
+    except FetchError as exc:
+        raise _fail(f"cannot read {url}: {exc}", 1) from exc
+    finally:
+        client.close()
+    for warning in outcome.warnings:
+        typer.echo(f"warning: {warning}", err=True)
+    if outcome.status != "ok" or not outcome.events:
+        reason = outcome.status if outcome.status != "ok" else "no_events_found"
+        raise _fail(f"Nothing imported ({reason}).", 1)
+    _store_manual(outcome.events, IMPORT_URL_SOURCE, db_path, dry_run=dry_run, accept=accept)
+
+
+@app.command("submit-event")
+def submit_event(
+    file: Annotated[Path, typer.Option("--file", help="Organizer file: .json or .ics.")],
+    organizer: Annotated[
+        str | None, typer.Option("--organizer", help="Organizer name (required for .ics).")
+    ] = None,
+    dry_run: Annotated[
+        bool, typer.Option("--dry-run", help="Print the validated events; store nothing.")
+    ] = False,
+    accept: Annotated[
+        bool, typer.Option("--accept", help="Publish at once instead of holding for review.")
+    ] = False,
+    db_path: DbOption = None,
+) -> None:
+    """Store an event an organizer chose to send us. Held for review unless --accept."""
+    try:
+        events = load_submission(file, organizer, datetime.now(TZ))
+    except SubmissionError as exc:
+        for error in exc.errors:
+            typer.echo(f"error: {error}", err=True)
+        raise typer.Exit(2) from exc
+    _store_manual(events, ORGANIZER_SOURCE, db_path, dry_run=dry_run, accept=accept)
 
 
 @app.command("report")
