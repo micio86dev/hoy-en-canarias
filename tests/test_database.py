@@ -236,3 +236,11 @@ def test_memory_copy_of_a_missing_file_is_empty_and_creates_nothing(tmp_path: Pa
     with Database.memory_copy(path) as copy:
         assert copy.count("events") == 0
     assert not path.parent.exists()
+
+
+def test_memory_copy_handles_special_characters_in_the_path(tmp_path: Path) -> None:
+    path = tmp_path / "odd #1?x%20.sqlite"
+    with Database(path) as db:
+        db.sync_sources([make_cfg("keep")])
+    with Database.memory_copy(path) as copy:
+        assert "keep" in copy.source_rows()

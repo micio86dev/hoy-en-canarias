@@ -270,7 +270,7 @@ class Database:
         copy = cls(":memory:")
         source = Path(path)
         if source.exists():
-            reader = sqlite3.connect(f"file:{source}?mode=ro", uri=True)
+            reader = sqlite3.connect(f"{source.resolve().as_uri()}?mode=ro", uri=True)
             try:
                 reader.backup(copy.conn)
             finally:

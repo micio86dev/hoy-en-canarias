@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from datetime import timedelta
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 _NAMED = {"hourly": timedelta(hours=1), "daily": timedelta(days=1), "weekly": timedelta(weeks=1)}
 _RE_AMOUNT = re.compile(r"^([1-9]\d{0,3})([hd])$")
@@ -62,3 +62,9 @@ class CrawlSettings(BaseModel):
     # Low-resource mode (also --low-resource): one source at a time, no browser renderer, no
     # local model, at most LOW_RESOURCE_PAGE_CAP pages per source.
     low_resource: bool = False
+
+    @model_validator(mode="after")
+    def _cap_not_below_base(self) -> CrawlSettings:
+        if self.backoff_max_hours < self.backoff_base_hours:
+            raise ValueError("backoff_max_hours must not be below backoff_base_hours")
+        return self

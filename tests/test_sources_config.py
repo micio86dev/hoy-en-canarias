@@ -119,6 +119,13 @@ def test_catalog_ai_section_defaults_to_disabled_and_local_only(tmp_path: Path) 
         load_catalog(remote)
 
 
+def test_backoff_cap_must_not_be_below_the_base() -> None:
+    from canarias_events.crawl_settings import CrawlSettings
+
+    with pytest.raises(ValueError, match="backoff_max_hours"):
+        CrawlSettings(backoff_base_hours=12, backoff_max_hours=6)
+
+
 def test_crawl_section_and_source_frequency(tmp_path: Path) -> None:
     plain = tmp_path / "a.yaml"
     plain.write_text("sources: []\n", encoding="utf-8")
