@@ -146,6 +146,7 @@ class WebParams(BaseModel):
 class _Page:
     url: str
     html: str
+    raw: bytes = b""
 
 
 class _Blocked(Exception):
@@ -205,7 +206,7 @@ class _Run:
         self.robots = RobotsPolicy(ctx.client)
         self.fetched = 0
         self.cache: dict[str, _Page] = {}
-        self.renderer: Renderer | None = None
+        self.renderers: list[Renderer] = []
         self.block_reason: str | None = None
         self.limit_warned = False
         self.reference = ctx.now.date()
@@ -228,9 +229,9 @@ class _Run:
             self.result.warnings.append(text)
 
     def close(self) -> None:
-        if self.renderer is not None:
+        for renderer in self.renderers:
             try:
-                self.renderer.close()
+                renderer.close()
             except Exception:  # noqa: BLE001 - closing is best effort
                 logger.debug("renderer close failed", exc_info=True)
 
@@ -266,7 +267,7 @@ class _Run:
         text = _decode(response.content, response.headers)
         if html and is_challenge_page(text):
             raise _Blocked(f"challenge page at {mask_secrets(url)}")
-        page = _Page(response.url, text)
+        page = _Page(response.url, text, response.content)
         self.cache[url] = page
         return page
 
@@ -337,7 +338,7 @@ class _Run:
         page = self.fetch_extra(self.p.sitemap_url, html=False)
         if page is None:
             return []
-        urls, problem = _parse_sitemap(page.html.encode("utf-8"))
+        urls, problem = _parse_sitemap(page.raw)
         if problem:
             self.warn(f"{problem}: {mask_secrets(self.p.sitemap_url)}")
             return []
@@ -403,38 +404,43 @@ class _Run:
 
     def render_pages(self, pages: list[_Page]) -> list[_Page]:
         kinds = ["playwright", "crawl4ai"] if self.p.render == "auto" else [self.p.render]
-        rendered: list[_Page] = []
         for kind in kinds:
             try:
-                self.renderer = self.adapter.renderer_factory(kind)
+                renderer = self.adapter.renderer_factory(kind)
             except RendererUnavailable as exc:
                 self.warn(f"render tier skipped ({kind}): {exc}")
                 continue
-            break
-        if self.renderer is None:
-            return []
-        for page in pages:
-            try:
-                out = self.renderer.render(page.url)
-            except RendererUnavailable as exc:
-                self.warn(f"render tier skipped: {exc}")
-                break
-            except RenderError as exc:
-                if exc.status in BLOCKING_STATUSES:
-                    self.block_reason = (
-                        f"HTTP {exc.status} while rendering {mask_secrets(page.url)}"
-                    )
+            self.renderers.append(renderer)
+            rendered: list[_Page] = []
+            unavailable = False
+            for page in pages:
+                if not self.robots.allowed(page.url):  # the final URL after redirects may differ
+                    self.warn(f"robots.txt disallows rendering {mask_secrets(page.url)}")
+                    continue
+                try:
+                    out = renderer.render(page.url)
+                except RendererUnavailable as exc:
+                    self.warn(f"render tier skipped ({kind}): {exc}")
+                    unavailable = True
                     break
-                self.warn(f"render failed for {mask_secrets(page.url)}: {exc}")
-                continue
-            except FetchError as exc:
-                self.warn(f"render failed for {mask_secrets(page.url)}: {exc}")
-                continue
-            if is_challenge_page(out.html):
-                self.block_reason = f"challenge page after rendering {mask_secrets(page.url)}"
-                break
-            rendered.append(_Page(out.final_url, out.html))
-        return rendered
+                except RenderError as exc:
+                    if exc.status in BLOCKING_STATUSES:
+                        self.block_reason = (
+                            f"HTTP {exc.status} while rendering {mask_secrets(page.url)}"
+                        )
+                        return rendered
+                    self.warn(f"render failed for {mask_secrets(page.url)}: {exc}")
+                    continue
+                except FetchError as exc:
+                    self.warn(f"render failed for {mask_secrets(page.url)}: {exc}")
+                    continue
+                if is_challenge_page(out.html):
+                    self.block_reason = f"challenge page after rendering {mask_secrets(page.url)}"
+                    return rendered
+                rendered.append(_Page(out.final_url, out.html))
+            if not unavailable:
+                return rendered
+        return []
 
     # ------------------------------------------------------------------ cascade
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Callable
 from datetime import date
 from typing import Any
@@ -293,8 +294,6 @@ def mock_webtenerife() -> dict[str, respx.Route]:
     }
     routes: dict[str, respx.Route] = {}
     sitemap = (FIXTURES / "webtenerife_sitemap.xml").read_text()
-    import re
-
     for url in re.findall(r"<loc>([^<]*/agenda/\d{4}/\d{2}/[^<]+/)</loc>", sitemap):
         slug = url.rstrip("/").rsplit("/", 1)[-1]
         if slug in fixtures:
@@ -930,3 +929,28 @@ def test_enrichment_skips_detail_urls_on_other_hosts(make_ctx: Ctx) -> None:
     result = adapter(follow_detail_pages=True, detail_url_pattern=r"elsewhere").fetch(make_ctx())
     assert len(result.events) == 3
     assert other_robots.call_count == 0
+
+
+@respx.mock
+def test_auto_render_tries_crawl4ai_when_playwright_is_unavailable(make_ctx: Ctx) -> None:
+    robots("www.auditoriodetenerife.com")
+    url = "https://www.auditoriodetenerife.com/"
+    page(url, html_fixture("auditoriodetenerife_home.html"))
+    working = FakeRenderer(html_fixture("teatenerife_actividades.html"))
+
+    class Missing(FakeRenderer):
+        def render(self, url: str) -> RenderedPage:
+            raise RendererUnavailable("playwright is not installed")
+
+    made: dict[str, FakeRenderer] = {}
+
+    def factory(kind: str) -> FakeRenderer:
+        made[kind] = Missing("") if kind == "playwright" else working
+        return made[kind]
+
+    result = WebAdapter(cfg(url, render="auto"), renderer_factory=factory).fetch(make_ctx())
+    assert list(made) == ["playwright", "crawl4ai"]
+    assert result.strategy_used == "render+blocks"
+    assert working.calls == [url]
+    assert made["playwright"].closed and working.closed
+    assert any("playwright" in w and "skipped" in w for w in result.warnings)
