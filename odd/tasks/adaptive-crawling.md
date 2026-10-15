@@ -16,7 +16,7 @@ Constraints: no auth/CAPTCHA/paywall bypass; respect robots.txt; no automatic so
 - [x] A3 Source health: history, anomaly detection, quarantine (no export of doubtful data), snapshots w/ retention, per-source frequency, failure backoff, concurrency, dry-run, --no-ai, timings; pipeline status for blocked-with-partial-data and robots_disallowed/needs_manual_review sources (review findings R3-blocked-partial-ingest, R3-robots-ssrf-reported-success)
 - [x] A3R Review follow-ups (route: delegated direct, one writer; TDD strict, source: project config/session, runner `uv run pytest`): (1) bare "N horas" after a date is a clock time; (2) day ranges after a line break; (3) all-deferred run exits 0; (4) HTTP 429 is a temporary failure; (5) anomaly baseline recovery; (6) page-limit warning names the limit that applied; (7) status vocabulary defined once; (8) accept_quarantine reuses `_new_stats()`
 - [x] A4 Social registry (acquisition modes), Bluesky/Mastodon adapters, import-url command, organizer submissions, discover-sources extension + validate-source
-- [ ] A5 Real run, inspect, README update, final summary
+- [x] A5 Real run, inspect, README update, final summary
 
 ## Progress / evidence
 
@@ -136,3 +136,33 @@ Live smokes 2026-10-15 (each once, project UA, robots honoured):
 - Bluesky `getAuthorFeed?actor=bsky.app` (curl, then `BlueskyAdapter` once, handle not configured): response shape confirmed (`feed[].post.{uri,author.handle,record.{text,createdAt,facets,embed}}`, `reason` on reposts); 13 posts -> 0 events (none had a date and a place), as expected.
 
 Open for A5: README (social registry, link_hosts/year_policy, import-url/submit-event/review flow, discover/validate commands); engram mirror sync by the orchestrator; no verified Canarian Mastodon/Bluesky accounts exist yet, so no account is enabled; Mastodon RSS is covered by fixtures only (no live instance was queried); Radio Insular was unreachable (503) at the earlier check, `validate-source` can re-check it.
+
+### A4 RDD record
+A4 reviewed in 3 slices 410424c..365c457, 365c457..f4fc8f6, f4fc8f6..5619a25, high risk, 4 lenses, APPROVED + acknowledged; advisory warnings fixed in A5 step 1.
+
+### A5 Real run, README, A4 follow-ups (route: delegated direct, one writer; 2+ non-trivial files; TDD strict, source: project config/session, runner `uv run pytest`)
+Commits: a12ee1b broken social registry no longer stops official imports (1); 6a0dea9 frequency ignores manual_accept rows (3); 27c957a malformed hrefs skipped, shared refused hosts `social.REFUSED_HOSTS` (6, 5); 3596b2d linked pages match on the full date, skipped links reported per host/status, per-link exception isolation (2, 4); bd0f1b5 mask error text; 7a73984 import-url guard errors exit 2 (7); d1f531c + 033e4ee + 1759187 validate-source errors, `error`/`transient`, `touch_candidate`, modes html/ical/rss (8); 1106669 README.
+Deviations: a strict-policy post without a year no longer adopts a linked page's year (the old test `strict_posts_may_still_match...` was replaced); acquisition modes `html` and `ical` added to the social vocabulary (candidates only, never scheduled); an inconclusive check (any `error`) keeps state/mode/score on `--save`; import-url exits 2 for UnsafeUrlError, InvalidPayload, ResponseTooLarge, 1 for other fetch errors.
+RED observed first for every fix (new tests failed before the change); mypy errors from monkeypatching through `validation.` were fixed by patching the adapter classes.
+Verification: `uv run pytest`: 1236 passed, 20 deselected (baseline 1199); `uv run ruff check .`: All checks passed; `uv run mypy src tests`: Success, no issues found in 89 source files.
+
+Real run 2026-10-15 (window 19..25 Oct; backup of the old DB and outputs in output/backup-20261015T233342/, git-ignored):
+| source | strategy | received/valid/in window | new | merged | errors | duration |
+|---|---|---|---|---|---|---|
+| holaislascanarias | - | 50/50/50 | 0 | 0 | 0 | 5.4 s |
+| cabildo_tenerife_deportes | - | 3276/3270/7 | 0 | 0 | 0 | 1.3 s |
+| deportes_tenerife, candelaria, santiago_del_teide, granadilla_de_abona, antigua | - | 3,8,2,1,1 in window | 0 | 0 | 0 | 0.3-2.2 s |
+| los_silos, santa_ursula, valle_gran_rey | - | 0 | 0 | 0 | 0 | 0.6-2.2 s |
+| webtenerife | detail-jsonld | 40/40/9 | 7 | 2 | 0 | 50.0 s |
+| auditorio_teatro_lpa | embedded | 24/24/3 | 3 | 0 | 0 | 2.0 s |
+| teatro_leal | blocks | 20/20/8 | 8 | 0 | 0 | 1.5 s |
+| tea_tenerife | blocks | 12/12/4 | 4 | 0 | 0 | 1.6 s |
+| adeje_agenda | blocks | 12/12/4 | 4 | 0 | 0 | 3.7 s |
+| arona_agenda | blocks | 25/25/12 | 12 | 0 | 0 | 1.7 s |
+| lpacultura | blocks | 20/20/10 | 10 | 0 | 0 | 1.7 s |
+| cact_lanzarote | blocks | 7/7/3 | 3 | 0 | 0 | 1.2 s |
+| cabildo_fuerteventura_agenda | blocks | 10/10/6 | 6 | 0 | 0 | 2.7 s |
+Totals: 126 distinct events overlap the window (78 start inside it); 69 from API/feeds, 57 from the HTML pipeline; run 1: new 57, merged 2, possible duplicates 3; 0 quarantined, 0 anomalies. Run 2 (idempotency): new 0, updated 0, merged 0, possible duplicates 0, 51.1 s; no frequency configured, so nothing was deferred; `--force` run identical (0 new). Success rate 19/19 sources in 4/4 runs.
+Measured (`/usr/bin/time -l`, venv python): `--force` 50.6 s wall, peak RSS 205,422,592 B; `--force --low-resource` 45.3 s, 120,963,072 B (webtenerife capped at 15 pages: 13 events, 3 in window); `discover-sources` 213.1 s, 71,467,008 B, 124 requests, 77 errors, 17 manual checks, 144 candidates (100 datasets, 44 web/api/feed), none enabled.
+Spot check of 6 HTML events against their pages: title, date, venue match in 6/6 except LPA Cultura (venue missing); start time missing in 3 (Teatro Leal 18:00, Adeje 21:00h, TEA 19:00).
+Open findings (not fixed): Hola date typos in long ranges pass the overlap filter (Trail Pino Santo start 0026-12-06 plus 4 events starting 2016/2025); Teatro Leal vs webtenerife `Un matrimonio sin filtros` duplicate not flagged (similarity 65); 36 of 57 HTML events lack a start time; low-resource run records a truncated listing in history; discovery noise; engram mirror `odd/adaptive-crawling/tasks` must be synced by the orchestrator.
