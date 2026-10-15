@@ -20,7 +20,7 @@ from canarias_events.exporters import export_all, source_status, write_atomic
 from canarias_events.health import summarize
 from canarias_events.http import SafeHttpClient
 from canarias_events.logging_config import configure_logging
-from canarias_events.pipeline import run_import
+from canarias_events.pipeline import accept_quarantine, run_import
 from canarias_events.sources.registry import SourcesCatalog, load_catalog
 
 DEFAULT_CONFIG = Path("config/sources.yaml")
@@ -188,7 +188,7 @@ def import_events(
         try:
             report = run_import(
                 db, catalog.sources, window, client=client, now=now, island=island,
-                source_ids=source or None, ai=catalog.ai,
+                source_ids=source or None, ai=catalog.ai, crawl=catalog.crawl,
             )  # fmt: skip
         except ValueError as exc:
             raise typer.BadParameter(str(exc)) from exc
@@ -262,6 +262,40 @@ def show_report(
         typer.echo("No import runs found." if run is None else f"Run {run.id} has no report.")
         raise typer.Exit(1)
     _echo_report(run.report)
+
+
+@app.command("review-quarantine")
+def review_quarantine(
+    list_items: Annotated[bool, typer.Option("--list", help="Show what is held back.")] = False,
+    accept: Annotated[
+        str | None, typer.Option("--accept", help="Publish the held-back events of this source.")
+    ] = None,
+    db_path: DbOption = None,
+) -> None:
+    """List or accept events held back because their run looked anomalous."""
+    if not list_items and accept is None:
+        raise typer.BadParameter("give --list or --accept <source>")
+    with Database(db_path or default_db_path()) as db:
+        if accept is not None:
+            count = accept_quarantine(db, accept, now=datetime.now(TZ))
+            if count == 0:
+                typer.echo(f"Nothing quarantined for {accept}.", err=True)
+                raise typer.Exit(1)
+            typer.echo(f"Accepted {count} event(s) of {accept}; run import-events to re-export.")
+            return
+        pending = db.quarantine_pending()
+    if not pending:
+        typer.echo("No quarantined events.")
+        return
+    groups: dict[str, list[Any]] = {}
+    for item in pending:
+        groups.setdefault(item.source_id, []).append(item)
+    rows = [
+        [sid, len(items), items[0].reason, items[0].run_id, items[0].created_at[:16],
+         "; ".join(i.event.title for i in items[:3])]
+        for sid, items in groups.items()
+    ]  # fmt: skip
+    typer.echo(format_table(["source", "events", "reason", "run", "held at", "first titles"], rows))
 
 
 if __name__ == "__main__":

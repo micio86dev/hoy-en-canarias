@@ -15,6 +15,7 @@ from typer.testing import CliRunner
 
 from canarias_events import cli
 from canarias_events.cli import app
+from canarias_events.database import Database
 from canarias_events.date_range import TZ, next_week
 from canarias_events.http import SafeHttpClient
 from canarias_events.models import Event
@@ -25,6 +26,7 @@ from canarias_events.sources.base import (
     SourceFetchResult,
 )
 from canarias_events.sources.registry import ADAPTERS
+from tests.conftest import NOW
 
 runner = CliRunner()
 
@@ -320,3 +322,48 @@ def test_log_level_option_is_validated(tmp_path: Path) -> None:
 
 def test_source_config_type_is_used() -> None:
     assert SourceConfig.model_validate(fake_source("a")).adapter == "fake"
+
+
+# --------------------------------------------------------------------------- review-quarantine
+
+
+def quarantined_db(tmp_path: Path) -> tuple[Path, str]:
+    """A database with one source whose latest run was anomalous (3 events held back)."""
+    config = write_config(tmp_path, [fake_source("a", params={"titles": ["Uno", "Dos", "Tres"]})])
+    db_path = tmp_path / "db.sqlite"
+    with Database(db_path) as db:
+        for n in range(1, 4):
+            db.record_source_run(
+                n, "a", NOW, status="succeeded", source_status="ok", events_found=100,
+                events_in_window=100, duration_s=1.0, error=None, strategy=None,
+                extraction_ok=None, listing_hash=None, anomalies=[],
+            )  # fmt: skip
+    result = invoke(*import_args(tmp_path, config, "--from", "2026-10-19", "--to", "2026-10-25"))
+    assert result.exit_code == 1, result.output  # the only source was anomalous
+    return config, str(db_path)
+
+
+def test_review_quarantine_lists_and_accepts(tmp_path: Path) -> None:
+    config, db = quarantined_db(tmp_path)
+    events = tmp_path / "out" / "events.json"
+    assert json.loads(events.read_text(encoding="utf-8")) == []  # doubtful data not exported
+
+    listing = invoke("review-quarantine", "--db", db, "--list")
+    assert listing.exit_code == 0, listing.output
+    assert "a" in listing.output and "count_drop" in listing.output and "3" in listing.output
+
+    assert invoke("review-quarantine", "--db", db, "--accept", "nope").exit_code == 1
+    accepted = invoke("review-quarantine", "--db", db, "--accept", "a")
+    assert accepted.exit_code == 0, accepted.output
+    assert "Accepted 3" in accepted.output
+    assert "No quarantined" in invoke("review-quarantine", "--db", db, "--list").output
+
+    again = invoke(*import_args(tmp_path, config, "--from", "2026-10-19", "--to", "2026-10-25"))
+    assert again.exit_code in (0, 1)
+    with Database(db) as check:
+        assert check.count("events") == 3
+
+
+def test_review_quarantine_requires_an_action(tmp_path: Path) -> None:
+    result = invoke("review-quarantine", "--db", str(tmp_path / "x.sqlite"))
+    assert result.exit_code != 0

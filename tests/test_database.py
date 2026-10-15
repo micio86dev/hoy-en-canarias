@@ -9,6 +9,7 @@ import pytest
 from canarias_events.database import _MIGRATIONS, Database, SqliteHttpCache, default_db_path
 from canarias_events.date_range import TZ
 from canarias_events.http import SafeHttpClient
+from canarias_events.models import Event
 from canarias_events.sources.base import SourceConfig
 
 NOW = datetime(2026, 10, 15, 12, 0, tzinfo=TZ)
@@ -144,3 +145,44 @@ def test_sqlite_cache_drives_conditional_requests(tmp_path: Path) -> None:
         assert second.from_cache
         assert second.content == b"payload"
         assert route.calls.last.request.headers["if-none-match"] == '"abc"'
+
+
+# --------------------------------------------------------------------------- quarantine
+
+
+def _quarantine_event(title: str) -> Event:
+    return Event(
+        title=title,
+        start_datetime=datetime(2026, 10, 21, 20, 0, tzinfo=TZ),
+        island="Tenerife",
+        source_name="Source q",
+        source_event_id=title,
+        raw_data={"k": "v"},
+    )
+
+
+def test_quarantine_roundtrip_keeps_the_event_intact() -> None:
+    with Database(":memory:") as db:
+        event = _quarantine_event("Concierto")
+        db.quarantine_add("q", 7, "count_drop", [event], NOW)
+        [item] = db.quarantine_pending("q")
+        assert (item.source_id, item.run_id, item.reason) == ("q", 7, "count_drop")
+        assert item.event == event
+        assert db.count("events") == 0  # never published by itself
+
+
+def test_a_new_quarantine_replaces_the_pending_one_of_the_same_source() -> None:
+    with Database(":memory:") as db:
+        db.quarantine_add("q", 1, "count_drop", [_quarantine_event("Uno")], NOW)
+        db.quarantine_add("q", 2, "count_drop", [_quarantine_event("Dos")], NOW)
+        db.quarantine_add("other", 2, "count_drop", [_quarantine_event("Tres")], NOW)
+        assert [i.event.title for i in db.quarantine_pending("q")] == ["Dos"]
+        assert {i.source_id for i in db.quarantine_pending()} == {"q", "other"}
+
+
+def test_quarantine_status_changes_leave_the_pending_list() -> None:
+    with Database(":memory:") as db:
+        db.quarantine_add("q", 1, "count_drop", [_quarantine_event("Uno")], NOW)
+        assert db.quarantine_close("q", "accepted") == 1
+        assert db.quarantine_pending("q") == []
+        assert db.quarantine_close("q", "accepted") == 0

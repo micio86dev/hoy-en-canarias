@@ -95,7 +95,16 @@ CREATE TABLE source_runs (
 );
 CREATE INDEX idx_source_runs_source ON source_runs(source_id, id);
 """
-_MIGRATIONS = (_SCHEMA_V1, _SCHEMA_V2)
+_SCHEMA_V3 = """
+CREATE TABLE quarantine (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    source_id TEXT NOT NULL, run_id INTEGER NOT NULL, created_at TEXT NOT NULL,
+    reason TEXT NOT NULL, event TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'superseded'))
+);
+CREATE INDEX idx_quarantine_source ON quarantine(source_id, status);
+"""
+_MIGRATIONS = (_SCHEMA_V1, _SCHEMA_V2, _SCHEMA_V3)
 
 _JSON_FIELDS = frozenset({"tags", "extra"})
 _BOOL_FIELDS = frozenset({"all_day", "is_free"})
@@ -176,6 +185,18 @@ class SourceRun:
     extraction_ok: bool | None
     listing_hash: str | None
     anomalies: list[str]
+
+
+@dataclass(frozen=True)
+class QuarantinedEvent:
+    """An event from a doubtful run, held back from the events table and the exports."""
+
+    id: int
+    source_id: str
+    run_id: int
+    created_at: str
+    reason: str
+    event: Event
 
 
 def default_db_path() -> Path:
@@ -343,6 +364,54 @@ class Database:
             )
             for r in rows
         ]  # fmt: skip
+
+    # ------------------------------------------------------------------ quarantine
+
+    def quarantine_add(
+        self, source_id: str, run_id: int, reason: str, events: list[Event], now: datetime
+    ) -> int:
+        """Hold ``events`` back; they replace what was pending for the source."""
+        with self.conn:
+            self.conn.execute(
+                "UPDATE quarantine SET status='superseded' WHERE source_id=? AND status='pending'",
+                (source_id,),
+            )
+            self.conn.executemany(
+                "INSERT INTO quarantine (source_id, run_id, created_at, reason, event)"
+                " VALUES (?, ?, ?, ?, ?)",
+                [
+                    (
+                        source_id, run_id, now.isoformat(), reason,
+                        json.dumps(e.model_dump(mode="json"), ensure_ascii=False, default=str),
+                    )
+                    for e in events
+                ],
+            )  # fmt: skip
+        return len(events)
+
+    def quarantine_pending(self, source_id: str | None = None) -> list[QuarantinedEvent]:
+        query = "SELECT * FROM quarantine WHERE status = 'pending'"
+        args: tuple[str, ...] = ()
+        if source_id is not None:
+            query, args = query + " AND source_id = ?", (source_id,)
+        rows = self.conn.execute(query + " ORDER BY source_id, id", args)
+        return [
+            QuarantinedEvent(
+                id=r["id"], source_id=r["source_id"], run_id=r["run_id"],
+                created_at=r["created_at"], reason=r["reason"],
+                event=Event.model_validate(json.loads(r["event"])),
+            )
+            for r in rows
+        ]  # fmt: skip
+
+    def quarantine_close(self, source_id: str, status: str) -> int:
+        """Leave the pending list as ``accepted`` (published) or ``superseded`` (confirmed)."""
+        with self.conn:
+            cur = self.conn.execute(
+                "UPDATE quarantine SET status=? WHERE source_id=? AND status='pending'",
+                (status, source_id),
+            )
+        return cur.rowcount
 
     # ------------------------------------------------------------------ import runs
 

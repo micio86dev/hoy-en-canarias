@@ -11,7 +11,7 @@ from canarias_events.database import Database
 from canarias_events.date_range import TZ
 from canarias_events.http import HttpError, SafeHttpClient
 from canarias_events.models import Event
-from canarias_events.pipeline import run_import
+from canarias_events.pipeline import accept_quarantine, run_import
 from canarias_events.sources.base import (
     FetchContext,
     SourceAdapter,
@@ -512,3 +512,112 @@ def test_http_forbidden_exception_is_recorded_as_blocked(
 ) -> None:
     run(db, client, {"a": fake("a", error=HttpError(403, "HTTP 403 for https://a.test"))})
     assert db.recent_source_runs("a", limit=1)[0].source_status == "blocked"
+
+
+# --------------------------------------------------------------------------- quarantine
+
+
+def seed_history(db: Database, source: str, counts: list[int], strategy: str = "blocks") -> None:
+    for n, found in enumerate(counts, start=1):
+        db.record_source_run(
+            n, source, NOW, status="succeeded", source_status="ok", events_found=found,
+            events_in_window=found, duration_s=1.0, error=None, strategy=strategy,
+            extraction_ok=True, listing_hash="h", anomalies=[],
+        )  # fmt: skip
+
+
+def web_result(*events: Event, **kw: Any) -> SourceFetchResult:
+    fields: dict[str, Any] = {
+        "events": list(events),
+        "records_received": len(events),
+        "strategy_used": "blocks",
+        "extraction_ok": True,
+        "listing_hash": "h",
+    }
+    fields.update(kw)
+    return SourceFetchResult(**fields)
+
+
+def test_an_anomalous_run_keeps_the_previous_state_and_quarantines(
+    db: Database, client: SafeHttpClient
+) -> None:
+    run(db, client, {"w": fake("w", ev("w", "1", "Concierto bueno"))})
+    seed_history(db, "w", [10, 10, 10])
+    before = db.all_events()[0]
+
+    report = run_scripted(db, client, web_result(ev("w", "2", "Basura 1")))
+
+    stats = report["sources"]["w"]
+    assert stats["status"] == "anomalous"
+    assert stats["anomalies"] == ["count_drop"] and stats["quarantined"] == 1
+    assert report["sources_anomalous"] == ["w"]
+    assert report["sources_succeeded"] == []
+    assert [e.title for e in db.all_events()] == ["Concierto bueno"]  # nothing added, kept
+    assert db.all_events() == [before]  # not even touched
+    [item] = db.quarantine_pending("w")
+    assert item.event.title == "Basura 1" and item.reason == "count_drop"
+    assert db.source_rows()["w"]["last_error"].startswith("anomaly: count_drop")
+    assert db.recent_source_runs("w", limit=1)[0].anomalies == ["count_drop"]
+
+
+def test_zero_events_after_history_is_anomalous_without_quarantine(
+    db: Database, client: SafeHttpClient
+) -> None:
+    seed_history(db, "w", [10, 12])
+    report = run_scripted(db, client, web_result(strategy_used=None))
+    assert report["sources"]["w"]["status"] == "anomalous"
+    assert report["sources"]["w"]["anomalies"] == ["empty_after_events"]
+    assert db.quarantine_pending() == []
+
+
+def test_a_normal_run_confirms_and_supersedes_the_quarantine(
+    db: Database, client: SafeHttpClient
+) -> None:
+    seed_history(db, "w", [10, 10, 10])
+    run_scripted(db, client, web_result(ev("w", "2", "Basura 1")))
+    assert len(db.quarantine_pending("w")) == 1
+
+    ten = [ev("w", str(i), f"Evento {i}", day=20 + i % 4) for i in range(10)]
+    report = run_scripted(db, client, web_result(*ten))
+    assert report["sources_succeeded"] == ["w"]
+    assert db.quarantine_pending("w") == []
+    assert db.count("events") == 10
+
+
+def test_accepting_the_quarantine_publishes_the_events(
+    db: Database, client: SafeHttpClient
+) -> None:
+    seed_history(db, "w", [10, 10, 10])
+    run_scripted(db, client, web_result(ev("w", "2", "Concierto nuevo")))
+    assert db.count("events") == 0
+
+    assert accept_quarantine(db, "w", now=NOW) == 1
+    assert [e.title for e in db.all_events()] == ["Concierto nuevo"]
+    assert db.quarantine_pending("w") == []
+    assert accept_quarantine(db, "w", now=NOW) == 0
+
+
+def test_blocked_with_partial_events_is_partial_and_quarantined(
+    db: Database, client: SafeHttpClient
+) -> None:
+    result = web_result(
+        ev("w", "1", "Parcial"), status="blocked", warnings=["blocked: HTTP 403 (not bypassed)"]
+    )
+    report = run_scripted(db, client, result)
+
+    assert report["sources"]["w"]["status"] == "partial"
+    assert report["sources_partial"] == ["w"]
+    assert report["sources_failed"] == [] and report["sources_succeeded"] == []
+    assert report["sources"]["w"]["quarantined"] == 1
+    assert db.count("events") == 0
+    assert [i.reason for i in db.quarantine_pending("w")] == ["blocked_partial"]
+    assert "blocked" in db.source_rows()["w"]["last_error"]
+    assert db.source_rows()["w"]["last_success_at"] is None
+
+
+def test_non_blocking_codes_do_not_quarantine(db: Database, client: SafeHttpClient) -> None:
+    seed_history(db, "w", [1, 1, 1], strategy="jsonld")
+    report = run_scripted(db, client, web_result(ev("w", "1", "Uno")))
+    stats = report["sources"]["w"]
+    assert stats["status"] == "succeeded" and stats["anomalies"] == ["strategy_changed"]
+    assert db.count("events") == 1

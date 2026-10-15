@@ -7,14 +7,17 @@ import os
 import time
 from collections import Counter
 from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
 
-from canarias_events.database import Database, UpsertResult
+from canarias_events.crawl_settings import CrawlSettings
+from canarias_events.database import Database, SourceRun, UpsertResult
 from canarias_events.date_range import TZ, DateWindow
 from canarias_events.deduplication import DEFAULT_MERGE_THRESHOLD, resolve
 from canarias_events.extract.llm import AiSettings
 from canarias_events.geo import normalize_island
+from canarias_events.health import INFORMATIONAL, detect_anomalies
 from canarias_events.http import HttpError, SafeHttpClient
 from canarias_events.models import Event
 from canarias_events.sources.base import (
@@ -75,6 +78,8 @@ def _new_stats() -> dict[str, Any]:
         "pages": 0,
         "warnings": [],
         "error": None,
+        "anomalies": [],
+        "quarantined": 0,
     }
 
 
@@ -118,34 +123,120 @@ def _record_extraction(stats: dict[str, Any], result: SourceFetchResult) -> None
     stats["tiers"] = list(result.tiers)
 
 
-def _ingest(
-    db: Database,
+def _in_window(
     events: list[Event],
-    cfg: SourceConfig,
     window: DateWindow,
     island: str | None,
-    now: datetime,
-    threshold: float,
     stats: dict[str, Any],
-) -> None:
+) -> list[Event]:
+    """Events that belong in this run's window; counts what is dropped and why."""
     discarded: Counter[str] = Counter(stats["discarded"])
+    kept: list[Event] = []
     for event in events:
         inside = event_overlaps(window, event)
         if inside is None:
             discarded[MISSING_START] += 1
-            continue
-        if not inside:
+        elif not inside:
             discarded[OUTSIDE_WINDOW] += 1
-            continue
-        if island and event.island != island:
+        elif island and event.island != island:
             discarded[ISLAND_FILTER] += 1
-            continue
-        stats["in_window"] += 1
-        decision = resolve(db, event, cfg.id, merge_threshold=threshold)
-        result: UpsertResult = db.upsert(event, cfg.id, decision, now)
+        else:
+            kept.append(event)
+    stats["in_window"] += len(kept)
+    stats["discarded"] = dict(discarded)
+    return kept
+
+
+def _ingest(
+    db: Database,
+    events: list[Event],
+    source_id: str,
+    now: datetime,
+    threshold: float,
+    stats: dict[str, Any],
+) -> None:
+    for event in events:
+        decision = resolve(db, event, source_id, merge_threshold=threshold)
+        result: UpsertResult = db.upsert(event, source_id, decision, now)
         stats[result.outcome] += 1
         stats["possible_duplicates"] += result.possible_duplicates
-    stats["discarded"] = dict(discarded)
+
+
+def accept_quarantine(
+    db: Database, source_id: str, *, now: datetime, threshold: float = DEFAULT_MERGE_THRESHOLD
+) -> int:
+    """Publish the events held back for ``source_id`` (a manual decision); returns how many."""
+    pending = db.quarantine_pending(source_id)
+    stats: dict[str, Any] = {k: 0 for k in ("new", "updated", "unchanged", "merged")}
+    stats["possible_duplicates"] = 0
+    _ingest(db, [item.event for item in pending], source_id, now, threshold, stats)
+    db.quarantine_close(source_id, "accepted")
+    return len(pending)
+
+
+def _apply_result(
+    db: Database,
+    cfg: SourceConfig,
+    result: SourceFetchResult,
+    history: Sequence[SourceRun],
+    run: _Run,
+    stats: dict[str, Any],
+) -> None:
+    """Map one adapter result to a status, then ingest it or hold it back."""
+    stats["records_received"] = result.records_received
+    stats["valid_events"] = len(result.events)
+    stats["pages"] = result.pages
+    stats["warnings"] = list(result.warnings)
+    stats["discarded"] = dict(Counter(reason for reason, _ in result.discarded))
+    _record_extraction(stats, result)
+    events = _in_window(result.events, run.window, run.island, stats)
+    codes = detect_anomalies(
+        history,
+        events_found=len(result.events),
+        extraction_ok=result.extraction_ok,
+        strategy=result.strategy_used,
+        listing_hash=result.listing_hash,
+        source_status=result.status,
+        settings=run.settings,
+    )
+    stats["anomalies"] = codes
+    reason = ",".join(c for c in codes if c not in INFORMATIONAL)
+    hold: str | None = None  # why the events are held back instead of published
+    if result.status == "blocked":  # 401/403/429 or challenge page: not bypassed
+        message = next((w for w in result.warnings if w.startswith("blocked")), "blocked: denied")
+        stats["error"] = message
+        if result.events:  # partial data from a source that then blocked us: doubtful
+            stats["status"], hold = "partial", "blocked_partial"
+        else:
+            stats["status"] = "failed"
+            run.errors.append({"source": cfg.id, "error": message})
+    elif result.status in NEEDS_REVIEW:  # not a healthy empty source, not a crash
+        stats["status"] = result.status
+        stats["error"] = result.warnings[-1] if result.warnings else result.status
+    elif reason:
+        stats["status"], hold = "anomalous", reason
+        stats["error"] = f"anomaly: {reason}"
+        run.warnings.append({"source": cfg.id, "warning": stats["error"]})
+    if hold is not None:
+        stats["quarantined"] = db.quarantine_add(cfg.id, run.run_id, hold, events, run.now)
+        return
+    if stats["status"] == "succeeded":
+        _ingest(db, events, cfg.id, run.now, run.threshold, stats)
+        db.quarantine_close(cfg.id, "superseded")  # a normal run confirms the source again
+
+
+@dataclass
+class _Run:
+    """What one import run shares between its sources."""
+
+    run_id: int
+    now: datetime
+    window: DateWindow
+    island: str | None
+    threshold: float
+    settings: CrawlSettings
+    errors: list[dict[str, str]] = field(default_factory=list)
+    warnings: list[dict[str, str]] = field(default_factory=list)
 
 
 def run_import(
@@ -161,6 +252,7 @@ def run_import(
     env: Mapping[str, str] | None = None,
     merge_threshold: float = DEFAULT_MERGE_THRESHOLD,
     ai: AiSettings | None = None,
+    crawl: CrawlSettings | None = None,
 ) -> dict[str, Any]:
     """Run every selected source, isolate failures and return (and store) the import report."""
     environment: Mapping[str, str] = os.environ if env is None else env
@@ -179,49 +271,32 @@ def run_import(
     }
     run_id = db.start_run(now, window.start, window.end, params)
     per_source: dict[str, dict[str, Any]] = {}
-    errors: list[dict[str, str]] = []
-    warnings: list[dict[str, str]] = []
 
+    run = _Run(run_id, now, window, island_name, merge_threshold, crawl or CrawlSettings())
     for cfg in chosen:
         stats = _new_stats()
         per_source[cfg.id] = stats
         began = time.monotonic()
+        history = db.recent_source_runs(cfg.id, run.settings.history_runs)
         try:
             ctx = FetchContext(client=client, window=window, now=now, env=environment, ai=ai)
-            result = adapter_factory(cfg).fetch(ctx)
-            stats["records_received"] = result.records_received
-            stats["valid_events"] = len(result.events)
-            stats["pages"] = result.pages
-            stats["warnings"] = list(result.warnings)
-            stats["discarded"] = dict(Counter(reason for reason, _ in result.discarded))
-            _record_extraction(stats, result)
-            _ingest(db, result.events, cfg, window, island_name, now, merge_threshold, stats)
-            if result.status == "blocked":  # 401/403/429 or challenge page: not bypassed
-                stats["status"] = "failed"
-                stats["error"] = next(
-                    (w for w in result.warnings if w.startswith("blocked")),
-                    "blocked: access denied",
-                )
-                errors.append({"source": cfg.id, "error": stats["error"]})
-            elif result.status in NEEDS_REVIEW:  # not a healthy empty source, not a crash
-                stats["status"] = result.status
-                stats["error"] = result.warnings[-1] if result.warnings else result.status
+            _apply_result(db, cfg, adapter_factory(cfg).fetch(ctx), history, run, stats)
         except Exception as exc:  # isolation: one broken source must not stop the run
             stats["status"] = "failed"
             if isinstance(exc, HttpError) and exc.status in PERMANENT_HTTP:
                 stats["source_status"] = "blocked"
             stats["error"] = f"{type(exc).__name__}: {exc}"
-            errors.append({"source": cfg.id, "error": stats["error"]})
+            run.errors.append({"source": cfg.id, "error": stats["error"]})
             logger.error("source %s failed: %s", cfg.id, stats["error"])
         stats["duration_s"] = round(time.monotonic() - began, 3)
-        warnings.extend({"source": cfg.id, "warning": w} for w in stats["warnings"])
+        run.warnings.extend({"source": cfg.id, "warning": w} for w in stats["warnings"])
         db.record_source_result(cfg.id, run_id, error=stats["error"], now=now)
         db.record_source_run(
             run_id, cfg.id, now, status=stats["status"], source_status=stats.get("source_status"),
             events_found=stats["valid_events"], events_in_window=stats["in_window"],
             duration_s=stats["duration_s"], error=stats["error"], strategy=stats.get("strategy"),
             extraction_ok=stats.get("extraction_ok"), listing_hash=stats.get("listing_hash"),
-            anomalies=[],
+            anomalies=stats["anomalies"],
         )  # fmt: skip
         logger.info("source %s: %s", cfg.id, stats["status"])
 
@@ -244,6 +319,8 @@ def run_import(
         "sources_attempted": [c.id for c in chosen],
         "sources_succeeded": [i for i, s in per_source.items() if s["status"] == "succeeded"],
         "sources_failed": [i for i, s in per_source.items() if s["status"] == "failed"],
+        "sources_partial": [i for i, s in per_source.items() if s["status"] == "partial"],
+        "sources_anomalous": [i for i, s in per_source.items() if s["status"] == "anomalous"],
         "sources_needs_review": [i for i, s in per_source.items() if s["status"] in NEEDS_REVIEW],
         "sources_skipped": skipped,
         "sources": per_source,
@@ -259,8 +336,8 @@ def run_import(
             "possible_duplicates": total("possible_duplicates"),
             "discarded": dict(discarded_total),
         },
-        "errors": errors,
-        "warnings": warnings,
+        "errors": run.errors,
+        "warnings": run.warnings,
     }
     db.finish_run(run_id, now, report)
     return report
