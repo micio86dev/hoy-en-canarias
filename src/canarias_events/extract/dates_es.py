@@ -190,8 +190,11 @@ def _token_ok(sep: str | None, has_h: bool, has_ap: bool) -> bool:
 
 
 _RE_LENGTH_AFTER = re.compile(r"\s*y\s+(?:\d{1,2}\s*min|media\b|cuarto\b)")
-# A bare "21 horas" right after a date, a year, a month, a comma or a dash is a clock time.
-_RE_DATE_CONTEXT = re.compile(rf"(?:[,\-–—]|\b(?:{_MON})|\b{_YEAR})\s*$")
+# A bare "21 horas" right after a month or a year is a clock time; after a comma or a dash only
+# when the hour is a believable event time (otherwise "..., 2 horas" stays a length, not 02:00).
+_RE_DATE_CONTEXT = re.compile(rf"(?:\b(?:{_MON})|\b{_YEAR})\s*$")
+_RE_PUNCT_CONTEXT = re.compile(r"[,\-–—]\s*$")
+_MIN_BARE_EVENT_HOUR = 7
 
 
 def _is_duration(folded: str, m: re.Match[str], p: str) -> bool:
@@ -207,8 +210,11 @@ def _is_duration(folded: str, m: re.Match[str], p: str) -> bool:
     if _RE_LENGTH_AFTER.match(folded, m.end(f"{p}hs")):
         return True
     # A bare hour with the long unit is a length unless it is introduced as a time ("a las") or
-    # stands right after a date, year, month, comma or dash ("24 de octubre, 21 horas").
-    return not (_RE_AT_CUE.search(before) or _RE_DATE_CONTEXT.search(before))
+    # stands right after a month, a year, or a comma or dash with a plausible hour
+    # ("24 de octubre, 21 horas").
+    if _RE_AT_CUE.search(before) or _RE_DATE_CONTEXT.search(before):
+        return False
+    return not (_RE_PUNCT_CONTEXT.search(before) and int(m.group(f"{p}h")) >= _MIN_BARE_EVENT_HOUR)
 
 
 def _times_in(folded: str) -> tuple[time | None, time | None]:
