@@ -128,7 +128,7 @@ def test_repeated_rate_limits_back_off_exponentially() -> None:
 
 def test_a_baseline_reset_run_does_not_hide_the_backoff_or_cool_down() -> None:
     synthetic = run_at(0.5, status="succeeded")
-    object.__setattr__(synthetic, "anomalies", ["baseline_reset"])
+    object.__setattr__(synthetic, "anomalies", ["baseline_reset", "manual_accept"])
     fails = [run_at(2), run_at(30), run_at(60)]
     assert "backoff" in (reason(None, [synthetic, *fails], None) or "")
     blocked = [run_at(1, status="robots_disallowed", source_status="robots_disallowed")]
@@ -137,5 +137,13 @@ def test_a_baseline_reset_run_does_not_hide_the_backoff_or_cool_down() -> None:
 
 def test_a_baseline_reset_run_does_not_defer_the_frequency_schedule() -> None:
     synthetic = run_at(0.5, status="succeeded")
-    object.__setattr__(synthetic, "anomalies", ["baseline_reset"])
+    object.__setattr__(synthetic, "anomalies", ["baseline_reset", "manual_accept"])
     assert reason("daily", [synthetic], last_success(30)) is None
+
+
+def test_a_real_baseline_reset_success_still_counts_as_a_run() -> None:
+    real = run_at(0.5, status="succeeded")
+    object.__setattr__(real, "anomalies", ["baseline_reset"])
+    blocked = [run_at(1, status="robots_disallowed", source_status="robots_disallowed")]
+    assert real.anomalies == ["baseline_reset"]
+    assert reason(None, [real, *blocked], None) is None  # the fresh success ends the cool-down

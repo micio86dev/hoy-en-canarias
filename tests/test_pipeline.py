@@ -670,7 +670,7 @@ def test_accepting_the_quarantine_makes_the_accepted_level_the_baseline(
     assert accept_quarantine(db, "w", now=NOW) == 1
     [baseline, *_] = db.recent_source_runs("w", limit=5)
     assert baseline.status == "succeeded" and baseline.events_found == 1
-    assert baseline.anomalies == ["baseline_reset"]
+    assert baseline.anomalies == ["baseline_reset", "manual_accept"]
 
     again = run_scripted(db, client, web_result(ev("w", "1", "Uno")))
     assert again["sources"]["w"]["status"] == "succeeded"
@@ -701,7 +701,7 @@ def test_accept_baseline_counts_only_the_non_partial_items_of_the_latest_run(
     [baseline, *_] = db.recent_source_runs("w", limit=3)
     assert baseline.run_id == 8
     assert baseline.events_found == 2 and baseline.events_in_window == 2
-    assert baseline.anomalies == ["baseline_reset"]
+    assert baseline.anomalies == ["baseline_reset", "manual_accept"]
 
 
 def test_accepting_only_blocked_partial_items_does_not_reset_the_baseline(

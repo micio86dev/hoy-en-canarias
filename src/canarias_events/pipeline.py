@@ -19,7 +19,7 @@ from canarias_events.date_range import TZ, DateWindow
 from canarias_events.deduplication import DEFAULT_MERGE_THRESHOLD, resolve
 from canarias_events.extract.llm import AiSettings
 from canarias_events.geo import normalize_island
-from canarias_events.health import BASELINE_RESET, INFORMATIONAL, detect_anomalies
+from canarias_events.health import BASELINE_RESET, INFORMATIONAL, MANUAL_ACCEPT, detect_anomalies
 from canarias_events.http import HttpError, SafeHttpClient
 from canarias_events.models import Event
 from canarias_events.scheduling import skip_reason
@@ -193,7 +193,7 @@ def accept_quarantine(
             latest, source_id, now, status=SUCCEEDED, source_status=ADAPTER_OK,
             events_found=count, events_in_window=count, duration_s=0.0,
             error=None, strategy=None, extraction_ok=None, listing_hash=None,
-            anomalies=[BASELINE_RESET],
+            anomalies=[BASELINE_RESET, MANUAL_ACCEPT],
         )  # fmt: skip
     return len(pending)
 

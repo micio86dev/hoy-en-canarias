@@ -13,9 +13,11 @@ from canarias_events.statuses import ANOMALOUS, NO_CONTENT_STATUSES, SUCCEEDED
 EMPTY_MARKER = "empty-marker"  # strategy of a page that says, in its own words, "no events"
 # The run's count is the new normal: later runs are compared from here on, not with older ones.
 BASELINE_RESET = "baseline_reset"
+# Marks the bookkeeping row written when a person accepts quarantined events (not a fetch).
+MANUAL_ACCEPT = "manual_accept"
 COUNT_DROP = "count_drop"
 # Codes that only inform; every other code keeps the run's events out of the exports.
-INFORMATIONAL = frozenset({"strategy_changed", BASELINE_RESET})
+INFORMATIONAL = frozenset({"strategy_changed", BASELINE_RESET, MANUAL_ACCEPT})
 
 
 def is_blocking(codes: Sequence[str]) -> bool:
