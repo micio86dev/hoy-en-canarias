@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Callable
-from datetime import datetime
+from datetime import date, datetime
 from html import escape
 from typing import Any
 from urllib.parse import parse_qs, urlsplit
@@ -19,6 +19,7 @@ from canarias_events.sources.base import FetchContext, SourceConfig
 from canarias_events.sources.bluesky import BlueskyAdapter
 from canarias_events.sources.mastodon import MastodonAdapter
 from canarias_events.sources.registry import ADAPTERS, create_adapter
+from canarias_events.sources.web import WebAdapter
 
 MakeCtx = Callable[..., FetchContext]
 FEED = "https://mastodon.example/@agenda.rss"
@@ -205,6 +206,54 @@ def test_robots_disallow_on_the_linked_page_is_respected(make_ctx: MakeCtx) -> N
 
 
 @respx.mock
+@pytest.mark.parametrize(("status", "label"), [(403, "blocked"), (429, "rate_limited")])
+def test_a_refused_event_page_is_reported_with_its_host_and_status(
+    make_ctx: MakeCtx, status: int, label: str
+) -> None:
+    html = f'<p>Gala en Adeje el 24 de octubre <a href="{PAGE}">info</a></p>'
+    serve_feed(("1", PUBLISHED, html))
+    robots("teatro.example.org")
+    respx.get(PAGE).mock(return_value=httpx.Response(status, text="no"))
+
+    result = MastodonAdapter(mastodon_cfg()).fetch(make_ctx())
+
+    assert [e.extra["derived_from"] for e in result.events] == ["post_text"]
+    assert any("teatro.example.org" in w and label in w for w in result.warnings), result.warnings
+
+
+@respx.mock
+def test_an_unexpected_error_on_one_link_skips_only_that_link(
+    make_ctx: MakeCtx, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    bad, good = "https://bad.example.org/e", PAGE
+    serve_feed(
+        ("1", PUBLISHED, f'<p>Gala en Adeje el 24 de octubre <a href="{bad}">x</a></p>'),
+        ("2", PUBLISHED, f'<p>Gala el 24 de octubre de 2026 <a href="{good}">y</a></p>'),
+    )
+    robots("teatro.example.org")
+    event_page("Gala de otoño", "2026-10-24T20:30:00+01:00")
+    real = WebAdapter.fetch
+
+    def flaky(self: WebAdapter, ctx: FetchContext) -> Any:
+        if "bad.example.org" in self.config.url:
+            raise RuntimeError("parser exploded")
+        return real(self, ctx)
+
+    monkeypatch.setattr(WebAdapter, "fetch", flaky)
+    cfg = mastodon_cfg(
+        params={
+            "handle": "agenda@mastodon.example",
+            "link_hosts": ["teatro.example.org", "bad.example.org"],
+            "year_policy": "infer",
+        }
+    )
+    result = MastodonAdapter(cfg).fetch(make_ctx())
+
+    assert sorted(e.extra["derived_from"] for e in result.events) == ["event_page", "post_text"]
+    assert any("bad.example.org" in w and "parser exploded" in w for w in result.warnings)
+
+
+@respx.mock
 def test_links_are_fetched_at_most_a_bounded_number_of_times(make_ctx: MakeCtx) -> None:
     posts = [
         (
@@ -223,7 +272,9 @@ def test_links_are_fetched_at_most_a_bounded_number_of_times(make_ctx: MakeCtx) 
             )
         )
     hosts = [f"t{n}.example.org" for n in range(20)]
-    cfg = mastodon_cfg(params={"handle": "agenda@mastodon.example", "link_hosts": hosts})
+    cfg = mastodon_cfg(
+        params={"handle": "agenda@mastodon.example", "link_hosts": hosts, "year_policy": "infer"}
+    )
     result = MastodonAdapter(cfg).fetch(make_ctx())
     pages = [c for c in respx.calls if c.request.url.path == "/e"]
     assert len(pages) == 8 and result.events == []
@@ -406,15 +457,54 @@ def test_a_post_without_a_year_is_skipped_unless_inference_is_opted_in(
 
 
 @respx.mock
-def test_strict_posts_may_still_match_the_date_of_a_linked_event_page(make_ctx: MakeCtx) -> None:
+def test_a_strict_post_without_a_year_does_not_adopt_the_year_of_a_linked_page(
+    make_ctx: MakeCtx,
+) -> None:
     serve_feed(("1", PUBLISHED, f'<p>Gala el 24 de octubre <a href="{PAGE}">info</a></p>'))
     robots("teatro.example.org")
     event_page("Gala de otoño", "2026-10-24T20:30:00+01:00")
     cfg = mastodon_cfg(
         params={"handle": "agenda@mastodon.example", "link_hosts": ["teatro.example.org"]}
     )
-    [event] = MastodonAdapter(cfg).fetch(make_ctx()).events  # the page states the year
+    result = MastodonAdapter(cfg).fetch(make_ctx())
+    assert result.events == []
+    assert [r for r, _ in result.discarded] == ["year not stated (year_policy: strict)"]
+
+
+@respx.mock
+def test_a_strict_post_with_a_stated_year_matches_the_linked_page(make_ctx: MakeCtx) -> None:
+    html = f'<p>Gala el 24 de octubre de 2026 <a href="{PAGE}">info</a></p>'
+    serve_feed(("1", PUBLISHED, html))
+    robots("teatro.example.org")
+    event_page("Gala de otoño", "2026-10-24T20:30:00+01:00")
+    cfg = mastodon_cfg(
+        params={"handle": "agenda@mastodon.example", "link_hosts": ["teatro.example.org"]}
+    )
+    [event] = MastodonAdapter(cfg).fetch(make_ctx()).events
+    assert event.extra["derived_from"] == "event_page"
     assert event.start_datetime == datetime(2026, 10, 24, 20, 30, tzinfo=TZ)
+
+
+@respx.mock
+def test_the_same_day_and_month_in_another_year_is_not_a_match(make_ctx: MakeCtx) -> None:
+    html = f'<p>Gala en Adeje el 24 de octubre de 2026 <a href="{PAGE}">info</a></p>'
+    serve_feed(("1", PUBLISHED, html))
+    robots("teatro.example.org")
+    event_page("Gala de otoño", "2027-10-24T20:30:00+01:00")
+    [event] = MastodonAdapter(mastodon_cfg()).fetch(make_ctx()).events
+    assert event.extra["derived_from"] == "post_text"  # the page's 2027 date is not adopted
+    assert event.start_datetime is None and event.start_date == date(2026, 10, 24)
+
+
+@respx.mock
+def test_an_inferred_year_still_matches_the_page_when_inference_is_opted_in(
+    make_ctx: MakeCtx,
+) -> None:
+    serve_feed(("1", PUBLISHED, f'<p>Gala el 24 de octubre <a href="{PAGE}">info</a></p>'))
+    robots("teatro.example.org")
+    event_page("Gala de otoño", "2027-10-24T20:30:00+01:00")
+    [event] = MastodonAdapter(mastodon_cfg()).fetch(make_ctx()).events  # year_policy: infer
+    assert event.extra["derived_from"] == "event_page"
 
 
 @respx.mock

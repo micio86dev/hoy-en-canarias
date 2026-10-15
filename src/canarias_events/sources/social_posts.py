@@ -14,6 +14,7 @@ priority, they never overwrite fields of reliable sources.
 
 from __future__ import annotations
 
+import logging
 import re
 from collections.abc import Sequence
 from dataclasses import dataclass, field
@@ -26,7 +27,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from canarias_events.date_range import TZ
 from canarias_events.extract.dates_es import ParsedDateRange, find_date_ranges
 from canarias_events.geo import municipalities_after_en
-from canarias_events.http import FetchError, mask_secrets
+from canarias_events.http import mask_secrets
 from canarias_events.models import SOCIAL_TRUST, Event
 from canarias_events.sources.base import (
     FetchContext,
@@ -35,8 +36,10 @@ from canarias_events.sources.base import (
     resolve_island,
 )
 from canarias_events.sources.web import WebAdapter
-from canarias_events.statuses import ADAPTER_OK
+from canarias_events.statuses import ADAPTER_OK, BLOCKED, NEEDS_MANUAL_REVIEW, RATE_LIMITED
 
+logger = logging.getLogger(__name__)
+LINK_PROBLEMS = frozenset({BLOCKED, RATE_LIMITED, NEEDS_MANUAL_REVIEW})
 MAX_POSTS = 40
 MAX_LINK_FETCHES = 8  # event pages fetched per run, however many posts there are
 MAX_LINKS_PER_POST = 3
@@ -94,6 +97,12 @@ def _title(text: str) -> str:
     return line[:TITLE_CHARS].rsplit(" ", 1)[0].rstrip(",;:- ") + "…"
 
 
+def _same_day(day: date, wanted: set[tuple[int, int, int | None]]) -> bool:
+    return any(
+        (day.month, day.day) == (month, d) and year in (None, day.year) for month, d, year in wanted
+    )
+
+
 def _moment(day: date, at: time | None) -> datetime | None:
     return datetime.combine(day, at, TZ) if at else None
 
@@ -135,7 +144,7 @@ class PostEvents:
         if not ranges:
             self.result.discard("no deterministic date", post.id)
             return
-        page_event = self._from_event_page(post, {(r.start.month, r.start.day) for r in ranges})
+        page_event = self._from_event_page(post, self._wanted_days(ranges))
         if page_event is not None:
             self.result.events.append(page_event)
             return
@@ -169,7 +178,8 @@ class PostEvents:
                 params={"jsonld_only": True},
             )  # fmt: skip
             sub = WebAdapter(page_cfg).fetch(self.ctx)
-        except (FetchError, ValueError) as exc:
+        except Exception as exc:  # isolation: one bad link must not cost the other posts
+            logger.warning("link %s skipped: %s", mask_secrets(link), exc)
             self.result.warnings.append(f"link skipped: {mask_secrets(link)}: {exc}")
             return found
         for warning in sub.warnings:
@@ -177,7 +187,22 @@ class PostEvents:
                 self.result.warnings.append(f"link: {warning}")
         if sub.status == ADAPTER_OK:
             found.extend(sub.events)
+        elif sub.status in LINK_PROBLEMS:
+            host = urlsplit(link).hostname or "?"
+            self.result.warnings.append(f"link skipped: {host}: {sub.status}")
         return found
+
+    def _wanted_days(self, ranges: Sequence[ParsedDateRange]) -> set[tuple[int, int, int | None]]:
+        """(month, day, year) a linked page may match; year None: the post did not state it.
+
+        Under the strict policy a post that states no year never adopts the page's year.
+        """
+        strict = self.params.year_policy == "strict"
+        return {
+            (r.start.month, r.start.day, None if r.year_inferred else r.start.year)
+            for r in ranges
+            if not (strict and r.year_inferred)
+        }
 
     def _linkable(self, host: str) -> bool:
         if host in self.skip_hosts:
@@ -192,12 +217,16 @@ class PostEvents:
                 links.append(link)
         return links[:MAX_LINKS_PER_POST]
 
-    def _from_event_page(self, post: SocialPost, days: set[tuple[int, int]]) -> Event | None:
+    def _from_event_page(
+        self, post: SocialPost, days: set[tuple[int, int, int | None]]
+    ) -> Event | None:
+        if not days:
+            return None
         for link in self._links(post):
             matching = [
                 e
                 for e in self._page_events(link)
-                if e.start_date is not None and (e.start_date.month, e.start_date.day) in days
+                if e.start_date is not None and _same_day(e.start_date, days)
             ]
             if len(matching) != 1:
                 continue  # none, or several events on that date: not an unambiguous match
