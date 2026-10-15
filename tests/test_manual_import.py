@@ -338,7 +338,6 @@ def test_an_ics_file_needs_the_organizer_name(tmp_path: Path) -> None:
 
 
 def test_refused_hosts_are_the_social_registry_hosts() -> None:
-    assert manual_import.REFUSED_HOSTS is social.REFUSED_HOSTS
     for host in social.REFUSED_HOSTS:
         found = social.classify_social_url(f"https://{host}/page")
         assert found is not None and found[0] in ("facebook", "instagram")

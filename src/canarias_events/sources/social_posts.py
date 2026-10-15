@@ -179,8 +179,10 @@ class PostEvents:
             )  # fmt: skip
             sub = WebAdapter(page_cfg).fetch(self.ctx)
         except Exception as exc:  # isolation: one bad link must not cost the other posts
-            logger.warning("link %s skipped: %s", mask_secrets(link), exc)
-            self.result.warnings.append(f"link skipped: {mask_secrets(link)}: {exc}")
+            logger.warning("link %s skipped: %s", mask_secrets(link), mask_secrets(str(exc)))
+            self.result.warnings.append(
+                f"link skipped: {mask_secrets(link)}: {mask_secrets(str(exc))}"
+            )
             return found
         for warning in sub.warnings:
             if "robots.txt" in warning:
