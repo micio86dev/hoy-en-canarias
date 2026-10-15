@@ -12,7 +12,8 @@ Constraints: no auth/CAPTCHA/paywall bypass; respect robots.txt; no automatic so
 ## Tasks
 - [x] A1 Extraction core: Spanish date parser (deterministic), JSON-LD Event extractor, embedded JSON walker, generic repeated-block/link extractor, robots.txt checker — pure, fixture-tested
 - [x] A2 Web adapter with tiered strategy + optional renderer (Playwright/Crawl4AI lazy) + optional Ollama extractor; configure HTML sources
-- [ ] A3 Source health: history, anomaly detection, quarantine (no export of doubtful data), snapshots w/ retention, per-source frequency, failure backoff, concurrency, dry-run, --no-ai, timings
+- [ ] A2R Review follow-ups (route: delegated direct, one writer, 2+ non-trivial files; TDD strict, source: project config/session, runner `uv run pytest`): (1) durations never become start_time; (2) street number before a date is not a day range; (3) offer url resolved against page_url; (4) text after HTML comments kept; (5) blocks grouped by parent element, not id(); (6) html content type only text/html + xhtml; (7) llm verification uses the prompt's reference date; (8) llm HTTPError -> LlmError; (9) renderer fail-closed guard + hook error test; (10) cloudflare fixture IP placeholder; (11) pin Folk Fest date; (12) deterministic pathological-input test
+- [ ] A3 Source health: history, anomaly detection, quarantine (no export of doubtful data), snapshots w/ retention, per-source frequency, failure backoff, concurrency, dry-run, --no-ai, timings; pipeline status for blocked-with-partial-data and robots_disallowed/needs_manual_review sources (review findings R3-blocked-partial-ingest, R3-robots-ssrf-reported-success)
 - [ ] A4 Social registry (acquisition modes), Bluesky/Mastodon adapters, import-url command, discover-sources extension + validate-source
 - [ ] A5 Real run, inspect, README update, final summary
 
@@ -21,15 +22,24 @@ Constraints: no auth/CAPTCHA/paywall bypass; respect robots.txt; no automatic so
 ### A1 + A2 (route: delegated direct, one writer; 2026-10-15)
 Route declaration: A1+A2 touch 40+ files and need fixture reading -> one delegated writer (mapping and write triggers). TDD strict, runner `uv run pytest`; every module was written test-first and the RED state observed before the implementation.
 
-Commits (work units, each reviewed by the gga hook):
-- 1750eec feat: add spanish date and json-ld extraction (dates_es, jsonld, candidate/util, deps lxml/dateparser/cssselect, extras render/crawl/content, AGENTS.md scope update)
-- bb4c53c feat: add generic block and embedded json extraction (embedded, blocks, guards, text)
-- fef1ad3 feat: add robots.txt compliance (RFC 9309 matcher, Crawl-delay via SafeHttpClient.set_host_interval)
-- 4de4163 feat: add optional playwright and crawl4ai renderers
-- aaeb21a feat: add optional local ollama extractor
-- d51a4a6 feat: add tiered web adapter with optional renderers (+ SourceFetchResult/FetchContext/pipeline/registry wiring)
-- 17b25f9, 3bd3d2e fixes found by review (auto render fallback, robots recheck, block handling)
-- 8f32cef chore: configure html sources
+Commits (work units, history rewritten 2026-10-15 to fit the native review budget; content identical):
+- a754880 test: fixtures webtenerife; 3bf3df1 build: deps (uv.lock)
+- f85781c feat: spanish date and json-ld extraction
+- ad998ea, a88c487, 38b08a7, b29689f, 1e01068, cd94a21, d583108, 5c5eb5f, 6019540, 9a306ce, 1525443, a046da1: per-source fixtures (adeje, cact, block page + robots, auditorio tenerife, auditorio lpa, la laguna, lpacultura, arona, fuerteventura, gran canaria, tea, teatro leal + sitemap)
+- f9d69f8 feat: generic block and embedded json extraction
+- ed91106 feat: robots.txt compliance
+- 6b2f728 feat: optional playwright and crawl4ai renderers
+- e4fbaa0 feat: optional local ollama extractor
+- 708b18c feat: tiered web adapter
+- 20f1521 fix: crawl4ai fallback; 9fae170 fix: block handling (found by review)
+- d02a7fc chore: configure html sources; 680dc67 docs: record A1 and A2 progress
+
+### RDD review record (reliability lens, all APPROVED + acknowledged, authority burned)
+- a754880, f85781c, a88c487, 38b08a7, b29689f, cd94a21, 5c5eb5f, 6019540, 9a306ce: approved
+- 1525443..a046da1: approved; f9d69f8: approved; ed91106..e4fbaa0: approved; 708b18c..680dc67: approved
+- Not reviewable (lens_context_budget_exceeded, no authority created): 3bf3df1 (uv.lock), ad998ea (192 KB fixture), d583108 (174 KB fixture)
+- 1e01068 (340 KB fixture) skipped by decision
+- Backups of the old history: backup/adaptive-crawling-pre-split, backup/adaptive-crawling-pre-split2
 
 RED -> GREEN evidence (`uv run pytest <file>`):
 - dates_es: RED `ModuleNotFoundError: canarias_events.extract.dates_es` -> GREEN 82 passed (incl. false-positive and pathological-input cases; a quadratic scan found by an adversarial run was fixed).
