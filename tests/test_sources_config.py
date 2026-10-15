@@ -80,3 +80,13 @@ def test_catalog_lists_candidates_and_excluded_with_check_date() -> None:
 )
 def test_all_adapters_registered(adapter: str) -> None:
     assert adapter in ADAPTERS
+
+
+def test_priorities_and_stale_flags() -> None:
+    by_id = {s.id: s for s in load_sources(CONFIG)}
+    assert by_id["cabildo_tenerife_deportes"].priority > by_id["holaislascanarias"].priority
+    assert by_id["holaislascanarias"].priority > by_id["ticketmaster"].priority
+    assert {i for i, s in by_id.items() if s.stale} == {
+        "gobcan_agenda_cultural",
+        "santacruz_agenda_cultural",
+    }

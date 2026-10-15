@@ -45,6 +45,7 @@ class SourceConfig(BaseModel):
     homepage: str | None = None
     notes: str | None = None
     priority: int = 50
+    stale: bool = False
     params: dict[str, Any] = Field(default_factory=dict)
 
     @field_validator("url")
