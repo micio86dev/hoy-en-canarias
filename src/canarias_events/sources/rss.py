@@ -35,9 +35,13 @@ class RssAdapter(SourceAdapter):
     source_type = "rss"
 
     def fetch(self, ctx: FetchContext) -> SourceFetchResult:
+        return self.read(ctx.client.get(self.config.url).content)
+
+    def read(self, content: bytes) -> SourceFetchResult:
+        """Events of an RSS/Atom document (only items with a structured event date)."""
         config = self.config
         result = SourceFetchResult()
-        parsed = feedparser.parse(ctx.client.get(config.url).content)
+        parsed = feedparser.parse(content)
         if not parsed.entries and parsed.bozo and not parsed.feed.get("title"):
             raise InvalidPayload(f"{config.id}: response is not an RSS/Atom feed")
         result.pages = 1

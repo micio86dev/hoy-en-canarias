@@ -46,6 +46,7 @@ from canarias_events.social import (
 from canarias_events.sources.base import SourceConfig
 from canarias_events.sources.registry import SourcesCatalog, load_catalog
 from canarias_events.submissions import SubmissionError, load_submission
+from canarias_events.validation import ValidationReport, validate_source
 
 DEFAULT_CONFIG = Path("config/sources.yaml")
 DEFAULT_OUTPUT_DIR = Path("output")
@@ -575,6 +576,91 @@ def submit_event(
             typer.echo(f"error: {error}", err=True)
         raise typer.Exit(2) from exc
     _store_manual(events, ORGANIZER_SOURCE, db_path, dry_run=dry_run, accept=accept)
+
+
+def _echo_validation(r: ValidationReport) -> None:
+    reach = "yes" if r.reachable else "no"
+    if r.http_status:
+        reach += f" (HTTP {r.http_status}" + (f", {r.content_type})" if r.content_type else ")")
+    quality = "-" if r.quality is None else f"{r.quality:.0%}"
+    history = "unknown (no history)"
+    if r.reliability:
+        history = (
+            f"{1 - (r.reliability['error_rate'] or 0):.0%} ok over {r.reliability['runs']} run(s)"
+        )
+    rows = [
+        ("Source", r.url + (f" [{r.source_id}]" if r.source_id else "")),
+        ("Reachable", reach), ("Kind", r.kind), ("Robots", r.robots),
+        ("Events", f"{r.events_found}" + (f" via {r.strategy}" if r.strategy else "")),
+        ("Data quality", f"{quality} with title, start date and place"),
+        ("Coverage", f"{r.in_next_30_days} in the next 30 days, "
+                     f"{r.in_target_week} in the target week"),
+        ("Reliability", history), ("Reuse terms", r.terms), ("Score", f"{r.score}/100"),
+        ("Suggested", f"acquisition_mode={r.suggested_mode or 'unknown'}, "
+                      f"verification_state={r.suggested_state}"),
+    ]  # fmt: skip
+    for label, value in rows:
+        typer.echo(f"{label + ':':<14}{value}")
+    for note in r.notes:
+        typer.echo(f"note: {note}")
+
+
+@app.command("validate-source")
+def validate_source_command(
+    target: Annotated[str, typer.Argument(help="A URL, a candidate id or a configured source id.")],
+    save: Annotated[
+        bool, typer.Option("--save", help="Store the suggested state on the candidate.")
+    ] = False,
+    as_json: Annotated[bool, typer.Option("--json", help="Print the report as JSON.")] = False,
+    db_path: DbOption = None,
+    config: ConfigOption = DEFAULT_CONFIG,
+) -> None:
+    """Score a candidate source (reachability, robots, events, quality, coverage, terms)."""
+    path = db_path or default_db_path()
+    now = datetime.now(TZ)
+    candidate = source = None
+    history = None
+    crawl = CrawlSettings()
+    if path.exists():
+        with Database(path) as db:
+            candidate = db.get_candidate(target)
+    url = target if target.lower().startswith(("http://", "https://")) else None
+    if url is None and candidate is not None:
+        url = candidate.url
+    if url is None and config.exists():
+        catalog = _load_catalog(config)
+        crawl = catalog.crawl
+        source = next((s for s in catalog.sources if s.id == target), None)
+        url = source.url if source else None
+    if url is None:
+        raise _fail(f"{target!r} is not a URL, a candidate id or a configured source id", 2)
+    if source is not None and path.exists():
+        with Database(path) as db:
+            history = db.recent_source_runs(source.id, crawl.history_runs)
+    client = make_client()
+    try:
+        report = validate_source(client, url, now=now, source=source, history=history)
+    finally:
+        client.close()
+    if as_json:
+        typer.echo(json.dumps(report.as_dict(), ensure_ascii=False, indent=2))
+    else:
+        _echo_validation(report)
+    if not save:
+        typer.echo("Not saved (use --save to record the suggested state).", err=True)
+        return
+    if source is not None:
+        typer.echo("A configured source has no candidate record: nothing saved.", err=True)
+        return
+    with Database(path) as db:
+        db.add_candidate(url, "web", "validate-source", now)
+        saved = db.get_candidate(url)
+        assert saved is not None
+        db.update_candidate(
+            saved.id, state=report.suggested_state, mode=report.suggested_mode,
+            score=report.score, report=report.as_dict(), now=now,
+        )  # fmt: skip
+    typer.echo(f"Saved: {saved.id} is now {report.suggested_state}.", err=True)
 
 
 @app.command("report")

@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -926,3 +926,122 @@ def test_the_shipped_schema_and_example_match_the_model() -> None:
     example = docs / "organizer-submission.example.json"
     [event] = load_submission(example, organizer=None, now=NOW)
     assert event.source_type == "organizer_submission"
+
+
+# --------------------------------------------------------------------------- validate-source
+
+
+SOURCE_URL = "https://agenda.example.org/programacion/"
+
+
+def serve_source(days: int = 3) -> None:
+    start = datetime(2026, 10, 15, 20, 0, tzinfo=TZ) + timedelta(days=days)
+    data = {
+        "@context": "https://schema.org", "@type": "Event", "name": "Concierto",
+        "startDate": start.isoformat(),
+        "location": {"@type": "Place", "name": "Teatro", "address": "La Laguna"},
+    }  # fmt: skip
+    respx.get("https://agenda.example.org/robots.txt").mock(return_value=httpx.Response(404))
+    respx.get(SOURCE_URL).mock(
+        return_value=httpx.Response(
+            200,
+            text=f'<script type="application/ld+json">{json.dumps(data)}</script>',
+            headers={"content-type": "text/html"},
+        )
+    )
+
+
+@respx.mock
+@pytest.mark.usefixtures("offline")
+def test_validate_source_prints_a_scored_report_and_stores_nothing(tmp_path: Path) -> None:
+    serve_source()
+    db = tmp_path / "db.sqlite"
+    result = invoke("validate-source", SOURCE_URL, "--db", str(db), "--config", str(tmp_path / "x"))
+    assert result.exit_code == 0, result.output
+    assert "Score:" in result.output and "acquisition_mode=api_public" in result.output
+    assert "Not saved" in result.output
+    assert not db.exists()
+
+
+@respx.mock
+@pytest.mark.usefixtures("offline")
+def test_validate_source_save_updates_the_candidate_state(tmp_path: Path) -> None:
+    serve_source()
+    db = tmp_path / "db.sqlite"
+    config = write_config(tmp_path, [fake_source("a")])
+    invoke(*discover_args(tmp_path, config, "--no-catalogs", "--no-links", "--url", SOURCE_URL))
+    with Database(db) as database:
+        [row] = database.list_candidates()
+    assert row.verification_state == "candidate"
+
+    plain = invoke("validate-source", row.id, "--db", str(db), "--config", str(config))
+    assert plain.exit_code == 0, plain.output
+    with Database(db) as database:
+        assert database.list_candidates()[0].verification_state == "candidate"  # no --save: as was
+
+    saved = invoke("validate-source", row.id, "--save", "--db", str(db), "--config", str(config))
+    assert saved.exit_code == 0, saved.output
+    with Database(db) as database:
+        [after] = database.list_candidates()
+        assert after.verification_state == "verified" and after.acquisition_mode == "api_public"
+        assert after.last_score is not None and after.last_score > 0
+        assert after.report is not None and after.report["events_found"] == 1
+
+
+@respx.mock
+@pytest.mark.usefixtures("offline")
+def test_validate_source_save_creates_the_candidate_for_a_new_url(tmp_path: Path) -> None:
+    serve_source()
+    db = tmp_path / "db.sqlite"
+    result = invoke("validate-source", SOURCE_URL, "--save", "--db", str(db), "--json")
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.output[: result.output.rindex("}") + 1])["events_found"] == 1
+    with Database(db) as database:
+        [row] = database.list_candidates()
+        assert row.url == SOURCE_URL and row.discovered_via == "validate-source"
+        assert row.verification_state == "verified"
+
+
+@respx.mock
+@pytest.mark.usefixtures("offline")
+def test_validate_source_accepts_a_configured_source_id(tmp_path: Path) -> None:
+    respx.get("https://feeds.example.org/e.ics").mock(
+        return_value=httpx.Response(
+            200,
+            text=(
+                "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//t//EN\nBEGIN:VEVENT\nUID:a@b\n"
+                "DTSTAMP:20261001T100000Z\nDTSTART:20261020T180000Z\nSUMMARY:Verbena\n"
+                "LOCATION:Plaza\\, Adeje\nEND:VEVENT\nEND:VCALENDAR\n"
+            ),
+            headers={"content-type": "text/calendar"},
+        )
+    )
+    config = write_config(
+        tmp_path,
+        [
+            {
+                "id": "ics1",
+                "name": "Ics",
+                "adapter": "ical",
+                "url": "https://feeds.example.org/e.ics",
+            }
+        ],
+    )
+    result = invoke("validate-source", "ics1", "--config", str(config), "--db", str(tmp_path / "d"))
+    assert result.exit_code == 0, result.output
+    assert "[ics1]" in result.output and "Events:       1" in result.output
+
+
+def test_validate_source_rejects_unknown_targets(tmp_path: Path) -> None:
+    config = write_config(tmp_path, [fake_source("a")])
+    result = invoke("validate-source", "nope", "--config", str(config), "--db", str(tmp_path / "d"))
+    assert result.exit_code == 2
+
+
+def test_validate_source_social_url_needs_no_network(tmp_path: Path) -> None:
+    result = invoke(
+        "validate-source", "https://www.facebook.com/grupo", "--db", str(tmp_path / "d"),
+        "--config", str(tmp_path / "x"),
+    )  # fmt: skip
+    assert result.exit_code == 0, result.output
+    assert "requires_authorization" in result.output and "rejected" in result.output
