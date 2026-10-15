@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 from collections.abc import Sequence
 from datetime import date, datetime
@@ -11,6 +12,7 @@ from typing import Annotated, Any
 from urllib.parse import urlsplit
 
 import typer
+import yaml
 from dotenv import load_dotenv
 
 from canarias_events.candidates import FoundCandidate, candidates_from_report
@@ -50,6 +52,9 @@ from canarias_events.validation import ValidationReport, validate_source
 
 DEFAULT_CONFIG = Path("config/sources.yaml")
 DEFAULT_OUTPUT_DIR = Path("output")
+
+logger = logging.getLogger(__name__)
+SOCIAL_WARNING_SOURCE = "social_sources"
 
 app = typer.Typer(
     help="Import public Canary Islands events for the next Monday-Sunday week.",
@@ -103,19 +108,25 @@ def _social_path(config: Path, social_config: Path | None) -> Path:
     return social_config or config.parent / "social_sources.yaml"
 
 
-def _with_social(catalog: SourcesCatalog, path: Path) -> SourcesCatalog:
-    """The catalog plus the verified, enabled social accounts (never anything else)."""
+def _with_social(
+    catalog: SourcesCatalog, path: Path
+) -> tuple[SourcesCatalog, dict[str, str] | None]:
+    """The catalog plus the verified, enabled social accounts (never anything else).
+
+    A broken optional social registry must not stop the official sources: it is skipped and
+    returned as a report warning.
+    """
     try:
         extra = scheduled_sources(load_social_registry(path))
-    except (OSError, ValueError) as exc:
-        raise typer.BadParameter(
-            f"cannot load {path}: {exc}", param_hint="--social-config"
-        ) from exc
+    except (OSError, ValueError, yaml.YAMLError) as exc:
+        message = f"social sources skipped: cannot load {path}: {exc}"
+        logger.warning(message)
+        return catalog, {"source": SOCIAL_WARNING_SOURCE, "warning": message}
     taken = {s.id for s in catalog.sources}
     clash = [s.id for s in extra if s.id in taken]
     if clash:
         raise typer.BadParameter(f"social source id(s) also in sources.yaml: {', '.join(clash)}")
-    return catalog.model_copy(update={"sources": [*catalog.sources, *extra]})
+    return catalog.model_copy(update={"sources": [*catalog.sources, *extra]}), None
 
 
 def _parse_day(value: str, option: str) -> date:
@@ -258,7 +269,9 @@ def import_events(
 ) -> None:
     """Fetch the enabled sources, deduplicate, store and export the window's events."""
     window = _window(from_date, to_date)
-    catalog = _with_social(_load_catalog(config), _social_path(config, social_config))
+    catalog, social_warning = _with_social(
+        _load_catalog(config), _social_path(config, social_config)
+    )
     typer.echo(
         f"Window: {window.start_date.isoformat()} to {window.end_date_inclusive.isoformat()} "
         "(Atlantic/Canary)"
@@ -280,6 +293,8 @@ def import_events(
             raise typer.BadParameter(str(exc)) from exc
         finally:
             client.close()
+        if social_warning is not None:
+            report["warnings"].append(social_warning)
         if dry_run:
             report["dry_run"] = True
             write_atomic(

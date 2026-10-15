@@ -423,6 +423,31 @@ def test_import_events_runs_verified_social_accounts(
     assert "Concierto en Adeje el martes 20 de octubre a las 20:00" in {e["title"] for e in events}
 
 
+@pytest.mark.parametrize(
+    "content",
+    ["sources: [unterminated", "- just\n- a list\n", "sources:\n  - id: x\n    bogus: 1\n"],
+)
+def test_a_broken_social_registry_does_not_stop_official_imports(
+    tmp_path: Path, content: str
+) -> None:
+    config = write_config(tmp_path, [fake_source("a")])
+    social = tmp_path / "social.yaml"
+    social.write_text(content, encoding="utf-8")
+
+    result = invoke(
+        *import_args(tmp_path, config, "--from", "2026-10-19", "--to", "2026-10-25"),
+        "--social-config", str(social),
+    )  # fmt: skip
+
+    assert result.exit_code == 0, result.output
+    assert "social sources skipped" in result.output
+    report = json.loads((tmp_path / "out" / "import-report.json").read_text(encoding="utf-8"))
+    assert report["sources_succeeded"] == ["a"]
+    warnings = [w for w in report["warnings"] if w["source"] == "social_sources"]
+    assert len(warnings) == 1 and "social sources skipped" in warnings[0]["warning"]
+    assert str(social) in warnings[0]["warning"]
+
+
 def test_a_social_id_clashing_with_sources_yaml_is_refused(tmp_path: Path) -> None:
     config = write_config(tmp_path, [fake_source("masto")])
     social = tmp_path / "social.yaml"
