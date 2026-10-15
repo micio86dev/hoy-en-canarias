@@ -151,6 +151,40 @@ def test_exit_code_is_zero_if_one_source_succeeds(tmp_path: Path) -> None:
     assert "failed" in result.output
 
 
+def test_exit_code_is_zero_when_no_source_is_due(tmp_path: Path) -> None:
+    config = write_config(tmp_path, [fake_source("a", frequency="daily")])
+    args = import_args(tmp_path, config, "--from", "2026-10-19", "--to", "2026-10-25")
+    assert invoke(*args).exit_code == 0
+    again = invoke(*args)
+    assert again.exit_code == 0, again.output
+    assert "No source due; 1 skipped" in again.output
+    assert "No source succeeded" not in again.output
+
+
+def test_exit_code_is_zero_when_only_some_sources_are_due(tmp_path: Path) -> None:
+    config = write_config(tmp_path, [fake_source("a", frequency="daily"), fake_source("b")])
+    args = import_args(tmp_path, config, "--from", "2026-10-19", "--to", "2026-10-25")
+    assert invoke(*args).exit_code == 0
+    assert invoke(*args).exit_code == 0  # b still runs and succeeds; a is deferred
+
+
+def test_exit_code_is_one_when_nothing_was_attempted_for_other_reasons(tmp_path: Path) -> None:
+    config = write_config(tmp_path, [fake_source("off", enabled=False)])
+    result = invoke(*import_args(tmp_path, config, "--from", "2026-10-19", "--to", "2026-10-25"))
+    assert result.exit_code == 1
+    assert "No source succeeded" in result.output
+
+
+def test_failed_attempts_still_exit_one_next_to_deferred_sources(tmp_path: Path) -> None:
+    config = write_config(
+        tmp_path,
+        [fake_source("a", frequency="daily"), fake_source("bad", params={"fail": True})],
+    )
+    args = import_args(tmp_path, config, "--from", "2026-10-19", "--to", "2026-10-25")
+    assert invoke(*args).exit_code == 0  # a succeeds
+    assert invoke(*args).exit_code == 1  # a is deferred, bad is attempted and fails
+
+
 def test_exit_code_is_one_when_every_source_fails(tmp_path: Path) -> None:
     config = write_config(tmp_path, [fake_source("bad", params={"fail": True})])
     result = invoke(*import_args(tmp_path, config, "--from", "2026-10-19", "--to", "2026-10-25"))

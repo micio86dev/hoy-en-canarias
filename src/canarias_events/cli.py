@@ -247,6 +247,10 @@ def import_events(
     else:
         typer.echo(f"Outputs written to {output_dir}/")
     if not report["sources_succeeded"]:
+        if not report["sources_attempted"] and report["sources_deferred"]:
+            # Nothing failed: every selected source was simply not due yet.
+            typer.echo(f"No source due; {len(report['sources_skipped'])} skipped.")
+            return
         typer.echo("No source succeeded.", err=True)
         raise typer.Exit(1)
 

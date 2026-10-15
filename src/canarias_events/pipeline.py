@@ -440,6 +440,7 @@ def run_import(
         "sources_anomalous": [i for i, s in per_source.items() if s["status"] == ANOMALOUS],
         "sources_needs_review": [i for i, s in per_source.items() if s["status"] in NEEDS_REVIEW],
         "sources_skipped": skipped,
+        "sources_deferred": [d["id"] for d in deferred],  # not due: frequency, backoff, cool-down
         "sources": per_source,
         "totals": {
             "events_in_window": len(events_in_window(db, window, island_name)),
