@@ -44,6 +44,7 @@ class SourceConfig(BaseModel):
     auth_env: str | None = None
     homepage: str | None = None
     notes: str | None = None
+    priority: int = 50
     params: dict[str, Any] = Field(default_factory=dict)
 
     @field_validator("url")
