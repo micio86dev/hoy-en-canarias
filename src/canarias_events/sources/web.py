@@ -225,6 +225,12 @@ class _Run:
         self.max_pages = (
             self.p.max_pages_per_run if cap is None else min(cap, self.p.max_pages_per_run)
         )
+        capped = cap is not None and cap < self.p.max_pages_per_run
+        self.page_limit_reached = (
+            f"page cap {self.max_pages} reached (low-resource)"
+            if capped
+            else f"max_pages_per_run={self.max_pages} reached"
+        )
         self.max_detail = (
             self.p.max_detail_pages if cap is None else min(cap, self.p.max_detail_pages)
         )
@@ -262,7 +268,7 @@ class _Run:
         if self.fetched >= self.max_pages:
             if not self.limit_warned:
                 self.limit_warned = True
-                self.warn(f"max_pages_per_run={self.max_pages} reached; fetching stopped")
+                self.warn(f"{self.page_limit_reached}; fetching stopped")
             raise _PageLimit
         if not self.robots.allowed(url):
             state = self.robots.status(url)

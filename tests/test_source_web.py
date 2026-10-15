@@ -786,6 +786,29 @@ def test_extra_listing_pages_and_the_page_cap(make_ctx: Ctx) -> None:
 
 
 @respx.mock
+def test_page_limit_warning_names_the_configured_limit_that_applied(make_ctx: Ctx) -> None:
+    robots()
+    urls = [f"https://{HOST}/agenda/page/{n}" for n in range(1, 5)]
+    for u in urls:
+        page(u, cards(5))
+    result = adapter(listing_urls=urls, max_pages_per_run=2).fetch(make_ctx())
+    assert "max_pages_per_run=2 reached; fetching stopped" in result.warnings
+
+
+@respx.mock
+def test_page_limit_warning_names_the_low_resource_cap_when_it_is_lower(make_ctx: Ctx) -> None:
+    robots()
+    urls = [f"https://{HOST}/agenda/page/{n}" for n in range(1, 5)]
+    for u in urls:
+        page(u, cards(5))
+    ctx = make_ctx()
+    ctx.page_cap = 2
+    result = adapter(listing_urls=urls, max_pages_per_run=40).fetch(ctx)
+    assert "page cap 2 reached (low-resource); fetching stopped" in result.warnings
+    assert not any("max_pages_per_run" in w for w in result.warnings)
+
+
+@respx.mock
 def test_failure_of_a_later_listing_page_is_only_a_warning(make_ctx: Ctx) -> None:
     robots()
     page(f"https://{HOST}/agenda/page/1", cards(5))
