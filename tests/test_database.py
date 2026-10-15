@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from canarias_events.database import Database, SqliteHttpCache, default_db_path
+from canarias_events.database import _MIGRATIONS, Database, SqliteHttpCache, default_db_path
 from canarias_events.date_range import TZ
 from canarias_events.http import SafeHttpClient
 from canarias_events.sources.base import SourceConfig
@@ -31,7 +31,7 @@ def test_creates_parent_dir_and_configures_pragmas(tmp_path: Path) -> None:
         assert path.exists()
         assert db.conn.execute("PRAGMA journal_mode").fetchone()[0] == "wal"
         assert db.conn.execute("PRAGMA foreign_keys").fetchone()[0] == 1
-        assert db.schema_version == 1
+        assert db.schema_version == len(_MIGRATIONS)
         tables = {
             r[0] for r in db.conn.execute("SELECT name FROM sqlite_master WHERE type = 'table'")
         }
@@ -56,7 +56,7 @@ def test_reopening_keeps_schema_version_and_data(tmp_path: Path) -> None:
     with Database(path) as db:
         db.sync_sources([make_cfg()])
     with Database(path) as db:
-        assert db.schema_version == 1
+        assert db.schema_version == len(_MIGRATIONS)
         assert db.count("sources") == 1
 
 

@@ -9,6 +9,7 @@ from typing import Any
 import yaml
 from pydantic import BaseModel, Field
 
+from canarias_events.crawl_settings import CrawlSettings
 from canarias_events.extract.llm import AiSettings
 from canarias_events.sources.base import SourceAdapter, SourceConfig
 from canarias_events.sources.ckan import CkanAdapter
@@ -45,6 +46,7 @@ class SourcesCatalog(BaseModel):
     excluded: list[CatalogEntry] = Field(default_factory=list)
     discovery_probes: list[str] = Field(default_factory=list)
     ai: AiSettings = Field(default_factory=AiSettings)  # optional local model, off by default
+    crawl: CrawlSettings = Field(default_factory=CrawlSettings)
 
 
 def create_adapter(config: SourceConfig) -> SourceAdapter:

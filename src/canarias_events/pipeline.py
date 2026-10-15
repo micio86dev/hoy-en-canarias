@@ -15,7 +15,7 @@ from canarias_events.date_range import TZ, DateWindow
 from canarias_events.deduplication import DEFAULT_MERGE_THRESHOLD, resolve
 from canarias_events.extract.llm import AiSettings
 from canarias_events.geo import normalize_island
-from canarias_events.http import SafeHttpClient
+from canarias_events.http import HttpError, SafeHttpClient
 from canarias_events.models import Event
 from canarias_events.sources.base import (
     FetchContext,
@@ -30,6 +30,10 @@ logger = logging.getLogger("canarias_events.pipeline")
 OUTSIDE_WINDOW = "outside window"
 MISSING_START = "missing start date"
 ISLAND_FILTER = "island filter"
+
+# Adapter statuses that are neither success nor a crash: a human has to look at the source.
+NEEDS_REVIEW = frozenset({"robots_disallowed", "needs_manual_review"})
+PERMANENT_HTTP = frozenset({401, 403})  # access denied: never retried as a temporary error
 
 AdapterFactory = Callable[[SourceConfig], SourceAdapter]
 
@@ -105,11 +109,12 @@ def _select(
 
 def _record_extraction(stats: dict[str, Any], result: SourceFetchResult) -> None:
     """Acquisition details of adapters that try several strategies (the ``web`` adapter)."""
+    stats["source_status"] = result.status
     if result.strategy_used is None and result.extraction_ok is None and not result.tiers:
         return
     stats["strategy"] = result.strategy_used
     stats["extraction_ok"] = result.extraction_ok
-    stats["source_status"] = result.status
+    stats["listing_hash"] = result.listing_hash
     stats["tiers"] = list(result.tiers)
 
 
@@ -198,14 +203,26 @@ def run_import(
                     "blocked: access denied",
                 )
                 errors.append({"source": cfg.id, "error": stats["error"]})
+            elif result.status in NEEDS_REVIEW:  # not a healthy empty source, not a crash
+                stats["status"] = result.status
+                stats["error"] = result.warnings[-1] if result.warnings else result.status
         except Exception as exc:  # isolation: one broken source must not stop the run
             stats["status"] = "failed"
+            if isinstance(exc, HttpError) and exc.status in PERMANENT_HTTP:
+                stats["source_status"] = "blocked"
             stats["error"] = f"{type(exc).__name__}: {exc}"
             errors.append({"source": cfg.id, "error": stats["error"]})
             logger.error("source %s failed: %s", cfg.id, stats["error"])
         stats["duration_s"] = round(time.monotonic() - began, 3)
         warnings.extend({"source": cfg.id, "warning": w} for w in stats["warnings"])
         db.record_source_result(cfg.id, run_id, error=stats["error"], now=now)
+        db.record_source_run(
+            run_id, cfg.id, now, status=stats["status"], source_status=stats.get("source_status"),
+            events_found=stats["valid_events"], events_in_window=stats["in_window"],
+            duration_s=stats["duration_s"], error=stats["error"], strategy=stats.get("strategy"),
+            extraction_ok=stats.get("extraction_ok"), listing_hash=stats.get("listing_hash"),
+            anomalies=[],
+        )  # fmt: skip
         logger.info("source %s: %s", cfg.id, stats["status"])
 
     def total(key: str) -> int:
@@ -227,6 +244,7 @@ def run_import(
         "sources_attempted": [c.id for c in chosen],
         "sources_succeeded": [i for i, s in per_source.items() if s["status"] == "succeeded"],
         "sources_failed": [i for i, s in per_source.items() if s["status"] == "failed"],
+        "sources_needs_review": [i for i, s in per_source.items() if s["status"] in NEEDS_REVIEW],
         "sources_skipped": skipped,
         "sources": per_source,
         "totals": {

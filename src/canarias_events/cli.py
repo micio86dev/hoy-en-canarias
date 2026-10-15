@@ -12,10 +12,12 @@ from typing import Annotated, Any
 import typer
 from dotenv import load_dotenv
 
+from canarias_events.crawl_settings import CrawlSettings
 from canarias_events.database import Database, SqliteHttpCache, default_db_path
 from canarias_events.date_range import TZ, DateWindow, explicit_window, next_week
 from canarias_events.discovery import run_discovery
 from canarias_events.exporters import export_all, source_status, write_atomic
+from canarias_events.health import summarize
 from canarias_events.http import SafeHttpClient
 from canarias_events.logging_config import configure_logging
 from canarias_events.pipeline import run_import
@@ -133,6 +135,31 @@ def _echo_report(report: dict[str, Any]) -> None:
     )
 
 
+def _echo_health(db: Database) -> None:
+    rows: list[list[Any]] = []
+    for source_id, row in sorted(db.source_rows().items()):
+        h = summarize(db.recent_source_runs(source_id, CrawlSettings().history_runs))
+        if not h["runs_considered"]:
+            continue
+        rate = h["error_rate"]
+        rows.append(
+            [
+                source_id,
+                h["last_status"],
+                row["last_success_at"] or "-",
+                "-" if h["last_events_found"] is None else h["last_events_found"],
+                f"{rate:.0%}",
+                h["consecutive_failures"],
+                ",".join(h["last_anomalies"]) or "-",
+            ]
+        )
+    if not rows:
+        typer.echo("No source runs recorded yet.")
+        return
+    headers = ["source", "last status", "last success", "events", "errors", "streak", "anomalies"]
+    typer.echo(format_table(headers, rows))
+
+
 # --------------------------------------------------------------------------- commands
 
 
@@ -221,9 +248,15 @@ def discover_sources(
 def show_report(
     db_path: DbOption = None,
     run_id: Annotated[int | None, typer.Option("--run-id", help="Default: the latest run.")] = None,
+    health: Annotated[
+        bool, typer.Option("--health", help="Per-source health over the recent runs.")
+    ] = False,
 ) -> None:
     """Print the summary of an import run stored in the database."""
     with Database(db_path or default_db_path()) as db:
+        if health:
+            _echo_health(db)
+            return
         run = db.get_run(run_id)
     if run is None or run.report is None:
         typer.echo("No import runs found." if run is None else f"Run {run.id} has no report.")

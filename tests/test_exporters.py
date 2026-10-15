@@ -213,3 +213,16 @@ def test_sources_report_statuses_and_sections(db: Database, client: SafeHttpClie
     ]
     assert report["excluded"][0]["name"] == "Excl"
     assert report["generated_at"] == NOW.isoformat()
+
+
+def test_sources_report_carries_the_health_summary(db: Database, client: SafeHttpClient) -> None:
+    cfg = make_cfg("ok")
+    run(db, client, {"ok": FakeAdapter(cfg, [ev("ok", "1", "Concierto")])})
+    run(db, client, {"ok": FakeAdapter(cfg, error=RuntimeError("down"))})
+    report = build_sources_report(SourcesCatalog(sources=[cfg]), db, NOW, env={})
+    health = report["sources"][0]["health"]
+    assert health["runs_considered"] == 2
+    assert health["consecutive_failures"] == 1
+    assert health["error_rate"] == 0.5
+    assert health["last_events_found"] == 1
+    assert health["last_status"] == "failed"

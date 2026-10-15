@@ -487,6 +487,12 @@ class _Run:
             marker.search(html_to_markdownish(p.html, p.url, max_chars=100_000)) for p in pages
         )
 
+    def note_listing(self, pages: list[_Page]) -> None:
+        """Content hash (health history) and raw first page (optional diagnostic snapshot)."""
+        text = "\n".join(html_to_markdownish(p.html, p.url, max_chars=200_000) for p in pages)
+        self.result.listing_hash = hashlib.sha256(" ".join(text.split()).encode()).hexdigest()
+        self.result.snapshot = pages[0].html if pages else None
+
     def render_wanted(self, pages: list[_Page]) -> bool:
         if self.p.render == "none":
             return False
@@ -507,6 +513,7 @@ class _Run:
             return result
         except _PageLimit:  # pragma: no cover - max_pages_per_run >= 1
             return result
+        self.note_listing(pages)
         tier, found = self.static_tiers(pages)
         if not found and self.block_reason is None:
             if self.empty_marker_hit(pages):

@@ -426,3 +426,89 @@ def test_ai_settings_reach_the_adapters(db: Database, client: SafeHttpClient) ->
         db, [make_cfg("spy")], WINDOW, client=client, now=NOW, adapter_factory=lambda c: Spy(c)
     )
     assert seen == [settings, None]
+
+
+# --------------------------------------------------------------------------- history and statuses
+
+
+class Scripted(FakeAdapter):
+    """Returns a prepared result (status, hash, warnings) for the status-mapping tests."""
+
+    def __init__(self, config: SourceConfig, result: SourceFetchResult) -> None:
+        super().__init__(config)
+        self.result = result
+
+    def fetch(self, ctx: FetchContext) -> SourceFetchResult:
+        return self.result
+
+
+def run_scripted(
+    db: Database, client: SafeHttpClient, result: SourceFetchResult, source: str = "w"
+) -> dict[str, Any]:
+    cfg = make_cfg(source)
+    return run_import(
+        db, [cfg], WINDOW, client=client, now=NOW, adapter_factory=lambda c: Scripted(c, result)
+    )
+
+
+def test_every_attempted_source_gets_a_history_row(db: Database, client: SafeHttpClient) -> None:
+    good = fake("good", ev("good", "1", "Concierto"))
+    bad = fake("bad", error=HttpError(503, "HTTP 503 for https://bad.test"))
+    report = run(db, client, {"good": good, "bad": bad})
+
+    [row] = db.recent_source_runs("good", limit=5)
+    assert (row.run_id, row.status, row.events_found, row.events_in_window) == (
+        report["run_id"],
+        "succeeded",
+        1,
+        1,
+    )
+    assert row.error is None and row.duration_s >= 0
+    [failed] = db.recent_source_runs("bad", limit=5)
+    assert failed.status == "failed" and "HTTP 503" in (failed.error or "")
+
+
+def test_history_keeps_strategy_and_listing_hash(db: Database, client: SafeHttpClient) -> None:
+    result = SourceFetchResult(
+        events=[ev("w", "1", "Concierto")],
+        records_received=1,
+        strategy_used="blocks",
+        extraction_ok=True,
+        listing_hash="abc123",
+    )
+    run_scripted(db, client, result)
+    [row] = db.recent_source_runs("w", limit=1)
+    assert (row.strategy, row.extraction_ok, row.listing_hash) == ("blocks", True, "abc123")
+
+
+@pytest.mark.parametrize("status", ["robots_disallowed", "needs_manual_review"])
+def test_non_healthy_empty_statuses_are_distinct_from_success(
+    db: Database, client: SafeHttpClient, status: str
+) -> None:
+    result = SourceFetchResult(
+        status=status, extraction_ok=False, warnings=[f"{status}: nothing fetched"]
+    )
+    report = run_scripted(db, client, result)
+
+    assert report["sources"]["w"]["status"] == status
+    assert report["sources_succeeded"] == []
+    assert report["sources_failed"] == []
+    assert report["sources_needs_review"] == ["w"]
+    assert report["sources"]["w"]["error"] == f"{status}: nothing fetched"
+    assert db.source_rows()["w"]["last_success_at"] is None
+    assert db.recent_source_runs("w", limit=1)[0].status == status
+    assert report["errors"] == []  # an operator action, not a crash
+
+
+def test_blocked_without_events_stays_a_failure(db: Database, client: SafeHttpClient) -> None:
+    result = SourceFetchResult(status="blocked", extraction_ok=False, warnings=["blocked: 403"])
+    report = run_scripted(db, client, result)
+    assert report["sources_failed"] == ["w"]
+    assert db.recent_source_runs("w", limit=1)[0].source_status == "blocked"
+
+
+def test_http_forbidden_exception_is_recorded_as_blocked(
+    db: Database, client: SafeHttpClient
+) -> None:
+    run(db, client, {"a": fake("a", error=HttpError(403, "HTTP 403 for https://a.test"))})
+    assert db.recent_source_runs("a", limit=1)[0].source_status == "blocked"

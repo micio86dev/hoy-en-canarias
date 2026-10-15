@@ -92,6 +92,8 @@ class SourceFetchResult:
     tiers: list[dict[str, Any]] = field(default_factory=list)  # per-tier candidates and timings
     extraction_ok: bool | None = None  # False: extraction failed; True: worked (maybe 0 events)
     status: str = "ok"  # ok | blocked | robots_disallowed | needs_manual_review
+    listing_hash: str | None = None  # sha256 of the listing text: layout/content change signal
+    snapshot: str | None = None  # raw first listing page, kept only for optional diagnostics
 
     def discard(self, reason: str, identifier: str | None) -> None:
         self.discarded.append((reason, identifier))

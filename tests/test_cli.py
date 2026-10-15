@@ -252,6 +252,17 @@ def test_report_prints_latest_run(tmp_path: Path) -> None:
     assert invoke("report", "--db", db, "--run-id", "99").exit_code == 1
 
 
+def test_report_health_lists_each_source(tmp_path: Path) -> None:
+    config = write_config(tmp_path, [fake_source("a"), fake_source("bad", params={"fail": True})])
+    db = str(tmp_path / "db.sqlite")
+    invoke(*import_args(tmp_path, config, "--from", "2026-10-19", "--to", "2026-10-25"))
+    result = invoke("report", "--db", db, "--health")
+    assert result.exit_code == 0, result.output
+    lines = {line.split()[0]: line for line in result.output.splitlines()[1:] if line.strip()}
+    assert "succeeded" in lines["a"]
+    assert "failed" in lines["bad"] and "100%" in lines["bad"]
+
+
 def test_report_without_runs(tmp_path: Path) -> None:
     result = invoke("report", "--db", str(tmp_path / "empty.sqlite"))
     assert result.exit_code == 1

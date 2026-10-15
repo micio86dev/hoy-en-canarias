@@ -14,6 +14,7 @@ from typing import Any
 
 from canarias_events.database import Database
 from canarias_events.date_range import DateWindow
+from canarias_events.health import summarize
 from canarias_events.models import Event
 from canarias_events.pipeline import events_in_window
 from canarias_events.sources.base import SourceConfig
@@ -150,6 +151,7 @@ def build_sources_report(
                     "last_error": row["last_error"] if row else None,
                     "last_run_id": row["last_run_id"] if row else None,
                 },
+                "health": summarize(db.recent_source_runs(cfg.id, catalog.crawl.history_runs)),
                 "notes": cfg.notes,
             }
         )

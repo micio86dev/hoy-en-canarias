@@ -983,3 +983,27 @@ def test_a_blocked_later_page_keeps_what_the_first_page_gave(make_ctx: Ctx) -> N
     assert len(result.events) == 5  # parsing pages already downloaded is safe
     assert second.call_count == 1 and third.call_count == 0  # nothing fetched after the wall
     assert any("403" in w for w in result.warnings)
+
+
+@respx.mock
+def test_listing_hash_is_stable_and_tracks_content(make_ctx: Ctx) -> None:
+    robots()
+    page(LISTING, cards(5))
+    first = adapter().fetch(make_ctx())
+    second = adapter().fetch(make_ctx())
+    assert first.listing_hash and first.listing_hash == second.listing_hash
+    assert first.snapshot is not None and "Concierto 1" in first.snapshot
+
+    respx.get(LISTING).mock(
+        return_value=httpx.Response(
+            200, text=cards(2), headers={"content-type": "text/html; charset=utf-8"}
+        )
+    )
+    assert adapter().fetch(make_ctx()).listing_hash != first.listing_hash
+
+
+@respx.mock
+def test_no_listing_hash_when_the_listing_is_not_fetched(make_ctx: Ctx) -> None:
+    robots(body="User-agent: *\nDisallow: /")
+    result = adapter().fetch(make_ctx())
+    assert result.listing_hash is None and result.snapshot is None

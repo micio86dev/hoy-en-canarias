@@ -84,7 +84,18 @@ CREATE TABLE http_cache (
     fetched_at TEXT NOT NULL
 );
 """
-_MIGRATIONS = (_SCHEMA_V1,)
+_SCHEMA_V2 = """
+CREATE TABLE source_runs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    run_id INTEGER NOT NULL, source_id TEXT NOT NULL, started_at TEXT NOT NULL,
+    status TEXT NOT NULL, source_status TEXT,
+    events_found INTEGER NOT NULL, events_in_window INTEGER NOT NULL,
+    duration_s REAL NOT NULL, error TEXT, strategy TEXT, extraction_ok INTEGER,
+    listing_hash TEXT, anomalies TEXT NOT NULL DEFAULT '[]'
+);
+CREATE INDEX idx_source_runs_source ON source_runs(source_id, id);
+"""
+_MIGRATIONS = (_SCHEMA_V1, _SCHEMA_V2)
 
 _JSON_FIELDS = frozenset({"tags", "extra"})
 _BOOL_FIELDS = frozenset({"all_day", "is_free"})
@@ -145,6 +156,26 @@ class ImportRun:
     window_end: str
     params: dict[str, Any]
     report: dict[str, Any] | None = field(default=None)
+
+
+@dataclass(frozen=True)
+class SourceRun:
+    """One source in one import run: the health history that anomaly detection compares to."""
+
+    run_id: int
+    source_id: str
+    started_at: str
+    # succeeded | partial | anomalous | failed | robots_disallowed | needs_manual_review
+    status: str
+    source_status: str | None  # what the adapter reported: ok | blocked | robots_disallowed | ...
+    events_found: int
+    events_in_window: int
+    duration_s: float
+    error: str | None
+    strategy: str | None
+    extraction_ok: bool | None
+    listing_hash: str | None
+    anomalies: list[str]
 
 
 def default_db_path() -> Path:
@@ -274,6 +305,44 @@ class Database:
 
     def source_rows(self) -> dict[str, sqlite3.Row]:
         return {r["id"]: r for r in self.conn.execute("SELECT * FROM sources")}
+
+    # ------------------------------------------------------------------ source history
+
+    def record_source_run(
+        self, run_id: int, source_id: str, started_at: datetime, *, status: str,
+        source_status: str | None, events_found: int, events_in_window: int, duration_s: float,
+        error: str | None, strategy: str | None, extraction_ok: bool | None,
+        listing_hash: str | None, anomalies: list[str],
+    ) -> None:  # fmt: skip
+        with self.conn:
+            self.conn.execute(
+                """INSERT INTO source_runs (run_id, source_id, started_at, status, source_status,
+                     events_found, events_in_window, duration_s, error, strategy, extraction_ok,
+                     listing_hash, anomalies)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (run_id, source_id, started_at.isoformat(), status, source_status, events_found,
+                 events_in_window, duration_s, error, strategy,
+                 None if extraction_ok is None else int(extraction_ok), listing_hash,
+                 json.dumps(anomalies)),
+            )  # fmt: skip
+
+    def recent_source_runs(self, source_id: str, limit: int) -> list[SourceRun]:
+        """The latest ``limit`` runs of a source, newest first."""
+        rows = self.conn.execute(
+            "SELECT * FROM source_runs WHERE source_id = ? ORDER BY id DESC LIMIT ?",
+            (source_id, limit),
+        )
+        return [
+            SourceRun(
+                run_id=r["run_id"], source_id=r["source_id"], started_at=r["started_at"],
+                status=r["status"], source_status=r["source_status"],
+                events_found=r["events_found"], events_in_window=r["events_in_window"],
+                duration_s=r["duration_s"], error=r["error"], strategy=r["strategy"],
+                extraction_ok=None if r["extraction_ok"] is None else bool(r["extraction_ok"]),
+                listing_hash=r["listing_hash"], anomalies=json.loads(r["anomalies"]),
+            )
+            for r in rows
+        ]  # fmt: skip
 
     # ------------------------------------------------------------------ import runs
 
