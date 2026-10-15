@@ -215,9 +215,9 @@ candidates:
   - {name: Ayuntamiento de Arona, url: "https://www.arona.org", reason: "HTML only.", checked_at: 2026-10-15}
   - {name: Ayuntamiento de Arrecife, url: "https://www.arrecife.es", reason: "HTML only.", checked_at: 2026-10-15}
   - {name: Ayuntamiento de Adeje, url: "https://www.adeje.es", reason: "HTML only.", checked_at: 2026-10-15}
-  - {name: visitlapalma.es, url: "https://www.visitlapalma.es", reason: "HTML only.", checked_at: 2026-10-15}
-  - {name: lagomera.travel, url: "https://www.lagomera.travel", reason: "HTML only.", checked_at: 2026-10-15}
-  - {name: elhierro.travel, url: "https://www.elhierro.travel", reason: "HTML only.", checked_at: 2026-10-15}
+  - {name: visitlapalma.es, url: "https://visitlapalma.es", reason: "Verified 2026-10-15: same Drupal JSON:API /jsonapi/node/event as holaislascanarias (same field_id_events_repository platform); its 4 window events were all already in holaislascanarias. Subset, no added coverage; not integrated.", checked_at: 2026-10-15}
+  - {name: lagomera.travel, url: "https://lagomera.travel", reason: "Verified 2026-10-15: same Drupal JSON:API /jsonapi/node/event as holaislascanarias (same field_id_events_repository platform); its 4 window events were all already in holaislascanarias. Subset, no added coverage; not integrated.", checked_at: 2026-10-15}
+  - {name: elhierro.travel, url: "https://elhierro.travel", reason: "Verified 2026-10-15: same Drupal JSON:API /jsonapi/node/event as holaislascanarias (same field_id_events_repository platform); its 2 window events were all already in holaislascanarias. Subset, no added coverage; not integrated.", checked_at: 2026-10-15}
   - {name: PredictHQ, url: "https://www.predicthq.com", reason: "Free plan is limited and its terms were not checked; candidate only.", checked_at: 2026-10-15}
   - {name: Radio Insular, url: "https://www.radioinsular.es", reason: "Unreachable at check time (HTTP 503). Re-check with discover-sources.", checked_at: 2026-10-15}
   - {name: Ocio Canarias, url: "https://www.ociocanarias.com", reason: "Unreachable at check time. Re-check with discover-sources.", checked_at: 2026-10-15}
@@ -258,9 +258,9 @@ discovery_probes:
   - www.arona.org
   - www.arrecife.es
   - www.adeje.es
-  - www.visitlapalma.es
-  - www.lagomera.travel
-  - www.elhierro.travel
+  - visitlapalma.es
+  - lagomera.travel
+  - elhierro.travel
   - www.radioinsular.es
   - www.ociocanarias.com
   - www.cabildofuer.es
