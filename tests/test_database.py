@@ -193,3 +193,18 @@ def test_an_empty_quarantine_does_not_discard_what_is_pending() -> None:
         db.quarantine_add("q", 1, "count_drop", [_quarantine_event("Uno")], NOW)
         assert db.quarantine_add("q", 2, "empty_after_events", [], NOW) == 0
         assert [i.event.title for i in db.quarantine_pending("q")] == ["Uno"]
+
+
+def test_http_cache_can_be_used_from_worker_threads(tmp_path: Path) -> None:
+    from concurrent.futures import ThreadPoolExecutor
+
+    with Database(tmp_path / "t.sqlite") as db:
+        cache = SqliteHttpCache(db)
+
+        def work(n: int) -> tuple[str | None, str | None, bytes] | None:
+            cache.set(f"https://t.test/{n}", f"e{n}", None, b"body")
+            return cache.get(f"https://t.test/{n}")
+
+        with ThreadPoolExecutor(max_workers=8) as pool:
+            results = list(pool.map(work, range(40)))
+    assert all(r is not None and r[2] == b"body" for r in results)

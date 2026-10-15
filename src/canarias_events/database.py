@@ -15,6 +15,7 @@ from __future__ import annotations
 import json
 import os
 import sqlite3
+import threading
 import uuid
 from dataclasses import dataclass, field
 from datetime import date, datetime
@@ -256,7 +257,8 @@ class Database:
         self.path = Path(path) if path is not None else default_db_path()
         if str(self.path) != ":memory:":
             self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.conn = sqlite3.connect(str(self.path))
+        # Worker threads only use the HTTP cache (behind its lock); results are stored serially.
+        self.conn = sqlite3.connect(str(self.path), check_same_thread=False)
         self.conn.row_factory = sqlite3.Row
         self.conn.execute("PRAGMA foreign_keys = ON")
         self.conn.execute("PRAGMA journal_mode = WAL")
@@ -713,15 +715,18 @@ class SqliteHttpCache:
 
     def __init__(self, db: Database) -> None:
         self._db = db
+        self._lock = threading.Lock()  # sources fetch in threads; one sqlite connection
 
     def get(self, url: str) -> CacheEntry | None:
-        row = self._db.conn.execute(
-            "SELECT etag, last_modified, body FROM http_cache WHERE url = ?", (mask_secrets(url),)
-        ).fetchone()
+        with self._lock:
+            row = self._db.conn.execute(
+                "SELECT etag, last_modified, body FROM http_cache WHERE url = ?",
+                (mask_secrets(url),),
+            ).fetchone()
         return (row["etag"], row["last_modified"], bytes(row["body"])) if row else None
 
     def set(self, url: str, etag: str | None, last_modified: str | None, body: bytes) -> None:
-        with self._db.conn:
+        with self._lock, self._db.conn:
             self._db.conn.execute(
                 "INSERT INTO http_cache (url, etag, last_modified, body, fetched_at)"
                 " VALUES (?, ?, ?, ?, ?)"

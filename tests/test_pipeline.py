@@ -1,12 +1,15 @@
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator
+import threading
+import time
+from collections.abc import Callable, Iterator, Mapping
 from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 
 import pytest
 
+from canarias_events.crawl_settings import CrawlSettings
 from canarias_events.database import Database
 from canarias_events.date_range import TZ
 from canarias_events.http import HttpError, SafeHttpClient
@@ -94,7 +97,7 @@ def client() -> Iterator[SafeHttpClient]:
 def run(
     db: Database,
     client: SafeHttpClient,
-    adapters: dict[str, FakeAdapter],
+    adapters: Mapping[str, FakeAdapter],
     configs: list[SourceConfig] | None = None,
     **kwargs: Any,
 ) -> dict[str, Any]:
@@ -621,3 +624,121 @@ def test_non_blocking_codes_do_not_quarantine(db: Database, client: SafeHttpClie
     stats = report["sources"]["w"]
     assert stats["status"] == "succeeded" and stats["anomalies"] == ["strategy_changed"]
     assert db.count("events") == 1
+
+
+# --------------------------------------------------------------------------- scheduling
+
+
+def test_a_source_with_a_frequency_is_skipped_after_a_recent_success(
+    db: Database, client: SafeHttpClient
+) -> None:
+    cfg = make_cfg("daily", frequency="daily")
+    adapter = FakeAdapter(cfg, [ev("daily", "1", "Concierto")])
+    run(db, client, {"daily": adapter}, [cfg])
+    report = run(db, client, {"daily": adapter}, [cfg])
+
+    assert adapter.calls == 1
+    assert report["sources_attempted"] == []
+    [skipped] = report["sources_skipped"]
+    assert skipped["id"] == "daily" and "frequency daily" in skipped["reason"]
+
+
+def test_force_ignores_frequency_and_backoff(db: Database, client: SafeHttpClient) -> None:
+    cfg = make_cfg("daily", frequency="daily")
+    adapter = FakeAdapter(cfg, [ev("daily", "1", "Concierto")])
+    run(db, client, {"daily": adapter}, [cfg])
+    report = run(db, client, {"daily": adapter}, [cfg], force=True)
+    assert adapter.calls == 2 and report["sources_skipped"] == []
+
+
+def test_repeated_temporary_failures_back_off(db: Database, client: SafeHttpClient) -> None:
+    cfg = make_cfg("flaky")
+    adapter = FakeAdapter(cfg, error=HttpError(503, "HTTP 503"))
+    for _ in range(3):
+        run(db, client, {"flaky": adapter}, [cfg])
+    assert adapter.calls == 3
+
+    report = run(db, client, {"flaky": adapter}, [cfg])  # same instant: still backing off
+    assert adapter.calls == 3
+    assert "backoff" in report["sources_skipped"][0]["reason"]
+    assert report["sources_failed"] == []  # skipped, not failed
+
+    run(db, client, {"flaky": adapter}, [cfg], force=True)
+    assert adapter.calls == 4
+
+
+def test_a_blocked_source_is_not_retried_on_the_next_run(
+    db: Database, client: SafeHttpClient
+) -> None:
+    cfg = make_cfg("w")
+    blocked = SourceFetchResult(status="blocked", extraction_ok=False, warnings=["blocked: 403"])
+    calls: list[int] = []
+
+    def factory(c: SourceConfig) -> SourceAdapter:
+        calls.append(1)
+        return Scripted(c, blocked)
+
+    for _ in range(3):
+        report = run_import(db, [cfg], WINDOW, client=client, now=NOW, adapter_factory=factory)
+    assert len(calls) == 1
+    assert "cool-down" in report["sources_skipped"][0]["reason"]
+
+
+# --------------------------------------------------------------------------- concurrency
+
+
+class Gate(FakeAdapter):
+    """Waits for a peer: only finishes when two sources really run at the same time."""
+
+    barrier = threading.Barrier(2, timeout=3)
+
+    def fetch(self, ctx: FetchContext) -> SourceFetchResult:
+        Gate.barrier.wait()
+        return super().fetch(ctx)
+
+
+def test_sources_run_concurrently_and_reports_keep_the_configured_order(
+    db: Database, client: SafeHttpClient
+) -> None:
+    Gate.barrier = threading.Barrier(2, timeout=3)
+    adapters = {
+        "b": Gate(make_cfg("b"), [ev("b", "1", "Uno")]),
+        "a": Gate(make_cfg("a"), [ev("a", "1", "Dos otra", day=22)]),
+    }
+    report = run(db, client, adapters, crawl=CrawlSettings(concurrency=2))
+    assert report["sources_succeeded"] == ["b", "a"]
+    assert list(report["sources"]) == ["b", "a"]
+    assert db.count("events") == 2
+
+
+def test_concurrency_one_runs_sources_one_at_a_time(db: Database, client: SafeHttpClient) -> None:
+    active = [0]
+    peak = [0]
+    lock = threading.Lock()
+
+    class Probe(FakeAdapter):
+        def fetch(self, ctx: FetchContext) -> SourceFetchResult:
+            with lock:
+                active[0] += 1
+                peak[0] = max(peak[0], active[0])
+            time.sleep(0.02)
+            with lock:
+                active[0] -= 1
+            return super().fetch(ctx)
+
+    adapters = {n: Probe(make_cfg(n), [ev(n, "1", f"Evento {n}")]) for n in "abc"}
+    run(db, client, adapters, crawl=CrawlSettings(concurrency=1))
+    assert peak[0] == 1
+    run(db, client, adapters, crawl=CrawlSettings(concurrency=3), force=True)
+    assert peak[0] > 1
+
+
+def test_a_failing_source_does_not_break_concurrent_ones(
+    db: Database, client: SafeHttpClient
+) -> None:
+    adapters = {
+        "bad": fake("bad", error=RuntimeError("boom")),
+        "good": fake("good", ev("good", "1", "Concierto")),
+    }
+    report = run(db, client, adapters, crawl=CrawlSettings(concurrency=2))
+    assert report["sources_failed"] == ["bad"] and report["sources_succeeded"] == ["good"]

@@ -119,6 +119,26 @@ def test_catalog_ai_section_defaults_to_disabled_and_local_only(tmp_path: Path) 
         load_catalog(remote)
 
 
+def test_crawl_section_and_source_frequency(tmp_path: Path) -> None:
+    plain = tmp_path / "a.yaml"
+    plain.write_text("sources: []\n", encoding="utf-8")
+    defaults = load_catalog(plain).crawl
+    assert (defaults.concurrency, defaults.anomaly_drop_ratio) == (4, 0.7)
+    custom = tmp_path / "b.yaml"
+    custom.write_text(
+        "crawl:\n  concurrency: 2\n  failure_threshold: 5\n"
+        "sources:\n  - {id: x, name: X, adapter: ical, url: 'https://x.test/a', frequency: 6h}\n",
+        encoding="utf-8",
+    )
+    catalog = load_catalog(custom)
+    assert (catalog.crawl.concurrency, catalog.crawl.failure_threshold) == (2, 5)
+    assert catalog.sources[0].frequency == "6h"
+    typo = tmp_path / "c.yaml"
+    typo.write_text("crawl:\n  concurency: 2\nsources: []\n", encoding="utf-8")
+    with pytest.raises(ValueError):
+        load_catalog(typo)
+
+
 WEB_SOURCES = {
     "webtenerife", "auditorio_teatro_lpa", "teatro_leal", "tea_tenerife", "adeje_agenda",
     "arona_agenda", "lpacultura", "cact_lanzarote", "cabildo_fuerteventura_agenda",

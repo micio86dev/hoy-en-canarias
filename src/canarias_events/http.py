@@ -15,6 +15,7 @@ import logging
 import math
 import re
 import socket
+import threading
 import time
 from collections.abc import Callable, Collection, Mapping
 from dataclasses import dataclass, field
@@ -261,6 +262,7 @@ class SafeHttpClient:
         self._clock = clock
         self._wall_clock = wall_clock or (lambda: datetime.now(UTC))
         self._last_request: dict[str, float] = {}
+        self._rate_lock = threading.Lock()
         self._host_intervals: dict[str, float] = {}
         # trust_env=False: never route through env proxies, which would bypass IP validation.
         self._client = client or httpx.Client(
@@ -358,13 +360,15 @@ class SafeHttpClient:
         return float(self.backoff_base * (2**attempt))
 
     def _wait_for_host(self, url: str) -> None:
+        """Politeness per host, safe for concurrent sources: each caller reserves the next slot."""
         host = urlsplit(url).hostname or ""
-        last = self._last_request.get(host)
-        if last is not None:
-            wait = self.host_interval(host) - (self._clock() - last)
-            if wait > 0:
-                self._sleep(wait)
-        self._last_request[host] = self._clock()
+        with self._rate_lock:
+            now = self._clock()
+            last = self._last_request.get(host)
+            slot = now if last is None else max(now, last + self.host_interval(host))
+            self._last_request[host] = slot
+        if slot > now:
+            self._sleep(slot - now)
 
     def _fetch_with_retries(
         self, url: str, headers: dict[str, str]

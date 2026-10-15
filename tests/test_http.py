@@ -550,3 +550,23 @@ def test_host_interval_overrides_the_default_for_one_host() -> None:
         client.get("https://slow.example.org/a")
         client.get("https://slow.example.org/a")
     assert rec.sleeps == [pytest.approx(4.0)]
+
+
+def test_concurrent_requests_to_one_host_reserve_consecutive_slots() -> None:
+    """Threads that arrive together must not all see the same 'last request' time."""
+    waits: list[float] = []
+    client = make_client(sleep=waits.append, clock=lambda: 100.0, min_interval=1.0)  # type: ignore[arg-type]
+    for _ in range(3):  # a frozen clock is the worst case: everybody arrives at the same instant
+        client._wait_for_host("https://same.example.org/x")
+    client._wait_for_host("https://other.example.org/x")  # other hosts are not delayed
+    assert waits == [pytest.approx(1.0), pytest.approx(2.0)]
+
+
+def test_rate_limiting_is_thread_safe() -> None:
+    from concurrent.futures import ThreadPoolExecutor
+
+    slots: list[float] = []
+    client = make_client(sleep=slots.append, clock=lambda: 50.0, min_interval=1.0)  # type: ignore[arg-type]
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        list(pool.map(lambda _: client._wait_for_host("https://same.example.org/"), range(8)))
+    assert sorted(slots) == [pytest.approx(float(n)) for n in range(1, 8)]

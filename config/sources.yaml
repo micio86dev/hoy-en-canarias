@@ -9,6 +9,14 @@
 # in each entry); the top-level `ai:` section (disabled by default, loopback Ollama only) is the
 # optional last tier and each source must also opt in with `params.ai: true`.
 # All endpoints below were checked with live GET requests on 2026-10-15.
+#
+# Optional crawl behaviour (every key has a safe default; see canarias_events/crawl_settings.py):
+#   crawl:
+#     concurrency: 4            # sources fetched at once; per-host rate limits still apply
+#     anomaly_drop_ratio: 0.7   # quarantine a run whose event count fell by more than 70%
+#     failure_threshold: 3      # temporary failures in a row before exponential backoff
+# A source may set `frequency: daily | weekly | <n>h | <n>d` to be skipped until due
+# (`import-events --force` ignores it).
 
 sources:
   - id: holaislascanarias

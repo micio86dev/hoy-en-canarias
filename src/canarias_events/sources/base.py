@@ -14,6 +14,7 @@ from urllib.parse import urlsplit
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
+from canarias_events.crawl_settings import parse_frequency
 from canarias_events.date_range import DateWindow
 from canarias_events.extract.llm import AiSettings
 from canarias_events.geo import (
@@ -47,7 +48,15 @@ class SourceConfig(BaseModel):
     notes: str | None = None
     priority: int = 50
     stale: bool = False
+    frequency: str | None = None  # daily | weekly | hourly | <n>h | <n>d; None: every run
     params: dict[str, Any] = Field(default_factory=dict)
+
+    @field_validator("frequency")
+    @classmethod
+    def _known_frequency(cls, value: str | None) -> str | None:
+        if value is not None:
+            parse_frequency(value)
+        return value
 
     @field_validator("url")
     @classmethod

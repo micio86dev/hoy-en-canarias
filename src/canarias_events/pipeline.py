@@ -7,6 +7,7 @@ import os
 import time
 from collections import Counter
 from collections.abc import Callable, Mapping, Sequence
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
@@ -20,6 +21,7 @@ from canarias_events.geo import normalize_island
 from canarias_events.health import INFORMATIONAL, detect_anomalies
 from canarias_events.http import HttpError, SafeHttpClient
 from canarias_events.models import Event
+from canarias_events.scheduling import skip_reason
 from canarias_events.sources.base import (
     FetchContext,
     SourceAdapter,
@@ -226,6 +228,41 @@ def _apply_result(
 
 
 @dataclass
+class _Fetched:
+    """Outcome of fetching one source in a worker thread."""
+
+    result: SourceFetchResult | None = None
+    error: Exception | None = None
+    seconds: float = 0.0
+
+
+def _due(
+    db: Database, chosen: list[SourceConfig], now: datetime, settings: CrawlSettings, *, force: bool
+) -> tuple[list[SourceConfig], list[dict[str, str]]]:
+    """Split the chosen sources into those to run now and those deferred (frequency, backoff)."""
+    if force:
+        return chosen, []
+    stored = db.source_rows()
+    due: list[SourceConfig] = []
+    deferred: list[dict[str, str]] = []
+    depth = max(settings.history_runs, settings.failure_threshold + 8)
+    for cfg in chosen:
+        row = stored.get(cfg.id)
+        reason = skip_reason(
+            cfg,
+            db.recent_source_runs(cfg.id, depth),
+            row["last_success_at"] if row else None,
+            now,
+            settings,
+        )
+        if reason:
+            deferred.append({"id": cfg.id, "reason": reason})
+        else:
+            due.append(cfg)
+    return due, deferred
+
+
+@dataclass
 class _Run:
     """What one import run shares between its sources."""
 
@@ -253,9 +290,11 @@ def run_import(
     merge_threshold: float = DEFAULT_MERGE_THRESHOLD,
     ai: AiSettings | None = None,
     crawl: CrawlSettings | None = None,
+    force: bool = False,
 ) -> dict[str, Any]:
     """Run every selected source, isolate failures and return (and store) the import report."""
     environment: Mapping[str, str] = os.environ if env is None else env
+    settings = crawl or CrawlSettings()
     island_name = None
     if island:
         island_name = normalize_island(island)
@@ -272,23 +311,40 @@ def run_import(
     run_id = db.start_run(now, window.start, window.end, params)
     per_source: dict[str, dict[str, Any]] = {}
 
-    run = _Run(run_id, now, window, island_name, merge_threshold, crawl or CrawlSettings())
-    for cfg in chosen:
+    run = _Run(run_id, now, window, island_name, merge_threshold, settings)
+    due, deferred = _due(db, chosen, now, settings, force=force)
+    skipped.extend(deferred)
+
+    def fetch(cfg: SourceConfig) -> _Fetched:  # runs in a worker thread: network only, no DB
+        began = time.monotonic()
+        try:
+            ctx = FetchContext(client=client, window=window, now=now, env=environment, ai=ai)
+            result = adapter_factory(cfg).fetch(ctx)
+            return _Fetched(result=result, seconds=time.monotonic() - began)
+        except Exception as exc:  # isolation: one broken source must not stop the run
+            return _Fetched(error=exc, seconds=time.monotonic() - began)
+
+    with ThreadPoolExecutor(max_workers=max(1, min(settings.concurrency, len(due) or 1))) as pool:
+        fetched = list(pool.map(fetch, due))  # map keeps the configured order
+
+    for cfg, got in zip(due, fetched, strict=True):
         stats = _new_stats()
         per_source[cfg.id] = stats
         began = time.monotonic()
-        history = db.recent_source_runs(cfg.id, run.settings.history_runs)
+        history = db.recent_source_runs(cfg.id, settings.history_runs)
         try:
-            ctx = FetchContext(client=client, window=window, now=now, env=environment, ai=ai)
-            _apply_result(db, cfg, adapter_factory(cfg).fetch(ctx), history, run, stats)
-        except Exception as exc:  # isolation: one broken source must not stop the run
+            if got.error is not None:
+                raise got.error
+            assert got.result is not None
+            _apply_result(db, cfg, got.result, history, run, stats)
+        except Exception as exc:
             stats["status"] = "failed"
             if isinstance(exc, HttpError) and exc.status in PERMANENT_HTTP:
                 stats["source_status"] = "blocked"
             stats["error"] = f"{type(exc).__name__}: {exc}"
             run.errors.append({"source": cfg.id, "error": stats["error"]})
             logger.error("source %s failed: %s", cfg.id, stats["error"])
-        stats["duration_s"] = round(time.monotonic() - began, 3)
+        stats["duration_s"] = round(got.seconds + time.monotonic() - began, 3)
         run.warnings.extend({"source": cfg.id, "warning": w} for w in stats["warnings"])
         db.record_source_result(cfg.id, run_id, error=stats["error"], now=now)
         db.record_source_run(
@@ -316,7 +372,7 @@ def run_import(
             "end_date_inclusive": window.end_date_inclusive.isoformat(),
         },
         "params": params,
-        "sources_attempted": [c.id for c in chosen],
+        "sources_attempted": [c.id for c in due],
         "sources_succeeded": [i for i, s in per_source.items() if s["status"] == "succeeded"],
         "sources_failed": [i for i, s in per_source.items() if s["status"] == "failed"],
         "sources_partial": [i for i, s in per_source.items() if s["status"] == "partial"],
