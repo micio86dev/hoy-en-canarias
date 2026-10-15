@@ -35,6 +35,7 @@ from canarias_events.statuses import (
     ADAPTER_OK,
     ANOMALOUS,
     BLOCKED,
+    BLOCKED_PARTIAL,
     FAILED,
     NEEDS_REVIEW,
     PARTIAL,
@@ -182,11 +183,15 @@ def accept_quarantine(
     stats = _new_stats()
     _ingest(db, [item.event for item in pending], source_id, now, threshold, stats)
     db.quarantine_close(source_id, "accepted")
-    # The accepted level is the new baseline (partial data from a blocked run is no level).
-    if any(item.reason != "blocked_partial" for item in pending):
+    # The accepted level of the latest quarantining run is the new baseline; partial data from
+    # a blocked run is no level, so it neither counts nor resets anything.
+    level = [item for item in pending if item.reason != BLOCKED_PARTIAL]
+    if level:
+        latest = max(item.run_id for item in level)
+        count = sum(1 for item in level if item.run_id == latest)
         db.record_source_run(
-            pending[0].run_id, source_id, now, status=SUCCEEDED, source_status=ADAPTER_OK,
-            events_found=len(pending), events_in_window=len(pending), duration_s=0.0,
+            latest, source_id, now, status=SUCCEEDED, source_status=ADAPTER_OK,
+            events_found=count, events_in_window=count, duration_s=0.0,
             error=None, strategy=None, extraction_ok=None, listing_hash=None,
             anomalies=[BASELINE_RESET],
         )  # fmt: skip
@@ -222,10 +227,12 @@ def _apply_result(
     reason = ",".join(c for c in codes if c not in INFORMATIONAL)
     hold: str | None = None  # why the events are held back instead of published
     if result.status in (BLOCKED, RATE_LIMITED):  # 401/403/429 or challenge page: not bypassed
-        message = next((w for w in result.warnings if w.startswith("blocked")), "blocked: denied")
+        message = next(
+            (w for w in result.warnings if w.startswith(result.status)), f"{result.status}: denied"
+        )
         stats["error"] = message
         if result.events:  # partial data from a source that then blocked us: doubtful
-            stats["status"], hold = PARTIAL, "blocked_partial"
+            stats["status"], hold = PARTIAL, BLOCKED_PARTIAL
         else:
             stats["status"] = FAILED
             run.errors.append({"source": cfg.id, "error": message})

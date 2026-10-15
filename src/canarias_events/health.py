@@ -46,6 +46,8 @@ def _stable_new_level(history: Sequence[SourceRun], found: int, settings: CrawlS
         return False
     levels = [*previous[:needed], found]
     centre = median(levels)
+    if not centre:
+        return False  # a zero level is an empty source, never a steady new normal
     return all(
         abs(level - centre) <= settings.anomaly_stable_tolerance * centre for level in levels
     )

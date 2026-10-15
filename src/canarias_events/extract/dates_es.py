@@ -210,11 +210,12 @@ def _is_duration(folded: str, m: re.Match[str], p: str) -> bool:
     if _RE_LENGTH_AFTER.match(folded, m.end(f"{p}hs")):
         return True
     # A bare hour with the long unit is a length unless it is introduced as a time ("a las") or
-    # stands right after a month, a year, or a comma or dash with a plausible hour
-    # ("24 de octubre, 21 horas").
-    if _RE_AT_CUE.search(before) or _RE_DATE_CONTEXT.search(before):
+    # stands right after a month, a year, a comma or a dash with a plausible hour
+    # ("24 de octubre, 21 horas", but not "24 de octubre 2 horas").
+    if _RE_AT_CUE.search(before):
         return False
-    return not (_RE_PUNCT_CONTEXT.search(before) and int(m.group(f"{p}h")) >= _MIN_BARE_EVENT_HOUR)
+    after_date = _RE_DATE_CONTEXT.search(before) or _RE_PUNCT_CONTEXT.search(before)
+    return not (after_date and int(m.group(f"{p}h")) >= _MIN_BARE_EVENT_HOUR)
 
 
 def _times_in(folded: str) -> tuple[time | None, time | None]:

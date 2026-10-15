@@ -532,11 +532,22 @@ def test_rate_limited_without_events_is_a_failure_recorded_as_rate_limited(
     db: Database, client: SafeHttpClient
 ) -> None:
     result = SourceFetchResult(
-        status="rate_limited", extraction_ok=False, warnings=["blocked: HTTP 429 (not bypassed)"]
+        status="rate_limited",
+        extraction_ok=False,
+        warnings=["rate_limited: HTTP 429 (retry later)"],
     )
     report = run_scripted(db, client, result)
     assert report["sources_failed"] == ["w"]
     assert db.recent_source_runs("w", limit=1)[0].source_status == "rate_limited"
+    assert report["errors"][0]["error"].startswith("rate_limited:")
+
+
+def test_blocked_error_text_stays_blocked(db: Database, client: SafeHttpClient) -> None:
+    result = SourceFetchResult(
+        status="blocked", extraction_ok=False, warnings=["blocked: HTTP 403 (not bypassed)"]
+    )
+    report = run_scripted(db, client, result)
+    assert report["errors"][0]["error"].startswith("blocked:")
 
 
 def test_a_rate_limited_source_is_retried_on_the_next_run(
@@ -544,7 +555,9 @@ def test_a_rate_limited_source_is_retried_on_the_next_run(
 ) -> None:
     cfg = make_cfg("w")
     limited = SourceFetchResult(
-        status="rate_limited", extraction_ok=False, warnings=["blocked: HTTP 429 (not bypassed)"]
+        status="rate_limited",
+        extraction_ok=False,
+        warnings=["rate_limited: HTTP 429 (retry later)"],
     )
     calls: list[int] = []
 
@@ -662,6 +675,42 @@ def test_accepting_the_quarantine_makes_the_accepted_level_the_baseline(
     again = run_scripted(db, client, web_result(ev("w", "1", "Uno")))
     assert again["sources"]["w"]["status"] == "succeeded"
     assert again["sources_anomalous"] == []
+
+
+def quarantine_by_hand(db: Database, run_id: int, reason: str, *titles: str) -> None:
+    """Pending items of one run (quarantine_add would supersede the previous batch)."""
+    for title in titles:
+        event = ev("w", title, title)
+        db.conn.execute(
+            "INSERT INTO quarantine (source_id, run_id, created_at, reason, event)"
+            " VALUES ('w', ?, ?, ?, ?)",
+            (run_id, NOW.isoformat(), reason, event.model_dump_json()),
+        )
+    db.conn.commit()
+
+
+def test_accept_baseline_counts_only_the_non_partial_items_of_the_latest_run(
+    db: Database,
+) -> None:
+    db.sync_sources([make_cfg("w")])
+    quarantine_by_hand(db, 7, "blocked_partial", "p1", "p2", "p3")
+    quarantine_by_hand(db, 8, "count_drop", "d1", "d2")
+    quarantine_by_hand(db, 8, "blocked_partial", "p4")
+
+    assert accept_quarantine(db, "w", now=NOW) == 6  # everything pending is published
+    [baseline, *_] = db.recent_source_runs("w", limit=3)
+    assert baseline.run_id == 8
+    assert baseline.events_found == 2 and baseline.events_in_window == 2
+    assert baseline.anomalies == ["baseline_reset"]
+
+
+def test_accepting_only_blocked_partial_items_does_not_reset_the_baseline(
+    db: Database,
+) -> None:
+    db.sync_sources([make_cfg("w")])
+    quarantine_by_hand(db, 3, "blocked_partial", "p1", "p2")
+    assert accept_quarantine(db, "w", now=NOW) == 2
+    assert db.recent_source_runs("w", limit=3) == []
 
 
 def test_a_stable_shrunk_listing_recovers_by_itself_after_three_runs(

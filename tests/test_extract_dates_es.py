@@ -304,6 +304,8 @@ def test_bare_hour_after_a_date_is_the_start_time() -> None:
         "24 de octubre de 2026, de duración 2 horas",
         "24 de octubre de 2026, 2 horas",
         "24 de octubre de 2026 - 3 horas",
+        "Sábado 24 de octubre 2 horas",
+        "24 de octubre de 2026 3 horas",
         "Espectáculo de 2 horas",
     ],
 )

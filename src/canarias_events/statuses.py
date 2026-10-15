@@ -19,6 +19,9 @@ ADAPTER_OK = "ok"
 BLOCKED = "blocked"  # 401/403 or a challenge page: not bypassed
 RATE_LIMITED = "rate_limited"  # HTTP 429: temporary, retried with exponential backoff
 
+# Quarantine hold reason of a run that was blocked after it had read some events.
+BLOCKED_PARTIAL = "blocked_partial"
+
 # A human has to look at these: neither success nor a crash, and never retried as temporary.
 NEEDS_REVIEW = frozenset({ROBOTS_DISALLOWED, NEEDS_MANUAL_REVIEW})
 # Nobody fixes these by retrying: the source cools down instead of backing off.

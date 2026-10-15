@@ -6,7 +6,7 @@ from datetime import timedelta
 
 from canarias_events.crawl_settings import CrawlSettings
 from canarias_events.database import Database, SourceRun
-from canarias_events.health import detect_anomalies, is_blocking, summarize
+from canarias_events.health import _stable_new_level, detect_anomalies, is_blocking, summarize
 from tests.conftest import NOW
 
 
@@ -241,3 +241,8 @@ def test_the_baseline_starts_at_the_latest_reset() -> None:
     runs = history(5, 5) + reset + history(20, 20, 20)
     assert detect(runs, 4) == []  # compared with the new level (median 5), not the old one
     assert detect(history(5, 5) + history(20, 20, 20), 4) == ["count_drop"]  # no reset: old level
+
+
+def test_a_zero_level_is_never_a_stable_new_level() -> None:
+    zero_drops = history(0, 0, status="anomalous", anomalies=["count_drop"])
+    assert _stable_new_level(zero_drops, 0, CrawlSettings()) is False

@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 
 from canarias_events.crawl_settings import CrawlSettings, parse_frequency
 from canarias_events.database import SourceRun
+from canarias_events.health import BASELINE_RESET
 from canarias_events.sources.base import SourceConfig
 from canarias_events.statuses import BLOCKED, FAILED, NON_TEMPORARY
 
@@ -31,6 +32,8 @@ def skip_reason(
         age = now - datetime.fromisoformat(last_success_at)
         if age < parse_frequency(cfg.frequency):
             return f"frequency {cfg.frequency}: last success {_hours(age)}h ago"
+    # A baseline reset is bookkeeping about the anomaly baseline, not an attempt to fetch.
+    runs = [r for r in runs if BASELINE_RESET not in r.anomalies]
     if not runs:
         return None
     latest = runs[0]

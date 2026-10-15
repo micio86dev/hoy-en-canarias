@@ -124,3 +124,18 @@ def test_repeated_rate_limits_back_off_exponentially() -> None:
     assert "backoff" not in (
         reason(None, [run_at(h, source_status="blocked") for h in (1, 10, 20)], None) or ""
     )
+
+
+def test_a_baseline_reset_run_does_not_hide_the_backoff_or_cool_down() -> None:
+    synthetic = run_at(0.5, status="succeeded")
+    object.__setattr__(synthetic, "anomalies", ["baseline_reset"])
+    fails = [run_at(2), run_at(30), run_at(60)]
+    assert "backoff" in (reason(None, [synthetic, *fails], None) or "")
+    blocked = [run_at(1, status="robots_disallowed", source_status="robots_disallowed")]
+    assert "cool-down" in (reason(None, [synthetic, *blocked], None) or "")
+
+
+def test_a_baseline_reset_run_does_not_defer_the_frequency_schedule() -> None:
+    synthetic = run_at(0.5, status="succeeded")
+    object.__setattr__(synthetic, "anomalies", ["baseline_reset"])
+    assert reason("daily", [synthetic], last_success(30)) is None

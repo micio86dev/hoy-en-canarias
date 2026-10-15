@@ -163,6 +163,12 @@ def _stop_status(http_status: int | None) -> str:
     return RATE_LIMITED if http_status == 429 else BLOCKED
 
 
+def _stop_message(status: str, reason: str) -> str:
+    """Warning text that starts with the adapter status, so the pipeline can pick it out."""
+    suffix = "retry later" if status == RATE_LIMITED else "not bypassed"
+    return f"{status}: {reason} ({suffix})"
+
+
 class _RobotsDisallowed(Exception):
     pass
 
@@ -226,7 +232,7 @@ class _Run:
             self.p.max_pages_per_run if cap is None else min(cap, self.p.max_pages_per_run)
         )
         capped = cap is not None and cap < self.p.max_pages_per_run
-        self.page_limit_reached = (
+        self.page_limit_message = (
             f"page cap {self.max_pages} reached (low-resource)"
             if capped
             else f"max_pages_per_run={self.max_pages} reached"
@@ -268,7 +274,7 @@ class _Run:
         if self.fetched >= self.max_pages:
             if not self.limit_warned:
                 self.limit_warned = True
-                self.warn(f"{self.page_limit_reached}; fetching stopped")
+                self.warn(f"{self.page_limit_message}; fetching stopped")
             raise _PageLimit
         if not self.robots.allowed(url):
             state = self.robots.status(url)
@@ -562,8 +568,8 @@ class _Run:
             if found:
                 tier = "llm"
         if self.block_reason is not None:
-            result.warnings.append(f"blocked: {self.block_reason} (not bypassed)")
             result.status = _stop_status(self.block_status)
+            result.warnings.append(_stop_message(result.status, self.block_reason))
         if not found:
             if self.block_reason is None:
                 result.status = "needs_manual_review"
@@ -593,7 +599,7 @@ class _Run:
     def finish_blocked(self, reason: str, http_status: int | None = None) -> SourceFetchResult:
         self.result.status = _stop_status(http_status)
         self.result.extraction_ok = False
-        self.result.warnings.append(f"blocked: {reason} (not bypassed)")
+        self.result.warnings.append(_stop_message(self.result.status, reason))
         return self.result
 
     # ------------------------------------------------------------------ events

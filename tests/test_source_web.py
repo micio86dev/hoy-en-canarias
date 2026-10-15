@@ -680,6 +680,7 @@ def test_blocked_sources_stop_without_retrying_or_bypassing(
     assert result.extraction_ok is False
     assert route.call_count == 1
     assert any(str(status) in w for w in result.warnings)
+    assert any(w.startswith("blocked:") for w in result.warnings)
 
 
 @respx.mock
@@ -691,6 +692,8 @@ def test_rate_limit_is_reported_as_rate_limited_not_blocked(make_ctx: Ctx) -> No
     assert result.events == []
     assert result.extraction_ok is False
     assert any("429" in w for w in result.warnings)
+    assert any(w.startswith("rate_limited:") for w in result.warnings)
+    assert not any(w.startswith("blocked") for w in result.warnings)
 
 
 @respx.mock
