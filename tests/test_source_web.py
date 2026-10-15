@@ -954,3 +954,32 @@ def test_auto_render_tries_crawl4ai_when_playwright_is_unavailable(make_ctx: Ctx
     assert working.calls == [url]
     assert made["playwright"].closed and working.closed
     assert any("playwright" in w and "skipped" in w for w in result.warnings)
+
+
+@respx.mock
+def test_challenge_page_in_place_of_the_sitemap_is_blocked(make_ctx: Ctx) -> None:
+    routes = mock_webtenerife()
+    respx.get(SITEMAP).mock(
+        return_value=httpx.Response(
+            200,
+            text=html_fixture("cloudflare_challenge.html"),
+            headers={"content-type": "text/html; charset=UTF-8"},
+        )
+    )
+    result = WebAdapter(webtenerife_config()).fetch(make_ctx())
+    assert result.status == "blocked"
+    assert not any(r.call_count for r in routes.values())
+
+
+@respx.mock
+def test_a_blocked_later_page_keeps_what_the_first_page_gave(make_ctx: Ctx) -> None:
+    robots()
+    page(f"https://{HOST}/agenda/page/1", cards(5))
+    second = respx.get(f"https://{HOST}/agenda/page/2").mock(return_value=httpx.Response(403))
+    third = page(f"https://{HOST}/agenda/page/3", cards(5))
+    urls = [f"https://{HOST}/agenda/page/{n}" for n in (1, 2, 3)]
+    result = adapter(listing_urls=urls).fetch(make_ctx())
+    assert result.status == "blocked"
+    assert len(result.events) == 5  # parsing pages already downloaded is safe
+    assert second.call_count == 1 and third.call_count == 0  # nothing fetched after the wall
+    assert any("403" in w for w in result.warnings)

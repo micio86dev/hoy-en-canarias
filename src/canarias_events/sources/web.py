@@ -265,7 +265,8 @@ class _Run:
             except ContentTypeRejected as exc:
                 raise InvalidPayload(f"{mask_secrets(url)}: {exc}") from exc
         text = _decode(response.content, response.headers)
-        if html and is_challenge_page(text):
+        looks_html = html or "html" in response.headers.get("content-type", "").lower()
+        if looks_html and is_challenge_page(text):
             raise _Blocked(f"challenge page at {mask_secrets(url)}")
         page = _Page(response.url, text, response.content)
         self.cache[url] = page
@@ -476,8 +477,6 @@ class _Run:
             found = self.attempt(tier, produce)
             if found:
                 return tier, found
-            if self.block_reason is not None:
-                break
         return "", []
 
     def empty_marker_hit(self, pages: list[_Page]) -> bool:
