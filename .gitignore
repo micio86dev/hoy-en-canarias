@@ -14,3 +14,4 @@ output/*
 data/
 .env
 .env.local
+.atl/
