@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from datetime import date, datetime
+from typing import Any
 
 import pytest
 
@@ -248,7 +249,7 @@ def test_image_as_list_and_plain_string() -> None:
 
 
 def test_relative_offer_url_is_resolved_against_the_page() -> None:
-    doc = {
+    doc: dict[str, Any] = {
         "@type": "Event", "name": "Tickets", "startDate": "2026-10-24",
         "offers": {"@type": "Offer", "url": "/entradas/42"},
     }  # fmt: skip

@@ -186,6 +186,25 @@ def test_range_without_year_is_checked_against_the_inferred_source_dates() -> No
 
 
 @respx.mock
+def test_without_reference_date_verification_uses_the_date_given_to_the_model() -> None:
+    today = datetime.now(TZ).date()
+    month = (
+        "enero febrero marzo abril mayo junio julio agosto septiembre octubre noviembre diciembre"
+    ).split()[today.month - 1]
+    text = f"## Taller de cerámica\n{today.day} de {month}. Casa de la Cultura."
+    route = respx.post(CHAT).mock(
+        return_value=reply([{"title": "Taller de cerámica", "start_date": today.isoformat()}])
+    )
+    found = OllamaExtractor(enabled()).extract(text, None)
+    assert (
+        f"{today.isoformat()}"
+        in json.loads(route.calls[0].request.content)["messages"][0]["content"]
+    )
+    assert [c.start_date for c in found] == [today]
+    assert found[0].year_inferred is True
+
+
+@respx.mock
 def test_hallucinated_items_and_fields_are_dropped() -> None:
     respx.post(CHAT).mock(
         return_value=reply(
@@ -259,6 +278,13 @@ def test_transport_problems_are_llm_errors() -> None:
     with pytest.raises(LlmError):
         OllamaExtractor(enabled()).extract(PAGE_TEXT, None, reference_date=REF)
     route.mock(return_value=httpx.Response(500, text="boom"))
+    with pytest.raises(LlmError):
+        OllamaExtractor(enabled()).extract(PAGE_TEXT, None, reference_date=REF)
+
+
+@respx.mock
+def test_response_decoding_errors_are_llm_errors() -> None:
+    respx.post(CHAT).mock(side_effect=httpx.DecodingError("bad gzip"))
     with pytest.raises(LlmError):
         OllamaExtractor(enabled()).extract(PAGE_TEXT, None, reference_date=REF)
 

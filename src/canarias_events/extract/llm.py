@@ -165,9 +165,11 @@ class OllamaExtractor:
         if not self.settings.enabled:
             return []
         clipped = text[: self.settings.max_input_chars]
-        raw_events = self._ask(clipped, page_url, reference_date or datetime.now(TZ).date())
+        # The model is told this date, so source days are checked against the same reference.
+        reference = reference_date or datetime.now(TZ).date()
+        raw_events = self._ask(clipped, page_url, reference)
         haystack = _norm(clipped)
-        days = _source_days(clipped, reference_date, infer=True)
+        days = _source_days(clipped, reference, infer=True)
         explicit_days = _source_days(clipped, None, infer=False)
         times = find_times(clipped)
         found: list[CandidateEvent] = []
@@ -223,7 +225,7 @@ class OllamaExtractor:
                         raise LlmError("ollama response too large")
                     chunks.append(chunk)
                 return b"".join(chunks)
-        except httpx.TransportError as exc:
+        except httpx.HTTPError as exc:
             raise LlmError(f"ollama unreachable ({type(exc).__name__})") from exc
 
     # ------------------------------------------------------------------ verification

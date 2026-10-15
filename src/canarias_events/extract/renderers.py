@@ -347,6 +347,8 @@ class Crawl4AIRenderer:
         )
         try:
             result = self._run(crawler.arun(url=url, config=run_config))
+        except RendererUnavailable:  # the fail-closed request hook: never degrade to a crawl error
+            raise
         except Exception as exc:  # noqa: BLE001
             raise RenderError(f"crawl failed: {type(exc).__name__}") from exc
         status = getattr(result, "status_code", None)

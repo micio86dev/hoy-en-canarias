@@ -565,6 +565,31 @@ def test_crawl4ai_failures_become_render_errors() -> None:
         renderer.render("https://example.org/a")
 
 
+def test_crawl4ai_hook_fails_closed_without_a_browser_context() -> None:
+    renderer = Crawl4AIRenderer(loader=crawl4ai_loader(), resolver=resolver)
+    renderer.render("https://example.org/a")
+    hook = FakeCrawler.instances[0].crawler_strategy.hooks["on_page_context_created"]
+    with pytest.raises(RendererUnavailable, match="browser context"):
+        asyncio.run(hook(object(), config=None))
+    with pytest.raises(RendererUnavailable):
+        asyncio.run(hook(object(), context=None))
+
+
+def test_crawl4ai_hook_failure_surfaces_as_renderer_unavailable() -> None:
+    renderer = Crawl4AIRenderer(loader=crawl4ai_loader(), resolver=resolver)
+    renderer.render("https://example.org/warm-up")
+    crawler = FakeCrawler.instances[0]
+
+    async def arun_with_hook(url: str, config: Any = None) -> FakeCrawlResult:
+        # crawl4ai runs the hook during arun; without a context it must fail closed.
+        await crawler.crawler_strategy.hooks["on_page_context_created"](object(), config=config)
+        return FakeCrawlResult()
+
+    crawler.arun = arun_with_hook  # type: ignore[method-assign]
+    with pytest.raises(RendererUnavailable):
+        renderer.render("https://example.org/a")
+
+
 def test_crawl4ai_refuses_unsafe_start_urls() -> None:
     renderer = Crawl4AIRenderer(loader=crawl4ai_loader(), resolver=resolver)
     with pytest.raises(UnsafeUrlError):
