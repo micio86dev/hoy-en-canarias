@@ -8,13 +8,11 @@ from typing import Any
 
 from canarias_events.crawl_settings import CrawlSettings
 from canarias_events.database import SourceRun
+from canarias_events.statuses import NO_CONTENT_STATUSES, SUCCEEDED
 
-SUCCEEDED = "succeeded"
 EMPTY_MARKER = "empty-marker"  # strategy of a page that says, in its own words, "no events"
 # Codes that only inform; every other code keeps the run's events out of the exports.
 INFORMATIONAL = frozenset({"strategy_changed"})
-# What the adapter reported when the listing was never read: no content to compare.
-NO_CONTENT_STATUSES = frozenset({"blocked", "robots_disallowed"})
 
 
 def is_blocking(codes: Sequence[str]) -> bool:

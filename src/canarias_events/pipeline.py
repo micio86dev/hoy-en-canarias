@@ -31,6 +31,14 @@ from canarias_events.sources.base import (
     SourceFetchResult,
 )
 from canarias_events.sources.registry import create_adapter
+from canarias_events.statuses import (
+    ANOMALOUS,
+    BLOCKED,
+    FAILED,
+    NEEDS_REVIEW,
+    PARTIAL,
+    SUCCEEDED,
+)
 
 logger = logging.getLogger("canarias_events.pipeline")
 
@@ -38,8 +46,6 @@ OUTSIDE_WINDOW = "outside window"
 MISSING_START = "missing start date"
 ISLAND_FILTER = "island filter"
 
-# Adapter statuses that are neither success nor a crash: a human has to look at the source.
-NEEDS_REVIEW = frozenset({"robots_disallowed", "needs_manual_review"})
 PERMANENT_HTTP = frozenset({401, 403})  # access denied: never retried as a temporary error
 
 AdapterFactory = Callable[[SourceConfig], SourceAdapter]
@@ -68,7 +74,7 @@ def events_in_window(db: Database, window: DateWindow, island: str | None = None
 
 def _new_stats() -> dict[str, Any]:
     return {
-        "status": "succeeded",
+        "status": SUCCEEDED,
         "records_received": 0,
         "valid_events": 0,
         "in_window": 0,
@@ -171,8 +177,7 @@ def accept_quarantine(
 ) -> int:
     """Publish the events held back for ``source_id`` (a manual decision); returns how many."""
     pending = db.quarantine_pending(source_id)
-    stats: dict[str, Any] = {k: 0 for k in ("new", "updated", "unchanged", "merged")}
-    stats["possible_duplicates"] = 0
+    stats = _new_stats()
     _ingest(db, [item.event for item in pending], source_id, now, threshold, stats)
     db.quarantine_close(source_id, "accepted")
     return len(pending)
@@ -206,26 +211,26 @@ def _apply_result(
     stats["anomalies"] = codes
     reason = ",".join(c for c in codes if c not in INFORMATIONAL)
     hold: str | None = None  # why the events are held back instead of published
-    if result.status == "blocked":  # 401/403/429 or challenge page: not bypassed
+    if result.status == BLOCKED:  # 401/403/429 or challenge page: not bypassed
         message = next((w for w in result.warnings if w.startswith("blocked")), "blocked: denied")
         stats["error"] = message
         if result.events:  # partial data from a source that then blocked us: doubtful
-            stats["status"], hold = "partial", "blocked_partial"
+            stats["status"], hold = PARTIAL, "blocked_partial"
         else:
-            stats["status"] = "failed"
+            stats["status"] = FAILED
             run.errors.append({"source": cfg.id, "error": message})
     elif result.status in NEEDS_REVIEW:  # not a healthy empty source, not a crash
         stats["status"] = result.status
         stats["error"] = result.warnings[-1] if result.warnings else result.status
     elif reason:
-        stats["status"], hold = "anomalous", reason
+        stats["status"], hold = ANOMALOUS, reason
         stats["error"] = f"anomaly: {reason}"
         run.warnings.append({"source": cfg.id, "warning": stats["error"]})
     _keep_snapshot(cfg, result, run, stats)
     if hold is not None:
         stats["quarantined"] = db.quarantine_add(cfg.id, run.run_id, hold, events, run.now)
         return
-    if stats["status"] == "succeeded":
+    if stats["status"] == SUCCEEDED:
         _ingest(db, events, cfg.id, run.now, run.threshold, stats)
         db.quarantine_close(cfg.id, "superseded")  # a normal run confirms the source again
 
@@ -238,7 +243,7 @@ def _keep_snapshot(
         not run.settings.snapshots.enabled
         or run.snapshot_dir is None
         or result.snapshot is None
-        or stats["status"] == "succeeded"
+        or stats["status"] == SUCCEEDED
     ):
         return
     path = save_snapshot(run.snapshot_dir, cfg.id, result.snapshot, run.now, run.settings.snapshots)
@@ -374,9 +379,9 @@ def run_import(
                 raise RuntimeError("adapter returned no result")
             _apply_result(db, cfg, got.result, history, run, stats)
         except Exception as exc:
-            stats["status"] = "failed"
+            stats["status"] = FAILED
             if isinstance(exc, HttpError) and exc.status in PERMANENT_HTTP:
-                stats["source_status"] = "blocked"
+                stats["source_status"] = BLOCKED
             stats["error"] = f"{type(exc).__name__}: {exc}"
             run.errors.append({"source": cfg.id, "error": stats["error"]})
             logger.error("source %s failed: %s", cfg.id, stats["error"])
@@ -419,10 +424,10 @@ def run_import(
         },
         "params": params,
         "sources_attempted": [c.id for c in due],
-        "sources_succeeded": [i for i, s in per_source.items() if s["status"] == "succeeded"],
-        "sources_failed": [i for i, s in per_source.items() if s["status"] == "failed"],
-        "sources_partial": [i for i, s in per_source.items() if s["status"] == "partial"],
-        "sources_anomalous": [i for i, s in per_source.items() if s["status"] == "anomalous"],
+        "sources_succeeded": [i for i, s in per_source.items() if s["status"] == SUCCEEDED],
+        "sources_failed": [i for i, s in per_source.items() if s["status"] == FAILED],
+        "sources_partial": [i for i, s in per_source.items() if s["status"] == PARTIAL],
+        "sources_anomalous": [i for i, s in per_source.items() if s["status"] == ANOMALOUS],
         "sources_needs_review": [i for i, s in per_source.items() if s["status"] in NEEDS_REVIEW],
         "sources_skipped": skipped,
         "sources": per_source,

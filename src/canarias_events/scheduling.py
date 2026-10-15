@@ -8,13 +8,11 @@ from datetime import datetime, timedelta
 from canarias_events.crawl_settings import CrawlSettings, parse_frequency
 from canarias_events.database import SourceRun
 from canarias_events.sources.base import SourceConfig
-
-# Statuses nobody fixes by retrying: they cool down instead of backing off.
-NON_TEMPORARY = frozenset({"robots_disallowed", "needs_manual_review"})
+from canarias_events.statuses import BLOCKED, FAILED, NON_TEMPORARY
 
 
 def _is_non_temporary(run: SourceRun) -> bool:
-    return run.status in NON_TEMPORARY or run.source_status == "blocked"
+    return run.status in NON_TEMPORARY or run.source_status == BLOCKED
 
 
 def _hours(delta: timedelta) -> float:
@@ -46,7 +44,7 @@ def skip_reason(
         return None
     streak = 0
     for run in runs:
-        if run.status != "failed" or _is_non_temporary(run):
+        if run.status != FAILED or _is_non_temporary(run):
             break
         streak += 1
     if streak < settings.failure_threshold:
