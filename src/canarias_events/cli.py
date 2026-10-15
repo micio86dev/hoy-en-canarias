@@ -199,6 +199,7 @@ def import_events(
             report = run_import(
                 db, catalog.sources, window, client=client, now=now, island=island,
                 source_ids=source or None, ai=catalog.ai, crawl=catalog.crawl,
+                snapshot_dir=output_dir / "snapshots",
             )  # fmt: skip
         except ValueError as exc:
             raise typer.BadParameter(str(exc)) from exc

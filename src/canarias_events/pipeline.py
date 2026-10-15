@@ -10,6 +10,7 @@ from collections.abc import Callable, Mapping, Sequence
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 
 from canarias_events.crawl_settings import CrawlSettings
@@ -22,6 +23,7 @@ from canarias_events.health import INFORMATIONAL, detect_anomalies
 from canarias_events.http import HttpError, SafeHttpClient
 from canarias_events.models import Event
 from canarias_events.scheduling import skip_reason
+from canarias_events.snapshots import prune_snapshots, save_snapshot
 from canarias_events.sources.base import (
     FetchContext,
     SourceAdapter,
@@ -219,12 +221,29 @@ def _apply_result(
         stats["status"], hold = "anomalous", reason
         stats["error"] = f"anomaly: {reason}"
         run.warnings.append({"source": cfg.id, "warning": stats["error"]})
+    _keep_snapshot(cfg, result, run, stats)
     if hold is not None:
         stats["quarantined"] = db.quarantine_add(cfg.id, run.run_id, hold, events, run.now)
         return
     if stats["status"] == "succeeded":
         _ingest(db, events, cfg.id, run.now, run.threshold, stats)
         db.quarantine_close(cfg.id, "superseded")  # a normal run confirms the source again
+
+
+def _keep_snapshot(
+    cfg: SourceConfig, result: SourceFetchResult, run: _Run, stats: dict[str, Any]
+) -> None:
+    """Save the raw listing of a run that did not end healthy (optional, see ``snapshots``)."""
+    if (
+        not run.settings.snapshots.enabled
+        or run.snapshot_dir is None
+        or result.snapshot is None
+        or stats["status"] == "succeeded"
+    ):
+        return
+    path = save_snapshot(run.snapshot_dir, cfg.id, result.snapshot, run.now, run.settings.snapshots)
+    if path is not None:
+        stats["snapshot"] = str(path)
 
 
 @dataclass
@@ -272,6 +291,7 @@ class _Run:
     island: str | None
     threshold: float
     settings: CrawlSettings
+    snapshot_dir: Path | None = None
     errors: list[dict[str, str]] = field(default_factory=list)
     warnings: list[dict[str, str]] = field(default_factory=list)
 
@@ -291,6 +311,7 @@ def run_import(
     ai: AiSettings | None = None,
     crawl: CrawlSettings | None = None,
     force: bool = False,
+    snapshot_dir: Path | None = None,
 ) -> dict[str, Any]:
     """Run every selected source, isolate failures and return (and store) the import report."""
     environment: Mapping[str, str] = os.environ if env is None else env
@@ -311,7 +332,9 @@ def run_import(
     run_id = db.start_run(now, window.start, window.end, params)
     per_source: dict[str, dict[str, Any]] = {}
 
-    run = _Run(run_id, now, window, island_name, merge_threshold, settings)
+    run = _Run(run_id, now, window, island_name, merge_threshold, settings, snapshot_dir)
+    if snapshot_dir is not None and settings.snapshots.enabled:
+        prune_snapshots(snapshot_dir, settings.snapshots, now)
     due, deferred = _due(db, chosen, now, settings, force=force)
     skipped.extend(deferred)
 
@@ -335,7 +358,8 @@ def run_import(
         try:
             if got.error is not None:
                 raise got.error
-            assert got.result is not None
+            if got.result is None:  # pragma: no cover - fetch() always sets one of the two
+                raise RuntimeError("adapter returned no result")
             _apply_result(db, cfg, got.result, history, run, stats)
         except Exception as exc:
             stats["status"] = "failed"
@@ -355,6 +379,9 @@ def run_import(
             anomalies=stats["anomalies"],
         )  # fmt: skip
         logger.info("source %s: %s", cfg.id, stats["status"])
+
+    if snapshot_dir is not None and settings.snapshots.enabled:
+        prune_snapshots(snapshot_dir, settings.snapshots, now)
 
     def total(key: str) -> int:
         return sum(int(s[key]) for s in per_source.values())

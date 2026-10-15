@@ -23,6 +23,17 @@ def parse_frequency(value: str) -> timedelta:
     return timedelta(hours=amount) if found.group(2) == "h" else timedelta(days=amount)
 
 
+class SnapshotSettings(BaseModel):
+    """Raw listing of failed/anomalous runs for debugging; off by default."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = False
+    max_bytes: int = Field(default=500_000, ge=100, le=20_000_000)
+    retention_days: int = Field(default=14, ge=0, le=3650)
+    max_files: int = Field(default=10, ge=1, le=1000)  # per source
+
+
 class CrawlSettings(BaseModel):
     """Tunables with safe defaults; the file normally omits this section."""
 
@@ -42,3 +53,5 @@ class CrawlSettings(BaseModel):
     # Blocked, robots-disallowed and manual-review sources are not retried for this long.
     blocked_cooldown_hours: float = Field(default=72.0, ge=0)
     concurrency: int = Field(default=4, ge=1, le=16)  # sources fetched at the same time
+
+    snapshots: SnapshotSettings = Field(default_factory=SnapshotSettings)

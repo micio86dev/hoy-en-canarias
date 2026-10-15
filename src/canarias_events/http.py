@@ -275,7 +275,8 @@ class SafeHttpClient:
     def set_host_interval(self, host: str, seconds: float) -> None:
         """Raise the minimum gap between requests to ``host`` (e.g. a robots.txt Crawl-delay)."""
         key = host.lower()
-        self._host_intervals[key] = max(self._host_intervals.get(key, 0.0), seconds)
+        with self._rate_lock:  # called from worker threads when robots.txt sets a Crawl-delay
+            self._host_intervals[key] = max(self._host_intervals.get(key, 0.0), seconds)
 
     def host_interval(self, host: str) -> float:
         """Effective minimum gap in seconds between requests to ``host``."""

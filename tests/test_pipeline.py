@@ -9,12 +9,13 @@ from typing import Any
 
 import pytest
 
-from canarias_events.crawl_settings import CrawlSettings
+from canarias_events.crawl_settings import CrawlSettings, SnapshotSettings
 from canarias_events.database import Database
 from canarias_events.date_range import TZ
 from canarias_events.http import HttpError, SafeHttpClient
 from canarias_events.models import Event
 from canarias_events.pipeline import accept_quarantine, run_import
+from canarias_events.snapshots import save_snapshot
 from canarias_events.sources.base import (
     FetchContext,
     SourceAdapter,
@@ -448,9 +449,26 @@ class Scripted(FakeAdapter):
 def run_scripted(
     db: Database, client: SafeHttpClient, result: SourceFetchResult, source: str = "w"
 ) -> dict[str, Any]:
+    return run_scripted_with(db, client, result, source=source)
+
+
+def run_scripted_with(
+    db: Database,
+    client: SafeHttpClient,
+    result: SourceFetchResult,
+    source: str = "w",
+    **kwargs: Any,
+) -> dict[str, Any]:
     cfg = make_cfg(source)
     return run_import(
-        db, [cfg], WINDOW, client=client, now=NOW, adapter_factory=lambda c: Scripted(c, result)
+        db,
+        [cfg],
+        WINDOW,
+        client=client,
+        now=NOW,
+        adapter_factory=lambda c: Scripted(c, result),
+        force=True,
+        **kwargs,
     )
 
 
@@ -742,3 +760,49 @@ def test_a_failing_source_does_not_break_concurrent_ones(
     }
     report = run(db, client, adapters, crawl=CrawlSettings(concurrency=2))
     assert report["sources_failed"] == ["bad"] and report["sources_succeeded"] == ["good"]
+
+
+# --------------------------------------------------------------------------- snapshots
+
+
+def test_failed_and_anomalous_runs_leave_a_snapshot_when_enabled(
+    db: Database, client: SafeHttpClient, tmp_path: Path
+) -> None:
+    crawl = CrawlSettings(snapshots=SnapshotSettings(enabled=True))
+    seed_history(db, "w", [10, 10, 10])
+    page = web_result(ev("w", "1", "Uno"), snapshot="<html>listing</html>")
+    report = run_scripted_with(db, client, page, crawl=crawl, snapshot_dir=tmp_path)
+
+    shot = Path(report["sources"]["w"]["snapshot"])
+    assert shot.read_text(encoding="utf-8") == "<html>listing</html>"
+    assert tmp_path / "w" in shot.parents
+
+
+def test_healthy_runs_and_disabled_settings_save_nothing(
+    db: Database, client: SafeHttpClient, tmp_path: Path
+) -> None:
+    snaps = tmp_path / "snaps"
+    healthy = web_result(ev("w", "1", "Uno"), snapshot="<html>ok</html>")
+    on = CrawlSettings(snapshots=SnapshotSettings(enabled=True))
+    report = run_scripted_with(db, client, healthy, crawl=on, snapshot_dir=snaps)
+    assert "snapshot" not in report["sources"]["w"]
+
+    bad = web_result(status="needs_manual_review", extraction_ok=False, snapshot="<html/>")
+    report = run_scripted_with(db, client, bad, crawl=CrawlSettings(), snapshot_dir=snaps)
+    assert "snapshot" not in report["sources"]["w"] and not snaps.exists()
+    report = run_scripted_with(db, client, bad, crawl=on, snapshot_dir=None)
+    assert "snapshot" not in report["sources"]["w"]
+
+
+def test_old_snapshots_are_pruned_at_run_start(
+    db: Database, client: SafeHttpClient, tmp_path: Path
+) -> None:
+    from datetime import timedelta
+
+    crawl = CrawlSettings(snapshots=SnapshotSettings(enabled=True, retention_days=5))
+    stale = save_snapshot(tmp_path, "gone", "x", NOW - timedelta(days=9), crawl.snapshots)
+    assert stale is not None
+    run_scripted_with(
+        db, client, web_result(ev("w", "1", "Uno")), crawl=crawl, snapshot_dir=tmp_path
+    )
+    assert not stale.exists()
