@@ -1,0 +1,4541 @@
+
+<!-- Start -->
+<!DOCTYPE html>
+<head>
+	<link rel="stylesheet" href="/website/css/common.css" type="text/css" media="screen">
+
+	<link rel="stylesheet" href="" type="text/css" media="screen">
+	<link rel="stylesheet" href="https://www.adeje.es/website/css/estilospage.css" type="text/css" media="screen">
+	<link rel="stylesheet" href="https://chat-adeje.expertbrain.ai/adeje-chat.css">
+
+        <style>
+            #chat-header { background: #f5333f; }
+            #chat-send { background: #f5333f; }
+            #chat-footer a { color: #f5333f; }
+            #chat-input:focus { border-color: #000000; }
+            #chat-send:hover { background: #000000; }
+            #chat-header-title { color: #fff; }
+			/*Añadido para HIDDEN*/
+			#chat-launcher.hidden { right: -200px; }
+			#chat-button-hide-show { position: fixed; bottom: 5px; right: 20px; text-align: right; cursor: pointer; transition: all .3s ease; z-index: 9999999; }
+
+			#chat-button-hide { width: 160px; text-align: center; }
+			#chat-button-show { display: none; padding: 3px 10px 5px 3px; background-color: #209ae2; color: #fff; }
+
+			#chat-button-hide-show.hidden{ right: 0px;   }
+			#chat-button-hide-show.hidden #chat-button-hide { display: none; }
+			#chat-button-hide-show.hidden #chat-button-show { display: inline; }
+			#chat-launcher { bottom: 25px; }			
+        </style>
+
+	
+		<title>Agenda | Ayuntamiento de Adeje</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<meta name="Resource-type" content="Document">
+		<meta http-equiv="Content-Language" content="es"/>
+
+
+
+		<link rel="icon" href="https://www.adeje.es/favicon.ico" type="image/x-icon">
+		<link rel="shortcut icon" href="https://www.adeje.es/favicon.ico" type="image/x-icon">
+
+        <link rel="apple-touch-icon" sizes="57x57" href="https://www.adeje.es/favicon/apple-icon-57x57.png">
+        <link rel="apple-touch-icon" sizes="60x60" href="https://www.adeje.es/favicon/apple-icon-60x60.png">
+        <link rel="apple-touch-icon" sizes="72x72" href="https://www.adeje.es/favicon/apple-icon-72x72.png">
+        <link rel="apple-touch-icon" sizes="76x76" href="https://www.adeje.es/favicon/apple-icon-76x76.png">
+        <link rel="apple-touch-icon" sizes="114x114" href="https://www.adeje.es/favicon/apple-icon-114x114.png">
+        <link rel="apple-touch-icon" sizes="120x120" href="https://www.adeje.es/favicon/apple-icon-120x120.png">
+        <link rel="apple-touch-icon" sizes="144x144" href="https://www.adeje.es/favicon/apple-icon-144x144.png">
+        <link rel="apple-touch-icon" sizes="152x152" href="https://www.adeje.es/favicon/apple-icon-152x152.png">
+        <link rel="apple-touch-icon" sizes="180x180" href="https://www.adeje.es/favicon/apple-icon-180x180.png">
+        <link rel="icon" type="image/png" sizes="192x192"  href="https://www.adeje.es/favicon/android-icon-192x192.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="https://www.adeje.es/favicon/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="96x96" href="https://www.adeje.es/favicon/favicon-96x96.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="https://www.adeje.es/favicon/favicon-16x16.png">
+
+        <meta name="msapplication-TileColor" content="#ffffff">
+        <meta name="msapplication-TileImage" content="https://www.adeje.es/favicon/ms-icon-144x144.png">
+        <meta name="theme-color" content="#ffffff">
+
+        
+
+            <meta property="og:title" content="Agenda" />
+
+            <meta property="og:site_name" content="Ayuntamiento de Adeje" />
+
+        
+
+        <meta property="og:url" content="https://www.adeje.es/contenido/91" />
+        <meta property="og:image" content="https://www.adeje.es/pub/adeje_featured.jpg" />
+        <meta property="og:type" content="website" />
+        <meta property="fb:app_id" content="176641135744447" />
+
+		<meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0">
+
+		<link rel="stylesheet" href="https://www.adeje.es/website/css/estilossep2024.css" type="text/css" media="screen">
+		<!--<link rel="stylesheet" href="https://www.adeje.es/website/css/estilos-max-width960.css" type="text/css" media="screen">-->
+		<link rel="stylesheet" href="https://www.adeje.es/website/css/estilos-max-width720.css" type="text/css" media="screen">
+		<link rel="stylesheet" href="https://www.adeje.es/website/js/bxslider/jquery.bxslider.css" type="text/css" media="screen">
+		<link rel="stylesheet" href="https://www.adeje.es/website/js/colorbox/skin1/colorbox.css" type="text/css" media="screen">
+
+		<link rel="stylesheet" href="https://www.adeje.es/website/css/cssembed.css" type="text/css" media="screen">
+
+		<link rel="stylesheet" href="https://www.adeje.es/website/css/impresion.css" type="text/css" media="print">
+		<link rel="stylesheet" href="https://www.adeje.es/website/css/iconos.css" />
+
+		<link rel="stylesheet" href="https://www.adeje.es/website/css/specialContent.css" />
+
+
+		<!--<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>-->
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+		<script type="text/javascript" src="https://www.adeje.es/website/js/bxslider/jquery.bxslider.min.js"></script>
+		<script type="text/javascript" src="https://www.adeje.es/website/js/colorbox/jquery.colorbox.js"></script>
+		<script type="text/javascript" src="https://www.adeje.es/website/js/funciones.js"></script>
+		<script type="text/javascript" src="https://www.adeje.es/website/js/jqueryblackandwhite/jquery.BlackAndWhite.js"></script>
+        <script type="text/javascript" src="https://www.adeje.es/website/js/uploadfile.js"></script>
+
+        <!-- JQUERY movil menu -->
+        <script type="text/javascript" src="https://www.adeje.es/website/js/mmenu/jquery.mmenu.min.js"></script>
+        <link href="https://www.adeje.es/website/js/mmenu/jquery.mmenu.css" type="text/css" rel="stylesheet" />
+
+
+		
+			<script type="text/javascript" src="https://www.adeje.es/website/js/masonry.pkgd.min.js"></script>
+		
+
+
+		<!-- Javascript y estilos para Soy Adeje -->
+
+		
+
+		<!-- ... Soy Adeje -->
+
+
+		<style>
+			/*Jquery: Black & White plugin*/
+			.bwWrapper {
+				position:relative;
+				display:block;
+			}
+		</style>
+
+			<script>
+
+
+
+				/**
+				 * Determine the mobile operating system.
+				 * This function either returns 'iOS', 'Android' or 'unknown'
+				 *
+				 * @returns {String}
+				 */
+				function getMobileOperatingSystem() {
+				  var userAgent = navigator.userAgent || navigator.vendor || window.opera;
+
+					  if( userAgent.match( /iPad/i ) || userAgent.match( /iPhone/i ) || userAgent.match( /iPod/i ) )
+					  {
+						return 'iOS';
+
+					  }
+					  else if( userAgent.match( /Android/i ) )
+					  {
+
+						return 'Android';
+					  }
+					  else
+					  {
+						return 'unknown';
+					  }
+					}
+
+					
+
+
+				   function VerticalCenter(){
+
+					   $('.VerticalCenter').each(function() {
+
+						   var parentHeight = $(this).parent().height();
+						   var divHeight = $(this).height();
+
+						   var margintop = (parentHeight/2) - (divHeight/2);
+						   $(this).css('margin-top',margintop+'px');
+
+					   });
+
+					   $('.VerticalCenterNoMobile').each(function() {
+
+						   var wdocument = $(document).width();
+
+						   if(wdocument>720){
+
+							   var parentHeight = $(this).parent().height();
+							   var divHeight = $(this).height();
+
+							   var margintop = (parentHeight/2) - (divHeight/2);
+							   $(this).css('margin-top',margintop+'px');
+
+						   }
+
+					   });
+
+				   }
+
+			</script>
+
+		<script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
+
+		
+
+
+
+	<!-- Script INSUIT -->
+	<script async="async" type="text/javascript" src="https://www--adeje--es.insuit.net/i4tservice/insuit-app.js"></script>
+
+	<link rel="stylesheet" href="https://www.adeje.es/website/css/mobileMenu.css" type="text/css">
+
+	<script src="https://kit.fontawesome.com/c75e8bd627.js" crossorigin="anonymous"></script>
+
+
+		<style>
+			#auditorio-iframe-container{ width: calc(100% - 20px); padding: 12px; background: none; }
+			#auditorioframe{
+				width: 100%; height: 100%; border-width: 0px; aspect-ratio: 3/1.2; 
+			}	
+
+			@media (max-width: 960px){
+				#auditorioframe{ aspect-ratio: 2 / 1.2; }
+			}	
+
+			@media (max-width: 568px){
+				#auditorioframe{ aspect-ratio: 1 / 1.2; }
+			}				
+		</style>
+
+</head>
+
+<body>
+
+	<style>
+  .footerMenuItem img{ width: 100%; max-height: 32px; filter: invert(0%) sepia(2%) saturate(17%) hue-rotate(337deg) brightness(93%) contrast(100%);  }
+
+  .footerMenuItem.active img { filter: invert(100%) sepia(0%) saturate(0%) hue-rotate(80deg) brightness(109%) contrast(101%); }
+
+</style>
+
+<div id="footerMenu">
+  <div id="footerMenuContent">
+
+    <div class="footerMenuItem">
+      <a href="https://www.adeje.es">
+        <img src="https://www.adeje.es/website/img/ui/svgicons/home.svg"><br>
+        Portada
+      </a>
+    </div>
+
+
+    <div class="footerMenuItem active">
+      <a href="https://www.adeje.es/agenda?pag=1&ViewStyle=GRID">
+        <img src="https://www.adeje.es/website/img/ui/svgicons/calendar.svg"><br>
+        Agenda
+      </a>
+    </div>
+
+
+    <div class="footerMenuItem">
+      <a href="https://www.adeje.es/ayuntamiento/anuncios">
+        <img src="https://www.adeje.es/website/img/ui/svgicons/announce.svg"><br>
+        Anuncios
+      </a>
+    </div>
+
+
+    <div class="footerMenuItem" id="menu-actualidad-button">
+      <a href="javascript:;" onClick="floating('menu-actualidad')">
+        <img src="https://www.adeje.es/website/img/ui/svgicons/article.svg"><br>
+        Noticias
+      </a>
+    </div>
+
+    <div class="footerMenuItem" id="main-menu-button">
+      <a href="javascript:;" onClick="floating('main-menu')">
+        <img src="https://www.adeje.es/website/img/ui/svgicons/navbar.svg"><br>
+        Menú
+      </a>
+      
+    </div>
+
+    <div style="clear: both;"></div>
+  </div>
+</div>
+
+<div id="main-menu" class="floating-menu">
+  <div class="content-floating-menu">
+    <div id="content-floating-menu-ajx"></div>
+    <div class="floating-menu-footer-space">&nbsp;</div>
+  </div>
+</div>
+
+<div id="menu-actualidad" class="floating-menu white">
+  <div class="content-floating-actualidad">
+    <div id="content-floating-actualidad-ajx"></div>
+    <div class="floating-menu-footer-space">&nbsp;</div>
+  </div>
+</div>
+
+<script>
+
+  mainMenuView(-1);
+
+  mainMenuActualidad();
+</script>
+
+  <div id="cookiesmsg">
+    <div id="cookiesbox">
+      <div id="closecookiestxt">
+        Utilizamos cookies propias y de terceros para ofrecer un correcto funcionamiento y una navegabilidad &oacute;ptima.
+        <br>Para m&aacute;s informaci&oacute;n, consulta nuestra <a href="https://www.adeje.es/politica-de-cookies">pol&iacute;tica de cookies.</a>
+        <br>
+        <a href="javascript:;" onClick="cookiesButton('ALL')" class="cookiesButton cookiesButtonALL" style="margin: 8px;">ACEPTAR TODAS LAS COOKIES</a><br>
+        <a href="javascript:;" onClick="showCookiesOptions();">CONFIGURAR LAS COOKIES A UTILIZAR</a>
+      </div>
+
+      <div id="cookiesOptions">
+        <a href="javascript:;" onClick="cookiesButton('ALL')" class="cookiesButton cookiesButtonALL" style="margin: 8px;">ACEPTAR TODAS LAS COOKIES</a>
+        <a href="javascript:;" onClick="cookiesButton('BASIC')" class="cookiesButton cookiesButtonALL" style="margin: 8px;">RECHAZAR COOKIES DE TERCEROS</a>
+        <br>Para m&aacute;s informaci&oacute;n, consulta nuestra <a href="https://www.adeje.es/politica-de-cookies">pol&iacute;tica de cookies.</a>
+      </div>
+    </div>
+  </div>
+
+
+<script>
+  function cookiesButton(options){
+    $.post('https://www.adeje.es/website/ajax/cookiesAccept.asp',{
+        options: options
+        },function(data){
+          if(options == 'ALL'){
+            cookiesAllAccepted();
+          }
+          $('#cookiesmsg').fadeOut(500);
+        }
+    )
+  }
+
+  function showCookiesOptions(){
+    $('#closecookiestxt').fadeOut(500);
+    $('#cookiesOptions').fadeIn(500);
+  }
+
+</script>
+
+
+<script>
+  function botonAceptar(){
+    $('#mensajeInicialVG').fadeOut(1000);
+
+    $.post('https://www.adeje.es/website/ajax/botonVGAceptar.asp',{
+
+        },function(data){
+          setTimeout(demoMenuMovilVGShow,1000);
+        }
+    )
+
+  function demoMenuMovilVGShow(){
+    $('#menuMovilVG').animate( { left: '-70px' }, 200 );
+    $('#menuMovilVG').removeClass('closed');
+    setTimeout(demoMenuMovilVGHide,1500);
+  }
+
+  function demoMenuMovilVGHide(){
+    $('#menuMovilVG').animate( { left: '-100%' }, 200 );
+    $('#menuMovilVG').addClass('closed');
+  }
+
+
+  }
+
+  function showHideMenuMovilVG(){
+    if( $('#menuMovilVG').hasClass('closed') ){
+        $('#menuMovilVG').animate( { left: '-70px' }, 200 );
+        $('#menuMovilVG').removeClass('closed');
+    }else{
+      $('#menuMovilVG').animate( { left: '-100%' }, 200 );
+      $('#menuMovilVG').addClass('closed');
+    }
+  }
+</script>
+
+
+	<div>
+
+		
+
+    <!-- STICKY HEADER MENU -->
+    <!-- ················· -->
+
+
+		<!-- Sticky header -->
+		<!-- ············· -->
+
+		<div id="homestickyheader">
+			<div id="homestickyheadercontent">
+				<input type="hidden" id="stickycenter" value="false">
+				<div id="escudostickymenu" class="VerticalCenter">
+					<a href="https://www.adeje.es"><img src="https://www.adeje.es/website/img/logo/adeje-torre-blanco.png" class="VerticalCenter"/></a>
+				</div>
+				<div id="stickymenu" class="VerticalCenter">
+					<ul>
+						<li id="Menu1"><a href="javascript:;" onMouseOver="ShowMenu('1');" onClick="ShowMenu('0');">Mi Ayuntamiento</a></li>
+						<li id="Menu2"><a href="javascript:;" onMouseOver="ShowMenu('2');" onClick="ShowMenu('0');">&Aacute;reas</a></li>
+						<!--<li id="Menu3"><a href="javascript:;" onMouseOver="ShowMenu('3');" onClick="ShowMenu('0');">Perfiles</a></li>
+						<li id="Menu4"><a href="javascript:;" onMouseOver="ShowMenu('4');" onClick="ShowMenu('0');">Temas</a></li>-->
+                        <li id="Menu5"><a href="javascript:;" onMouseOver="ShowMenu('5');" onClick="ShowMenu('0');">A - Z</a></li>
+						<div style="clear: both;"></div>
+					</ul>
+				</div>
+
+				<div id="stickymenutools">
+					<div id="stickymenulogin">
+						Login
+					</div>
+
+
+					<div style="clear: both;"></div>
+				</div>
+
+				<div style="clear: both;"></div>
+			</div>
+		</div>
+		<!-- ... sticky header -->
+
+
+	<!-- ... stickyheader menu -->
+
+
+
+
+	<!-- CABECERA -->
+
+		<!-- BARRA TOP LOGIN / IDIOMA -->
+		<!-- ························ -->
+		<!--
+		<div id="contenedorbarratop">
+			<div id="barratop">
+				<div id="contentbarratop">
+					Login&nbsp;&nbsp;&nbsp;Choose language <strong>ES</strong> | ENG
+				</div>
+			</div>
+		</div>
+		-->
+		<!-- ... barra top login / idioma -->
+
+
+		<!-- CABECERA: LOGO, MENUS, BUSCADOR... -->
+		<div id="contenedorcabecera">
+
+			<div id="logdesign"></div>
+
+			<div id="cabecera" onMouseOver="ShowHideInfoAmpliada('clear');">
+
+				<!-- LOGO -->
+				<div id="logomain">
+					<a href="https://www.adeje.es"><img src="https://www.adeje.es/website/img/logo/logomain.png" alt="Portada" /></a>
+				</div>
+
+				<!-- ... logo -->
+
+				<div id="boxmenunextlogo">
+
+					<!-- MENU PRINCIPAL NORMAL -->
+					<!-- ····················· -->
+
+					<div id="menu" class="VerticalCenter">
+						<ul>
+							<li id="Menu1"><a href="javascript:;" onMouseOver="ShowMenu('1');" onClick="ShowMenu('0');">Mi Ayuntamiento</a></li>
+							<li id="Menu2"><a href="javascript:;" onMouseOver="ShowMenu('2');" onClick="ShowMenu('0');">&Aacute;reas</a></li>
+							<!--<li id="Menu3"><a href="javascript:;" onMouseOver="ShowMenu('3');" onClick="ShowMenu('0');">Perfiles</a></li>
+							<li id="Menu4"><a href="javascript:;" onMouseOver="ShowMenu('4');" onClick="ShowMenu('0');">Temas</a></li>-->
+                            <li id="Menu5"><a href="javascript:;" onMouseOver="ShowMenu('5');" onClick="ShowMenu('0');">A - Z</a></li>
+							<div style="clear: both;"></div>
+						</ul>
+						<input type="hidden" value="" id="MenuSelected">
+					</div>
+					<!-- ... menu principal normal -->
+
+
+					<!-- BUSCADOR Y SELECCION DE IDIOMA -->
+					<!-- ······························ -->
+					<div id="menutools" class="VerticalCenter">
+
+						<div id="buscador" class="VerticalCenter">
+							<div id="iconolupa" class="VerticalCenter">
+								<span class="icono" data-icon="&#xe05f;"></span>
+							</div>
+							<form action="https://www.adeje.es/buscador" method="POST" name="busqueda">
+								<input type="text" id="busqueda" name="TerminoBusqueda" onfocus="ShowMenu('0'); $('#iconolupa').hide();" onblur="$('#iconolupa').show();" >
+							</form>
+						</div>
+
+					</div>
+					<!-- ... buscador y seleccion de idioma -->
+
+
+					<div style="clear: both;"></div>
+				</div> 		<!-- div: boxmenunextlogo -->
+
+				<div id="boxbotonmenumobile" class="VerticalCenter">
+					<div class="menumovilicono"><a href="#my-menu">&#9776;</a></div>
+				</div>
+
+
+
+				<div style="clear: both;"></div>
+			</div>		<!-- div: cabecera -->
+
+			<div style="clear: both;"></div>
+
+		</div>		<!-- div: contenedorcabecera -->
+
+
+
+
+		<!-- BOXES MENUS -->
+
+						<div class="menubox" id="menubox1">
+				<div class="menuboxcontent" id="menumiayuntamiento">
+					<div class="menuboxcol4">
+						<div style="float: left; width: 35%; margin-right: 4%;">
+							<!--<a href="http://www.adeje.es/alcalde"><img src="http://www.adeje.es/website/pub/perfiles/alcalde.jpg" style="width: 100%;"></a>-->
+						</div>
+						<div style="float: left; width: 61%;">
+							<br><a href="https://www.adeje.es/alcalde"><span style="font-size: 150%;">Jos&eacute; Miguel<br> Rodr&iacute;guez Fraga</span><br>
+							ALCALDE</a>
+							<div style="font-size: 80%;border-width: 0px; border-top-width: 1px; border-color: #CECECE; border-style: dotted; margin-top: 4%; padding-top: 4%;">
+								<ul>
+									
+											<li>
+												<a href="https://www.adeje.es/contenido/317">CORPORACIÓN MUNICIPAL</a>
+											</li>
+										
+								</ul>
+							</div>
+						</div>
+
+						<div style="clear: both;"></div>
+
+					</div>
+					<div class="menuboxcol4" style="font-size: 100%;">
+						<div style="padding-left: 20px; border-width: 0px; border-style: solid ; border-left-width: 1px; border-color: #CECECE;">
+							<ul>
+								
+										<li>
+											<a href="https://link.adeje.es/sede-electronica">Sede Electrónica</a>
+										</li>
+									
+										<li>
+											<a href="https://www.adeje.es/contenido/502">Trámites</a>
+										</li>
+									
+										<li>
+											<a href="https://link.adeje.es/perfcontrat">Perfil del contratante</a>
+										</li>
+									
+										<li>
+											<a href="https://www.adeje.es/subvenciones">Subvenciones</a>
+										</li>
+									
+										<li>
+											<a href="https://www.adeje.es/identidad-visual">Identidad visual</a>
+										</li>
+									
+								<li>&nbsp;</li>
+								
+										<li>
+											<a href="https://www.adeje.es/contenido/23">Oficina de atención al ciudadano</a>
+										</li>
+									
+										<li>
+											<a href="https://adeje-publicform.incidenciasurbanas.com/">Buzón de quejas y sugerencias</a>
+										</li>
+									
+										<li>
+											<a href="https://centinela.lefebvre.es/public/concept/1759107?access=7Saer7eSuIKm30y5TJ%2F2eeIOVaL5vEpcxbMsW0MmAfI%3D">Canal interno de información</a>
+										</li>
+									
+										<li>
+											<a href="https://amigable.adeje.es">Adeje Amigable</a>
+										</li>
+									
+
+								<li>&nbsp;</li>
+								
+										<li>
+											<a href="https://www.adeje.es/agenda">Agenda</a>
+										</li>
+									
+										<li>
+											<a href="https://www.adeje.es/blog">Blog</a>
+										</li>
+									
+							</ul>
+						</div>
+					</div>
+					<div class="menuboxcol4" id="altanewsletterbox" style="display: none;">
+						<div id="altanewsletter">
+							SUSCR&Iacute;BETE AL<br>NEWSLETTER SEMANAL<br>
+							<input type="" style="" name="altanewsletter">
+							<br>
+							<a href="#" class="botonrojo" style="width: 40%;">ENVIAR</a>
+						</div>
+					</div>
+
+					<div style="clear: both;"></div>
+				</div>
+			</div>
+
+			<div class="menubox" id="menubox2">
+				<div class="menuboxcontent">
+					
+							<div class="menuboxcol3" style="float: left;">
+								<a href="https://www.adeje.es/contenido/740">
+									<span class="TituloMenus">Alcaldía</span>
+								</a>
+								<ul>
+									
+                                            <li>
+                                                <a href="https://www.adeje.es/contenido/6504">Fundación Canaria Alas</a>
+                                            </li>
+								        
+                                            <li>
+                                                <a href="https://www.adeje.es/contenido/5418">Oficina de Planificación Estratégica</a>
+                                            </li>
+								        
+                                            <li>
+                                                <a href="https://www.adeje.es/contenido/582">Tu alcalde online</a>
+                                            </li>
+								        
+								</ul>
+							</div>
+					
+							<div class="menuboxcol3" style="float: left;">
+								<a href="https://www.adeje.es/contenido/11">
+									<span class="TituloMenus">Bienestar Social</span>
+								</a>
+								<ul>
+									
+                                            <li>
+                                                <a href="https://www.adeje.es/contenido/52">Atención integral a las personas con diversidad funcional</a>
+                                            </li>
+								        
+                                            <li>
+                                                <a href="https://www.adeje.es/contenido/4">Juventud</a>
+                                            </li>
+								        
+                                            <li>
+                                                <a href="https://www.adeje.es/contenido/50">Servicios Sociales</a>
+                                            </li>
+								        
+								</ul>
+							</div>
+					
+							<div class="menuboxcol3" style="float: left;">
+								<a href="https://www.adeje.es/contenido/5">
+									<span class="TituloMenus">Buen gobierno, Hacienda e Innovación</span>
+								</a>
+								<ul>
+									
+                                            <li>
+                                                <a href="https://www.adeje.es/contenido/23">Atención a la ciudadanía</a>
+                                            </li>
+								        
+                                            <li>
+                                                <a href="https://www.adeje.es/contenido/28">Empresa Municipal de Servicios</a>
+                                            </li>
+								        
+                                            <li>
+                                                <a href="https://www.adeje.es/contenido/478">Innovación y modernización</a>
+                                            </li>
+								        
+                                            <li>
+                                                <a href="https://www.adeje.es/contenido/843">Obras municipales</a>
+                                            </li>
+								        
+                                            <li>
+                                                <a href="https://www.adeje.es/contenido/22">Padrón y estadística</a>
+                                            </li>
+								        
+                                            <li>
+                                                <a href="https://www.adeje.es/contenido/723">Plazas y Parques</a>
+                                            </li>
+								        
+                                            <li>
+                                                <a href="https://www.adeje.es/contenido/19">Recaudación y Tributos</a>
+                                            </li>
+								        
+                                            <li>
+                                                <a href="https://www.adeje.es/contenido/25">Sede Electrónica</a>
+                                            </li>
+								        
+                                            <li>
+                                                <a href="https://www.adeje.es/contenido/204">Servicios Municipales</a>
+                                            </li>
+								        
+								</ul>
+							</div>
+					
+							<div class="menuboxcol3" style="float: left;">
+								<a href="https://www.adeje.es/contenido/1">
+									<span class="TituloMenus">Cultura, Deportes y Educación</span>
+								</a>
+								<ul>
+									
+                                            <li>
+                                                <a href="https://www.adeje.es/contenido/42">Bibliotecas</a>
+                                            </li>
+								        
+                                            <li>
+                                                <a href="https://www.adeje.es/contenido/2">Cultura y fiestas</a>
+                                            </li>
+								        
+                                            <li>
+                                                <a href="https://www.adeje.es/contenido/3">Deportes</a>
+                                            </li>
+								        
+                                            <li>
+                                                <a href="https://www.adeje.es/contenido/41">Educación</a>
+                                            </li>
+								        
+                                            <li>
+                                                <a href="https://www.adeje.es/contenido/140">Escuela de Música y Danza</a>
+                                            </li>
+								        
+                                            <li>
+                                                <a href="https://www.adeje.es/contenido/729">Escuela Infantil</a>
+                                            </li>
+								        
+                                            <li>
+                                                <a href="https://www.adeje.es/contenido/543">Participación ciudadana y convivencia</a>
+                                            </li>
+								        
+								</ul>
+							</div>
+					
+							<div class="menuboxcol3" style="float: left;">
+								<a href="https://www.adeje.es/contenido/12">
+									<span class="TituloMenus">Destino turístico y sostenibilidad</span>
+								</a>
+								<ul>
+									
+                                            <li>
+                                                <a href="https://www.adeje.es/contenido/33">Medio Ambiente</a>
+                                            </li>
+								        
+                                            <li>
+                                                <a href="https://www.adeje.es/contenido/49">Playas</a>
+                                            </li>
+								        
+								</ul>
+							</div>
+					
+							<div class="menuboxcol3" style="float: left;">
+								<a href="https://www.adeje.es/contenido/4338">
+									<span class="TituloMenus">Presidencia y Planificación del Territorio</span>
+								</a>
+								<ul>
+									
+                                            <li>
+                                                <a href="https://www.adeje.es/contenido/44">Patrimonio histórico-artístico</a>
+                                            </li>
+								        
+								</ul>
+							</div>
+					
+							<div class="menuboxcol3" style="float: left;">
+								<a href="https://www.adeje.es/contenido/680">
+									<span class="TituloMenus">Salud, calidad de vida y bienestar animal</span>
+								</a>
+								<ul>
+									
+                                            <li>
+                                                <a href="https://www.adeje.es/contenido/163">Igualdad y diversidad</a>
+                                            </li>
+								        
+                                            <li>
+                                                <a href="https://www.adeje.es/contenido/51">Mayores</a>
+                                            </li>
+								        
+                                            <li>
+                                                <a href="https://www.adeje.es/contenido/46">Oficina de información al consumidor (OMIC)</a>
+                                            </li>
+								        
+                                            <li>
+                                                <a href="https://www.adeje.es/contenido/45">Salud</a>
+                                            </li>
+								        
+                                            <li>
+                                                <a href="https://www.adeje.es/contenido/898">Sanidad</a>
+                                            </li>
+								        
+                                            <li>
+                                                <a href="https://www.adeje.es/contenido/31">Servicios funerarios</a>
+                                            </li>
+								        
+								</ul>
+							</div>
+					
+							<div class="menuboxcol3" style="float: left;">
+								<a href="https://www.adeje.es/contenido/4337">
+									<span class="TituloMenus">Seguridad, promoción de la actividad económica y el empleo</span>
+								</a>
+								<ul>
+									
+                                            <li>
+                                                <a href="https://www.adeje.es/contenido/37">Adeje Impulsa</a>
+                                            </li>
+								        
+                                            <li>
+                                                <a href="https://www.adeje.es/contenido/32">Agromercado</a>
+                                            </li>
+								        
+                                            <li>
+                                                <a href="https://www.adeje.es/contenido/200">Seguridad ciudadana y Protección Civil</a>
+                                            </li>
+								        
+                                            <li>
+                                                <a href="https://www.adeje.es/contenido/290">Servicio de movilidad</a>
+                                            </li>
+								        
+								</ul>
+							</div>
+					
+					<div style="clear: both;"></div>
+				</div>
+			</div>
+
+			<div class="menubox" id="menubox5">
+				
+				<div class="menuboxcontent">
+					
+							<div class="menuboxcol4" id="m5col1">
+								<ul>
+						
+
+							<li><a href="https://www.adeje.es/contenido/37" class="ellip">Adeje Impulsa</a></li>
+
+						
+
+							<li><a href="https://www.adeje.es/contenido/32" class="ellip">Agromercado</a></li>
+
+						
+
+							<li><a href="https://www.adeje.es/contenido/23" class="ellip">Atención a la ciudadanía</a></li>
+
+						
+
+							<li><a href="https://www.adeje.es/contenido/52" class="ellip">Atención integral a las personas con diversidad funcional</a></li>
+
+						
+
+							<li><a href="https://www.adeje.es/contenido/42" class="ellip">Bibliotecas</a></li>
+
+						
+
+							<li><a href="https://www.adeje.es/contenido/2" class="ellip">Cultura y fiestas</a></li>
+
+						
+
+							<li><a href="https://www.adeje.es/contenido/3" class="ellip">Deportes</a></li>
+
+						
+
+							<li><a href="https://www.adeje.es/contenido/41" class="ellip">Educación</a></li>
+
+						
+
+							<li><a href="https://www.adeje.es/contenido/28" class="ellip">Empresa Municipal de Servicios</a></li>
+
+						
+
+							<li><a href="https://www.adeje.es/contenido/140" class="ellip">Escuela de Música y Danza</a></li>
+
+						
+
+							<li><a href="https://www.adeje.es/contenido/729" class="ellip">Escuela Infantil</a></li>
+
+						
+
+							<li><a href="https://www.adeje.es/contenido/6504" class="ellip">Fundación Canaria Alas</a></li>
+
+						</ul></div>
+							<div class="menuboxcol4" id="m5col2">
+								<ul>
+						
+
+							<li><a href="https://www.adeje.es/contenido/163" class="ellip">Igualdad y diversidad</a></li>
+
+						
+
+							<li><a href="https://www.adeje.es/contenido/478" class="ellip">Innovación y modernización</a></li>
+
+						
+
+							<li><a href="https://www.adeje.es/contenido/4" class="ellip">Juventud</a></li>
+
+						
+
+							<li><a href="https://www.adeje.es/contenido/51" class="ellip">Mayores</a></li>
+
+						
+
+							<li><a href="https://www.adeje.es/contenido/33" class="ellip">Medio Ambiente</a></li>
+
+						
+
+							<li><a href="https://www.adeje.es/contenido/843" class="ellip">Obras municipales</a></li>
+
+						
+
+							<li><a href="https://www.adeje.es/contenido/46" class="ellip">Oficina de información al consumidor (OMIC)</a></li>
+
+						
+
+							<li><a href="https://www.adeje.es/contenido/5418" class="ellip">Oficina de Planificación Estratégica</a></li>
+
+						
+
+							<li><a href="https://www.adeje.es/contenido/22" class="ellip">Padrón y estadística</a></li>
+
+						
+
+							<li><a href="https://www.adeje.es/contenido/543" class="ellip">Participación ciudadana y convivencia</a></li>
+
+						
+
+							<li><a href="https://www.adeje.es/contenido/44" class="ellip">Patrimonio histórico-artístico</a></li>
+
+						
+
+							<li><a href="https://www.adeje.es/contenido/49" class="ellip">Playas</a></li>
+
+						</ul></div>
+							<div class="menuboxcol4" id="m5col3">
+								<ul>
+						
+
+							<li><a href="https://www.adeje.es/contenido/723" class="ellip">Plazas y Parques</a></li>
+
+						
+
+							<li><a href="https://www.adeje.es/contenido/19" class="ellip">Recaudación y Tributos</a></li>
+
+						
+
+							<li><a href="https://www.adeje.es/contenido/45" class="ellip">Salud</a></li>
+
+						
+
+							<li><a href="https://www.adeje.es/contenido/898" class="ellip">Sanidad</a></li>
+
+						
+
+							<li><a href="https://www.adeje.es/contenido/25" class="ellip">Sede Electrónica</a></li>
+
+						
+
+							<li><a href="https://www.adeje.es/contenido/200" class="ellip">Seguridad ciudadana y Protección Civil</a></li>
+
+						
+
+							<li><a href="https://www.adeje.es/contenido/290" class="ellip">Servicio de movilidad</a></li>
+
+						
+
+							<li><a href="https://www.adeje.es/contenido/31" class="ellip">Servicios funerarios</a></li>
+
+						
+
+							<li><a href="https://www.adeje.es/contenido/204" class="ellip">Servicios Municipales</a></li>
+
+						
+
+							<li><a href="https://www.adeje.es/contenido/50" class="ellip">Servicios Sociales</a></li>
+
+						
+
+							<li><a href="https://www.adeje.es/contenido/582" class="ellip">Tu alcalde online</a></li>
+
+						</ul></div>
+				</div>
+			</div>
+
+            <div class="menubox" id="menubox5_">
+            	
+            	<div class="menuboxcontent">
+                	
+                        <div class="menuboxcol4" id="m5col1">
+                            
+                            <ul>
+                            	
+                                    	<!--<li>A</li>-->
+                                        
+                                    <li><a href="https://www.adeje.es/contenido/32" class="ellip">Agromercado</a></li>
+                                    
+                                    <li><a href="https://www.adeje.es/alcalde" class="ellip">Alcalde de Adeje</a></li>
+                                    
+                                    <li><a href="https://www.adeje.es/contenido/38" class="ellip">Apoyo empresarial</a></li>
+                                    
+                                    <li><a href="https://www.adeje.es/contenido/205" class="ellip">Atención al menor</a></li>
+                                    
+                                        	<li>&nbsp;</li>
+                                        
+                                    	<!--<li>B</li>-->
+                                        
+                                    <li><a href="https://www.adeje.es/bibliotecas" class="ellip">Bibliotecas</a></li>
+                                    
+                                        	<li>&nbsp;</li>
+                                        
+                                    	<!--<li>C</li>-->
+                                        
+                                    <li><a href="https://www.adeje.es/contenido/321" class="ellip">Centro Integral de Acogida de Animales Domésticos</a></li>
+                                    
+                                    <li><a href="https://www.adeje.es/contenido/2" class="ellip">Cultura</a></li>
+                                    
+                                        	<li>&nbsp;</li>
+                                        
+                                    	<!--<li>D</li>-->
+                                        
+                                    <li><a href="https://www.adeje.es/contenido/3" class="ellip">Deporte</a></li>
+                                    
+                                    <li><a href="https://www.adeje.es/contenido/52" class="ellip">Discapacidad</a></li>
+                                    
+                                        	<li>&nbsp;</li>
+                                        
+                                    	<!--<li>E</li>-->
+                                        
+                                    <li><a href="https://www.adeje.es/contenido/41" class="ellip">Educación</a></li>
+                                    
+                                    <li><a href="https://www.adeje.es/contenido/39" class="ellip">Empleo</a></li>
+                                    
+                                    <li><a href="https://www.adeje.es/contenido/28" class="ellip">Empresa Municipal de Servicios (EMSA)</a></li>
+                                    
+                                    <li><a href="https://www.adeje.es/contenido/729" class="ellip">Escuela Infantil</a></li>
+                                    
+                                    <li><a href="https://www.adeje.es/emma" class="ellip">Escuela de Música</a></li>
+                                    
+                                    <li><a href="https://www.adeje.es/contenido/289" class="ellip">Escuela de Seguridad y Convivencia</a></li>
+                                    
+                                        	<li>&nbsp;</li>
+                                        
+                                    	<!--<li>F</li>-->
+                                        
+                                    <li><a href="https://www.adeje.es/contenido/40" class="ellip">Formación</a></li>
+                                    
+                            </ul>
+                        </div>
+                     
+                        <div class="menuboxcol4" id="m5col2">
+                            
+                            <ul>
+                            	
+                                    	<!--<li>I</li>-->
+                                        
+                                    <li><a href="https://www.adeje.es/contenido/163" class="ellip">Igualdad</a></li>
+                                    
+                                    <li><a href="https://www.adeje.es/contenido/478" class="ellip">Innovación</a></li>
+                                    
+                                        	<li>&nbsp;</li>
+                                        
+                                    	<!--<li>J</li>-->
+                                        
+                                    <li><a href="https://www.adeje.es/contenido/4" class="ellip">Juventud</a></li>
+                                    
+                                        	<li>&nbsp;</li>
+                                        
+                                    	<!--<li>L</li>-->
+                                        
+                                    <li><a href="https://www.adeje.es/contenido/518" class="ellip">Limpieza y basuras</a></li>
+                                    
+                                        	<li>&nbsp;</li>
+                                        
+                                    	<!--<li>M</li>-->
+                                        
+                                    <li><a href="https://www.adeje.es/contenido/51" class="ellip">Mayores</a></li>
+                                    
+                                    <li><a href="https://www.adeje.es/contenido/33" class="ellip">Medio Ambiente</a></li>
+                                    
+                                        	<li>&nbsp;</li>
+                                        
+                                    	<!--<li>O</li>-->
+                                        
+                                    <li><a href="https://www.adeje.es/contenido/46" class="ellip">OMIC</a></li>
+                                    
+                                    <li><a href="https://www.adeje.es/contenido/843" class="ellip">Obras Municipales</a></li>
+                                    
+                                    <li><a href="https://www.adeje.es/contenido/23" class="ellip">Oficina de atención al ciudadano</a></li>
+                                    
+                                        	<li>&nbsp;</li>
+                                        
+                                    	<!--<li>P</li>-->
+                                        
+                                    <li><a href="https://www.adeje.es/contenido/22" class="ellip">Padrón y estadística</a></li>
+                                    
+                                    <li><a href="https://www.adeje.es/contenido/723" class="ellip">Parques y plazas</a></li>
+                                    
+                                    <li><a href="https://www.adeje.es/contenido/543" class="ellip">Participación ciudadana</a></li>
+                                    
+                                    <li><a href="https://www.adeje.es/contenido/44" class="ellip">Patrimonio histórico-artístico</a></li>
+                                    
+                                    <li><a href="https://www.adeje.es/contenido/463" class="ellip">Perfil del contratante</a></li>
+                                    
+                                    <li><a href="https://www.adeje.es/contenido/49" class="ellip">Playas</a></li>
+                                    
+                                    <li><a href="https://www.adeje.es/seguridad/policia-local-adeje" class="ellip">Policía Local</a></li>
+                                    
+                            </ul>
+                        </div>
+                     
+                        <div class="menuboxcol4" id="m5col3">
+                            
+                            <ul>
+                            	
+                                    <li><a href="http://www.costa-adeje.es/" class="ellip">Promoción turística</a></li>
+                                    
+                                        	<li>&nbsp;</li>
+                                        
+                                    	<!--<li>R</li>-->
+                                        
+                                    <li><a href="https://www.adeje.es/radio" class="ellip">Radio Sur Adeje</a></li>
+                                    
+                                    <li><a href="https://www.adeje.es/contenido/19" class="ellip">Recaudación y tributos</a></li>
+                                    
+                                        	<li>&nbsp;</li>
+                                        
+                                    	<!--<li>S</li>-->
+                                        
+                                    <li><a href="https://www.adeje.es/contenido/45" class="ellip">Salud</a></li>
+                                    
+                                    <li><a href="https://www.adeje.es/contenido/324" class="ellip">Salvamento en playas</a></li>
+                                    
+                                    <li><a href="https://www.adeje.es/contenido/898" class="ellip">Sanidad</a></li>
+                                    
+                                    <li><a href="https://link.adeje.es/sede-electronica" class="ellip">Sede electrónica</a></li>
+                                    
+                                    <li><a href="https://www.adeje.es/contenido/33" class="ellip">Senderos municipales</a></li>
+                                    
+                                    <li><a href="https://www.adeje.es/contenido/31" class="ellip">Servicios funerarios</a></li>
+                                    
+                                    <li><a href="https://www.adeje.es/contenido/50" class="ellip">Servicios sociales</a></li>
+                                    
+                                        	<li>&nbsp;</li>
+                                        
+                                    	<!--<li>T</li>-->
+                                        
+                                    <li><a href="https://www.adeje.es/trafico" class="ellip">Tráfico y seguridad vial</a></li>
+                                    
+                                        	<li>&nbsp;</li>
+                                        
+                                    	<!--<li>U</li>-->
+                                        
+                                    <li><a href="https://www.adeje.es/uva" class="ellip">Universidad de Verano</a></li>
+                                    
+                                    <li><a href="https://www.adeje.es/contenido/26" class="ellip">Urbanismo</a></li>
+                                    
+                                        	<li>&nbsp;</li>
+                                        
+                                    	<!--<li>V</li>-->
+                                        
+                                    <li><a href="https://www.adeje.es/contenido/293" class="ellip">Voluntariado - Protección Civil</a></li>
+                                    
+                                        	<li>&nbsp;</li>
+                                        
+                                    	<!--<li></li>-->
+                                        
+                                    <li><a href="" class="ellip"></a></li>
+                                    
+                            </ul>
+                        </div>
+                     
+                        <div class="menuboxcol4" id="m5col4">
+                            
+                            <ul>
+                            	
+                            </ul>
+                        </div>
+                     
+                </div>
+            </div>
+
+			<div class="menubox" id="menubox3">
+				<div class="menuboxcontent">
+					
+
+					<div class="menuboxcol3" id="m3col2" style="border-width: 0px; border-style: solid ; border-right-width: 0px; border-color: #CECECE;">
+						<ul>
+							<li>
+								
+											   <li>
+												   <a href="https://www.adeje.es/porperfil/?perfil=4">Nuevos vecinos</a>
+											   </li>
+											
+											   <li>
+												   <a href="https://www.adeje.es/porperfil/?perfil=5">Mujeres e igualdad</a>
+											   </li>
+											
+											   <li>
+												   <a href="https://www.adeje.es/porperfil/?perfil=6">Desempleados</a>
+											   </li>
+											
+											   <li>
+												   <a href="https://www.adeje.es/porperfil/?perfil=7">Discapacidad</a>
+											   </li>
+											
+							</li>
+						</ul>
+					</div>
+
+					<div class="menuboxcol3" id="m3col3" style="border-width: 0px; border-style: solid ; border-right-width: 0px; border-color: #CECECE;">
+						<ul>
+							<li>
+								
+											   <li>
+												   <a href="https://www.adeje.es/porperfil/?perfil=1">Niños</a>
+											   </li>
+											
+											   <li>
+												   <a href="https://www.adeje.es/porperfil/?perfil=2">Jóvenes</a>
+											   </li>
+											
+											   <li>
+												   <a href="https://www.adeje.es/porperfil/?perfil=3">Mayores</a>
+											   </li>
+											
+							</li>
+						</ul>
+					</div>
+
+					<div class="menuboxcol3" id="m3col4">
+						<ul>
+							<li>
+								
+											   <li>
+												   <a href="https://www.adeje.es/porperfil/?perfil=9">Padres y madres</a>
+											   </li>
+											
+											   <li>
+												   <a href="https://www.adeje.es/porperfil/?perfil=8">Estudiantes</a>
+											   </li>
+											
+											   <li>
+												   <a href="https://www.adeje.es/porperfil/?perfil=10">Empresarios</a>
+											   </li>
+											
+							</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+
+			<div class="menubox" id="menubox4">
+				<div class="menuboxcontent">
+						
+					<div class="menuboxcol3" id="m2col3" style="border-width: 0px; border-style: solid ; border-right-width: 0px; border-color: #CECECE;">
+						<ul>
+							<li>
+								
+									   		<li>
+												  <a href="">
+													  <span class="TituloMenus">Servicios</span>
+												  </a>
+											</li>
+									   
+											   <li>
+												   <a href="">Oficina de atención al ciudadano</a>
+											   </li>
+											
+											   <li>
+												   <a href="https://www.adeje.es/contenido/46">Oficina de atención al consumidor (OMIC)</a>
+											   </li>
+											
+											   <li>
+												   <a href="">Servicios sociales</a>
+											   </li>
+											
+											   <li>
+												   <a href="https://www.adeje.es/contenido/843">Obras Municipales</a>
+											   </li>
+											
+											   <li>
+												   <a href="">Limpieza</a>
+											   </li>
+											
+											   <li>
+												   <a href="">Agromercado</a>
+											   </li>
+											
+											   <li>
+												   <a href="https://www.adeje.es/contenido/28">Empresa Municipal de Servicios (EMSA)</a>
+											   </li>
+											
+											   <li>
+												   <a href="">Seguridad ciudadana</a>
+											   </li>
+											
+											   <li>
+												   <a href="">Recaudación municipal</a>
+											   </li>
+											
+											   <li>
+												   <a href="">Servicios funerarios</a>
+											   </li>
+											
+							</li>
+						 </ul>
+					</div>
+
+					<div class="menuboxcol3" id="m2col3" style="border-width: 0px; border-style: solid ; border-right-width: 0px; border-color: #CECECE;">
+						<ul>
+							<li>
+								
+									   		<li>
+												  <a href="">
+													  <span class="TituloMenus">Formación</span>
+												  </a>
+											</li>
+									   
+											   <li>
+												   <a href="https://www.adeje.es/agenda?TipoEvento=1">Cursos y talleres</a>
+											   </li>
+											
+											   <li>
+												   <a href="https://www.adeje.es/contenido/40">Formación Adeje Impulsa</a>
+											   </li>
+											
+											   <li>
+												   <a href="https://www.adeje.es/uva">Universidad de Verano</a>
+											   </li>
+											
+											   <li>
+												   <a href="https://www.adeje.es/educacion/grado-de-turismo-ull">Grado de Turismo ULL</a>
+											   </li>
+											
+											   <li>
+												   <a href="https://www.adeje.es/cultura/upa">Universidad Popular de Adeje</a>
+											   </li>
+											
+											   <li>
+												   <a href="https://www.adeje.es/emma">Escuela Municipal de Música</a>
+											   </li>
+											
+											   <li>
+												   <a href="https://www.adeje.es/educacion/centros-educativos/51-escuela-infantil-el-duendecill">Escuela infantil</a>
+											   </li>
+											
+											   <li>
+												   <a href="">Ayudas y subvenciones</a>
+											   </li>
+											
+							</li>
+						</ul>
+					</div>
+
+					<div class="menuboxcol3" id="m2col3" style="border-width: 0px; border-style: solid ; border-right-width: 0px; border-color: #CECECE;">
+						<ul>
+							<li>
+								
+									   		<li>
+												  <a href="">
+													  <span class="TituloMenus">Empleo</span>
+												  </a>
+											</li>
+									   
+											   <li>
+												   <a href="">Ofertas de empleo</a>
+											   </li>
+											
+											   <li>
+												   <a href="">Bolsa de empleo municipal</a>
+											   </li>
+											
+									   		<li>&nbsp;</li>
+									   
+									   		<li>
+												  <a href="">
+													  <span class="TituloMenus">Comunidad</span>
+												  </a>
+											</li>
+									   
+											   <li>
+												   <a href="">Políticas de igualdad</a>
+											   </li>
+											
+											   <li>
+												   <a href="">Discapacidad</a>
+											   </li>
+											
+											   <li>
+												   <a href="">Salud</a>
+											   </li>
+											
+											   <li>
+												   <a href="">Voluntariado</a>
+											   </li>
+											
+											   <li>
+												   <a href="">Patrimonio</a>
+											   </li>
+											
+							</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+
+
+		<!-- ... boxes menus -->
+
+	<!-- ... cabecera -->
+
+            <div style="background: #ffffff;">
+                <div id="cab">
+
+                        <div id="TituloArea" class="VerticalCenter">
+                            
+                                    <div id="lineamensualagenda"></div>
+                                    <script>VerLineaMensualAgenda('10','2026');</script>
+                                    
+                            <div class="VerticalCenterNoMobile ResponsableArea" id="ResponsableArea">
+                                
+                            </div>
+
+                            <div style="clear: both;"></div>
+                        </div>
+                </div>
+            </div>
+		
+        <div id="iconoSubMenuMovil">
+          <div class="contenidobox">
+            <a href="javascript:;" onClick="showHideSubmenuMovil();">&#9776;</a>
+            <span class="tituloSubMenuMovil">
+							Agenda
+            </span>
+            <div id="submenuMovil">
+
+							
+		  <ul>
+		  
+				  <li>
+			  
+
+					  <a href="https://www.adeje.es/alcaldia">
+						  Alcaldía
+					  </a>
+
+					  
+			  </li>
+		  
+				  <li>
+			  
+
+					  <a href="https://www.adeje.es/buen-gobierno">
+						  Buen gobierno, Hacienda e Innovación
+					  </a>
+
+					  
+			  </li>
+		  
+				  <li>
+			  
+
+					  <a href="https://www.adeje.es/seguridad-desarrollo-economico-empleo">
+						  Seguridad, promoción de la actividad económica y el empleo
+					  </a>
+
+					  
+			  </li>
+		  
+				  <li>
+			  
+
+					  <a href="https://www.adeje.es/cultura-deportes-educacion">
+						  Cultura, Deportes y Educación
+					  </a>
+
+					  
+			  </li>
+		  
+				  <li>
+			  
+
+					  <a href="https://www.adeje.es/turismo">
+						  Destino turístico y sostenibilidad
+					  </a>
+
+					  
+			  </li>
+		  
+				  <li>
+			  
+
+					  <a href="https://www.adeje.es/siguenos">
+						  Medios de contacto y redes sociales
+					  </a>
+
+					  
+			  </li>
+		  
+				  <li>
+			  
+
+					  <a href="https://www.adeje.es/presidencia-y-planificacion-del-territorio">
+						  Presidencia y Planificación del Territorio
+					  </a>
+
+					  
+			  </li>
+		  
+				  <li>
+			  
+
+					  <a href="https://www.adeje.es/salud-vida">
+						  Salud, calidad de vida y bienestar animal
+					  </a>
+
+					  
+			  </li>
+		  
+				  <li>
+			  
+
+					  <a href="https://www.adeje.es/bienestar">
+						  Bienestar Social
+					  </a>
+
+					  
+			  </li>
+		  
+				  <li>
+			  
+
+					  <a href="https://www.adeje.es/ayuntamiento">
+						  Mi Ayuntamiento
+					  </a>
+
+					  
+			  </li>
+		  
+				  <li>
+			  
+
+					  <a href="https://www.adeje.es/agenda">
+						  Agenda
+					  </a>
+
+					  
+			  </li>
+		  
+				  <li>
+			  
+
+					  <a href="https://www.adeje.es/blog">
+						  Blog
+					  </a>
+
+					  
+			  </li>
+		  
+				  <li>
+			  
+
+					  <a href="https://www.adeje.es/siguenos_old">
+						  Contacto y perfiles sociales
+					  </a>
+
+					  
+			  </li>
+		  
+				  <li>
+			  
+
+					  <a href="https://www.adeje.es/buscador">
+						  Buscador
+					  </a>
+
+					  
+			  </li>
+		  
+				  <li>
+			  
+
+					  <a href="https://www.adeje.es/aviso-legal">
+						  Aviso legal
+					  </a>
+
+					  
+			  </li>
+		  
+				  <li>
+			  
+
+					  <a href="https://www.adeje.es/proteccion-de-datos">
+						  Política de privacidad y protección de datos personales
+					  </a>
+
+					  
+			  </li>
+		  
+				  <li>
+			  
+
+					  <a href="https://www.adeje.es/politica-de-cookies">
+						  Política de cookies
+					  </a>
+
+					  
+			  </li>
+		  
+				  <li>
+			  
+
+					  <a href="https://www.adeje.es/accesibilidad">
+						  Declaración de accesibilidad
+					  </a>
+
+					  
+			  </li>
+		  
+				  <li>
+			  
+
+					  <a href="https://www.adeje.es/formacion">
+						  Oferta formativa
+					  </a>
+
+					  
+			  </li>
+		  
+				  <li>
+			  
+
+					  <a href="https://www.adeje.es/fiestas">
+						  Fiestas Patronales de Adeje
+					  </a>
+
+					  
+			  </li>
+		  
+		  </ul>
+	  
+            </div>
+          </div>
+        </div>
+        
+
+			<div id="bodycontent">
+
+
+			
+			<section class="holidays" style="background-color: #ffcd54; padding: 40px 20px; font-size: 1.1rem; text-align: center; display: none;" >
+				<b></b>, instalaciones municipales cerradas por <b></b>
+			</section>
+			
+				<div onMouseOver="ShowMenu('0');" id="contenedorcontent">
+			
+					<div id="contenido" style="width: calc(100% - 20px);">
+				
+<!-- ·················· -->
+ <!-- CONTENIDO TIPO (C) -->
+ <!-- ·················· -->
+ <!-- Buscador sección ayudas y subvenciones -->
+   
+ <!-- ... buscador sección ayudas y subvenciones -->
+
+
+
+                  <div class="contenidobox" style="background: none;">
+                        
+
+                            <div class="barrabusqueda" onMouseOver="$('.boxagendalineamensual').fadeOut(300);">
+                                <div class="barrabusquedacontent">
+                                        <div style="float: left; width: 70%;">
+                                             <span class="custom-dropdown custom-dropdown--white">
+                                                 <select onchange="if(this.value){ window.location.href=this.value }" class="custom-dropdown__select custom-dropdown__select--white">
+                                                       
+                                                       <option value="http://www.adeje.es/agenda?pag=1&TipoEvento=0">Tipo de evento</option>
+                                                       
+                                                               <option value="http://www.adeje.es/agenda?pag=1&TipoEvento=15" >Actos religiosos</option>
+                                                           
+                                                               <option value="http://www.adeje.es/agenda?pag=1&TipoEvento=4" >Arte y exposiciones</option>
+                                                           
+                                                               <option value="http://www.adeje.es/agenda?pag=1&TipoEvento=14" >Charlas y conferencias</option>
+                                                           
+                                                               <option value="http://www.adeje.es/agenda?pag=1&TipoEvento=2" >Cine</option>
+                                                           
+                                                               <option value="http://www.adeje.es/agenda?pag=1&TipoEvento=6" >Conciertos y música</option>
+                                                           
+                                                               <option value="http://www.adeje.es/agenda?pag=1&TipoEvento=9" >Concursos</option>
+                                                           
+                                                               <option value="http://www.adeje.es/agenda?pag=1&TipoEvento=1" >Cursos y talleres</option>
+                                                           
+                                                               <option value="http://www.adeje.es/agenda?pag=1&TipoEvento=11" >Días mundiales</option>
+                                                           
+                                                               <option value="http://www.adeje.es/agenda?pag=1&TipoEvento=8" >Eventos deportivos</option>
+                                                           
+                                                               <option value="http://www.adeje.es/agenda?pag=1&TipoEvento=17" >Excursiones organizadas</option>
+                                                           
+                                                               <option value="http://www.adeje.es/agenda?pag=1&TipoEvento=7" >Ferias y congresos</option>
+                                                           
+                                                               <option value="http://www.adeje.es/agenda?pag=1&TipoEvento=12" >Fiestas y tradiciones</option>
+                                                           
+                                                               <option value="http://www.adeje.es/agenda?pag=1&TipoEvento=13" >Gastronomía</option>
+                                                           
+                                                               <option value="http://www.adeje.es/agenda?pag=1&TipoEvento=5" >Literatura</option>
+                                                           
+                                                               <option value="http://www.adeje.es/agenda?pag=1&TipoEvento=10" >Naturaleza</option>
+                                                           
+                                                               <option value="http://www.adeje.es/agenda?pag=1&TipoEvento=3" >Teatro y danza</option>
+                                                           
+                                                               <option value="http://www.adeje.es/agenda?pag=1&TipoEvento=16" >Varios</option>
+                                                           
+                                                 </select>
+                                             </span>
+
+                                        </div>
+
+                                        <div style="float: left; width: 30%; text-align: right; position: relative;">
+                                            <div id="tipovista">
+
+                                                <ul>
+                                                    <li class="selected"><a href="https://www.adeje.es/agenda?pag=1&ViewStyle=LIST"><span data-icon="&#xe031;" class="pieredesicon"></span></a></li>
+                                                    <li><a href="https://www.adeje.es/agenda?pag=1&ViewStyle=GRID"><span data-icon="&#xe032;" class="pieredesicon"></span></a></li>
+                                                    <div style="clear: both;"></div>
+                                                </ul>
+                                            </div>
+                                        </div>
+
+                                        <div style="clear: both;"></div>
+                                </div>
+                            </div>
+
+
+
+                              
+                                            <div class="VistaAgendaLista">
+                                                
+                                                    <div class="VistaAgendaListaItem" id="VistaAgendaListaItem1" >
+
+
+                                                           <div class="VistaAgendaListaFecha">
+                                                                <div id="FechaEvento1" style="position: absolute; text-align: center; width: 100%; line-height: 16px;">
+                                                                    <span class="fechacirculodia">29</span> <span class="fechacirculomes">sep</span><br><span class="fechacirculodia">18</span> <span class="fechacirculomes">oct</span>
+                                                                </div>
+
+                                                               <p id="circulo1" class="full-circle"></p>
+                                                               <script>
+                                                                   var h = $('#circulo1').width();
+                                                                   var h2 = h/2;
+                                                                   $('#circulo1').height( h );
+                                                                   $('#circulo1').css('border-radius', h2+'px');
+                                                                   $('#circulo1').css('-webkit-border-radius', h2+'px');
+                                                                   $('#circulo1').css('-moz-border-radius', h2+'px');
+
+                                                                   //var altoparent = $('#VistaAgendaListaItem1').height();
+                                                                   //var altodiv = $('#FechaEvento1').height();
+                                                                   //var margintop = (altoparent/2) - (altodiv/2);
+                                                                   //$('#FechaEvento1').css('margin-top',margintop+'px');
+
+                                                                    var altoparent = $('#circulo1').height();
+                                                                    var altodiv = $('#FechaEvento1').height();
+
+
+                                                                    var margintop = (altoparent / 2) - (altodiv / 2);
+                                                                    margintop = margintop + 20;
+                                                                    $('#FechaEvento1').css('margin-top',margintop+'px');
+                                                               </script>
+
+                                                           </div>
+
+
+
+                                                           <div class="VistaAgendaListaImagen">
+                                                                 <a href="https://www.adeje.es/evento/26061">
+                                                                   
+                                                                        <img src="https://www.adeje.es/website/contenido/default/E26061.jpg"></a>
+                                                                   
+                                                                 </a>
+                                                           </div>
+
+                                                           <div class="VistaAgendaListaDatos">
+
+                                                               <div class="VistaAgendaListaDatosLugar">
+                                                                    
+                                                                        &nbsp;
+                                                                    
+                                                               </div>
+
+                                                               <div class="VistaAgendaListaDatosTitulo">
+                                                                   <a href="https://www.adeje.es/evento/26061">
+                                                                    Programa Fiestas Patronales Adeje 2026
+                                                                   </a>
+                                                               </div>
+
+                                                               <div class="VistaAgendaListaDatosDescripcion">
+
+
+                                                                  
+
+
+
+                                                               </div>
+                                                           </div>
+                                                           <div style="clear: both;"></div>
+                                                    </div>
+                                                
+                                                    <div class="VistaAgendaListaItem" id="VistaAgendaListaItem2" style="border-width: 0px; border-top-width: 1px; border-style: dotted; border-color: #d2d2d2;">
+
+
+                                                           <div class="VistaAgendaListaFecha">
+                                                                <div id="FechaEvento2" style="position: absolute; text-align: center; width: 100%; line-height: 16px;">
+                                                                    <span class="fechacirculodia">19-23</span><br><span class="fechacirculomes">oct</span>
+                                                                </div>
+
+                                                               <p id="circulo2" class="full-circle"></p>
+                                                               <script>
+                                                                   var h = $('#circulo2').width();
+                                                                   var h2 = h/2;
+                                                                   $('#circulo2').height( h );
+                                                                   $('#circulo2').css('border-radius', h2+'px');
+                                                                   $('#circulo2').css('-webkit-border-radius', h2+'px');
+                                                                   $('#circulo2').css('-moz-border-radius', h2+'px');
+
+                                                                   //var altoparent = $('#VistaAgendaListaItem2').height();
+                                                                   //var altodiv = $('#FechaEvento2').height();
+                                                                   //var margintop = (altoparent/2) - (altodiv/2);
+                                                                   //$('#FechaEvento2').css('margin-top',margintop+'px');
+
+                                                                    var altoparent = $('#circulo2').height();
+                                                                    var altodiv = $('#FechaEvento2').height();
+
+
+                                                                    var margintop = (altoparent / 2) - (altodiv / 2);
+                                                                    margintop = margintop + 20;
+                                                                    $('#FechaEvento2').css('margin-top',margintop+'px');
+                                                               </script>
+
+                                                           </div>
+
+
+
+                                                           <div class="VistaAgendaListaImagen">
+                                                                 <a href="https://www.adeje.es/evento/26114">
+                                                                   
+                                                                        <img src="https://www.adeje.es/website/contenido/default/E26114.jpg"></a>
+                                                                   
+                                                                 </a>
+                                                           </div>
+
+                                                           <div class="VistaAgendaListaDatos">
+
+                                                               <div class="VistaAgendaListaDatosLugar">
+                                                                    
+                                                                        <span style="color: #bbbbbb" class="icono" data-icon="&#xe04f;"></span> Convento Franciscano de Nuestra Señora de Guadalupe y San Pablo
+                                                               </div>
+
+                                                               <div class="VistaAgendaListaDatosTitulo">
+                                                                   <a href="https://www.adeje.es/evento/26114">
+                                                                    El Hermano Pedro: El Viaje de la Fe
+                                                                   </a>
+                                                               </div>
+
+                                                               <div class="VistaAgendaListaDatosDescripcion">
+
+
+                                                                  
+                                                                          <p>Del 19 al 23 de octubre, el Antiguo Convento Franciscano de Adeje acoger&aacute; unas jornadas culturales con motivo del 400.&ordm; aniversario del nacimiento del Hermano Pedro.
+</p>
+                                                                          <script>
+                                                                              var AltoImgListado = $('#ListadoImgImagen0').width();
+                                                                              AltoImgListado = AltoImgListado - $('#tituloitem1').height();
+                                                                              if( $('#fechaitem1') ){
+                                                                                AltoImgListado = AltoImgListado - $('#fechaitem1').height()
+                                                                              }
+                                                                              AltoImgListado = AltoImgListado - 30;
+                                                                              $('#itemlistado1').height( AltoImgListado );
+                                                                          </script>
+                                                                          
+                                                                              <script>
+                                                                                  createEllipsis('itemlistado1');
+                                                                              </script>
+                                                                          
+
+
+
+                                                               </div>
+                                                           </div>
+                                                           <div style="clear: both;"></div>
+                                                    </div>
+                                                
+                                                    <div class="VistaAgendaListaItem" id="VistaAgendaListaItem3" style="border-width: 0px; border-top-width: 1px; border-style: dotted; border-color: #d2d2d2;">
+
+
+                                                           <div class="VistaAgendaListaFecha">
+                                                                <div id="FechaEvento3" style="position: absolute; text-align: center; width: 100%; line-height: 16px;">
+                                                                    <span class="fechacirculodia">24</span><br><span class="fechacirculomes">oct 2026</span>
+                                                                </div>
+
+                                                               <p id="circulo3" class="full-circle"></p>
+                                                               <script>
+                                                                   var h = $('#circulo3').width();
+                                                                   var h2 = h/2;
+                                                                   $('#circulo3').height( h );
+                                                                   $('#circulo3').css('border-radius', h2+'px');
+                                                                   $('#circulo3').css('-webkit-border-radius', h2+'px');
+                                                                   $('#circulo3').css('-moz-border-radius', h2+'px');
+
+                                                                   //var altoparent = $('#VistaAgendaListaItem3').height();
+                                                                   //var altodiv = $('#FechaEvento3').height();
+                                                                   //var margintop = (altoparent/2) - (altodiv/2);
+                                                                   //$('#FechaEvento3').css('margin-top',margintop+'px');
+
+                                                                    var altoparent = $('#circulo3').height();
+                                                                    var altodiv = $('#FechaEvento3').height();
+
+
+                                                                    var margintop = (altoparent / 2) - (altodiv / 2);
+                                                                    margintop = margintop + 20;
+                                                                    $('#FechaEvento3').css('margin-top',margintop+'px');
+                                                               </script>
+
+                                                           </div>
+
+
+
+                                                           <div class="VistaAgendaListaImagen">
+                                                                 <a href="https://www.adeje.es/evento/26095">
+                                                                   
+                                                                        <img src="https://www.adeje.es/website/contenido/default/E26095.jpg"></a>
+                                                                   
+                                                                 </a>
+                                                           </div>
+
+                                                           <div class="VistaAgendaListaDatos">
+
+                                                               <div class="VistaAgendaListaDatosLugar">
+                                                                    
+                                                                        <span style="color: #bbbbbb" class="icono" data-icon="&#xe04f;"></span> Campo de Fútbol de Adeje
+                                                               </div>
+
+                                                               <div class="VistaAgendaListaDatosTitulo">
+                                                                   <a href="https://www.adeje.es/evento/26095">
+                                                                    La Oreja de Van Gogh
+                                                                   </a>
+                                                               </div>
+
+                                                               <div class="VistaAgendaListaDatosDescripcion">
+
+
+                                                                  
+                                                                          <p>Celebra 30 a&ntilde;os de trayectoria en Adeje.
+
+La Oreja de Van Gogh naci&oacute; en 1996 en Donostia / San Sebasti&aacute;n y se ha consolidado como uno de los grupos m&aacute;s reconocidos del pop-rock espa&ntilde;ol.
+</p>
+                                                                          <script>
+                                                                              var AltoImgListado = $('#ListadoImgImagen0').width();
+                                                                              AltoImgListado = AltoImgListado - $('#tituloitem2').height();
+                                                                              if( $('#fechaitem2') ){
+                                                                                AltoImgListado = AltoImgListado - $('#fechaitem2').height()
+                                                                              }
+                                                                              AltoImgListado = AltoImgListado - 30;
+                                                                              $('#itemlistado2').height( AltoImgListado );
+                                                                          </script>
+                                                                          
+                                                                              <script>
+                                                                                  createEllipsis('itemlistado2');
+                                                                              </script>
+                                                                          
+
+
+
+                                                               </div>
+                                                           </div>
+                                                           <div style="clear: both;"></div>
+                                                    </div>
+                                                
+                                                    <div class="VistaAgendaListaItem" id="VistaAgendaListaItem4" style="border-width: 0px; border-top-width: 1px; border-style: dotted; border-color: #d2d2d2;">
+
+
+                                                           <div class="VistaAgendaListaFecha">
+                                                                <div id="FechaEvento4" style="position: absolute; text-align: center; width: 100%; line-height: 16px;">
+                                                                    <span class="fechacirculodia">24</span><br><span class="fechacirculomes">oct 2026</span>
+                                                                </div>
+
+                                                               <p id="circulo4" class="full-circle"></p>
+                                                               <script>
+                                                                   var h = $('#circulo4').width();
+                                                                   var h2 = h/2;
+                                                                   $('#circulo4').height( h );
+                                                                   $('#circulo4').css('border-radius', h2+'px');
+                                                                   $('#circulo4').css('-webkit-border-radius', h2+'px');
+                                                                   $('#circulo4').css('-moz-border-radius', h2+'px');
+
+                                                                   //var altoparent = $('#VistaAgendaListaItem4').height();
+                                                                   //var altodiv = $('#FechaEvento4').height();
+                                                                   //var margintop = (altoparent/2) - (altodiv/2);
+                                                                   //$('#FechaEvento4').css('margin-top',margintop+'px');
+
+                                                                    var altoparent = $('#circulo4').height();
+                                                                    var altodiv = $('#FechaEvento4').height();
+
+
+                                                                    var margintop = (altoparent / 2) - (altodiv / 2);
+                                                                    margintop = margintop + 20;
+                                                                    $('#FechaEvento4').css('margin-top',margintop+'px');
+                                                               </script>
+
+                                                           </div>
+
+
+
+                                                           <div class="VistaAgendaListaImagen">
+                                                                 <a href="https://www.adeje.es/evento/26106">
+                                                                   
+                                                                        <img src="https://www.adeje.es/website/contenido/default/E26106.jpg"></a>
+                                                                   
+                                                                 </a>
+                                                           </div>
+
+                                                           <div class="VistaAgendaListaDatos">
+
+                                                               <div class="VistaAgendaListaDatosLugar">
+                                                                    
+                                                                        &nbsp;
+                                                                    
+                                                               </div>
+
+                                                               <div class="VistaAgendaListaDatosTitulo">
+                                                                   <a href="https://www.adeje.es/evento/26106">
+                                                                    Ruta Descubriendo en Femenino, "Ellas, Sabias Granadilleras"
+                                                                   </a>
+                                                               </div>
+
+                                                               <div class="VistaAgendaListaDatosDescripcion">
+
+
+                                                                  
+                                                                          <p>Un paseo por las historias femeninas
+
+El casco hist&oacute;rico en clave femenina: Recorreremos sus calles para conocer las historias no contadas que se esconden en sus nombres y arquitectura.
+&nbsp;
+</p>
+                                                                          <script>
+                                                                              var AltoImgListado = $('#ListadoImgImagen0').width();
+                                                                              AltoImgListado = AltoImgListado - $('#tituloitem3').height();
+                                                                              if( $('#fechaitem3') ){
+                                                                                AltoImgListado = AltoImgListado - $('#fechaitem3').height()
+                                                                              }
+                                                                              AltoImgListado = AltoImgListado - 30;
+                                                                              $('#itemlistado3').height( AltoImgListado );
+                                                                          </script>
+                                                                          
+                                                                              <script>
+                                                                                  createEllipsis('itemlistado3');
+                                                                              </script>
+                                                                          
+
+
+
+                                                               </div>
+                                                           </div>
+                                                           <div style="clear: both;"></div>
+                                                    </div>
+                                                
+                                                    <div class="VistaAgendaListaItem" id="VistaAgendaListaItem5" style="border-width: 0px; border-top-width: 1px; border-style: dotted; border-color: #d2d2d2;">
+
+
+                                                           <div class="VistaAgendaListaFecha">
+                                                                <div id="FechaEvento5" style="position: absolute; text-align: center; width: 100%; line-height: 16px;">
+                                                                    <span class="fechacirculodia">25</span><br><span class="fechacirculomes">oct 2026</span>
+                                                                </div>
+
+                                                               <p id="circulo5" class="full-circle"></p>
+                                                               <script>
+                                                                   var h = $('#circulo5').width();
+                                                                   var h2 = h/2;
+                                                                   $('#circulo5').height( h );
+                                                                   $('#circulo5').css('border-radius', h2+'px');
+                                                                   $('#circulo5').css('-webkit-border-radius', h2+'px');
+                                                                   $('#circulo5').css('-moz-border-radius', h2+'px');
+
+                                                                   //var altoparent = $('#VistaAgendaListaItem5').height();
+                                                                   //var altodiv = $('#FechaEvento5').height();
+                                                                   //var margintop = (altoparent/2) - (altodiv/2);
+                                                                   //$('#FechaEvento5').css('margin-top',margintop+'px');
+
+                                                                    var altoparent = $('#circulo5').height();
+                                                                    var altodiv = $('#FechaEvento5').height();
+
+
+                                                                    var margintop = (altoparent / 2) - (altodiv / 2);
+                                                                    margintop = margintop + 20;
+                                                                    $('#FechaEvento5').css('margin-top',margintop+'px');
+                                                               </script>
+
+                                                           </div>
+
+
+
+                                                           <div class="VistaAgendaListaImagen">
+                                                                 <a href="https://www.adeje.es/evento/25642">
+                                                                   
+                                                                        <img src="https://www.adeje.es/website/contenido/default/E25642.jpg"></a>
+                                                                   
+                                                                 </a>
+                                                           </div>
+
+                                                           <div class="VistaAgendaListaDatos">
+
+                                                               <div class="VistaAgendaListaDatosLugar">
+                                                                    
+                                                                        &nbsp;
+                                                                    
+                                                               </div>
+
+                                                               <div class="VistaAgendaListaDatosTitulo">
+                                                                   <a href="https://www.adeje.es/evento/25642">
+                                                                    Caminando por la Vida:Cueva Negras y almuerzo (Nivel Alto)
+                                                                   </a>
+                                                               </div>
+
+                                                               <div class="VistaAgendaListaDatosDescripcion">
+
+
+                                                                  
+                                                                          <p>Descubre la magia del noroeste de Tenerife con Caminando por la Vida en la Ruta de las Cuevas Negras, un recorrido circular que parte y llega a Los Silos. Con 13,5 km y 215 metros de desnivel positivo, esta ruta ofrece naturaleza, historia y paisajes espectaculares.
+</p>
+                                                                          <script>
+                                                                              var AltoImgListado = $('#ListadoImgImagen0').width();
+                                                                              AltoImgListado = AltoImgListado - $('#tituloitem4').height();
+                                                                              if( $('#fechaitem4') ){
+                                                                                AltoImgListado = AltoImgListado - $('#fechaitem4').height()
+                                                                              }
+                                                                              AltoImgListado = AltoImgListado - 30;
+                                                                              $('#itemlistado4').height( AltoImgListado );
+                                                                          </script>
+                                                                          
+                                                                              <script>
+                                                                                  createEllipsis('itemlistado4');
+                                                                              </script>
+                                                                          
+
+
+
+                                                               </div>
+                                                           </div>
+                                                           <div style="clear: both;"></div>
+                                                    </div>
+                                                
+                                                    <div class="VistaAgendaListaItem" id="VistaAgendaListaItem6" style="border-width: 0px; border-top-width: 1px; border-style: dotted; border-color: #d2d2d2;">
+
+
+                                                           <div class="VistaAgendaListaFecha">
+                                                                <div id="FechaEvento6" style="position: absolute; text-align: center; width: 100%; line-height: 16px;">
+                                                                    <span class="fechacirculodia">27</span><br><span class="fechacirculomes">oct 2026</span>
+                                                                </div>
+
+                                                               <p id="circulo6" class="full-circle"></p>
+                                                               <script>
+                                                                   var h = $('#circulo6').width();
+                                                                   var h2 = h/2;
+                                                                   $('#circulo6').height( h );
+                                                                   $('#circulo6').css('border-radius', h2+'px');
+                                                                   $('#circulo6').css('-webkit-border-radius', h2+'px');
+                                                                   $('#circulo6').css('-moz-border-radius', h2+'px');
+
+                                                                   //var altoparent = $('#VistaAgendaListaItem6').height();
+                                                                   //var altodiv = $('#FechaEvento6').height();
+                                                                   //var margintop = (altoparent/2) - (altodiv/2);
+                                                                   //$('#FechaEvento6').css('margin-top',margintop+'px');
+
+                                                                    var altoparent = $('#circulo6').height();
+                                                                    var altodiv = $('#FechaEvento6').height();
+
+
+                                                                    var margintop = (altoparent / 2) - (altodiv / 2);
+                                                                    margintop = margintop + 20;
+                                                                    $('#FechaEvento6').css('margin-top',margintop+'px');
+                                                               </script>
+
+                                                           </div>
+
+
+
+                                                           <div class="VistaAgendaListaImagen">
+                                                                 <a href="https://www.adeje.es/evento/26117">
+                                                                   
+                                                                        <img src="https://www.adeje.es/website/contenido/default/E26117.jpg"></a>
+                                                                   
+                                                                 </a>
+                                                           </div>
+
+                                                           <div class="VistaAgendaListaDatos">
+
+                                                               <div class="VistaAgendaListaDatosLugar">
+                                                                    
+                                                                        <span style="color: #bbbbbb" class="icono" data-icon="&#xe04f;"></span> Auditorio de Adeje. Sala Contemporánea
+                                                               </div>
+
+                                                               <div class="VistaAgendaListaDatosTitulo">
+                                                                   <a href="https://www.adeje.es/evento/26117">
+                                                                    Cuentos en familia: Imaginando
+                                                                   </a>
+                                                               </div>
+
+                                                               <div class="VistaAgendaListaDatosDescripcion">
+
+
+                                                                  
+                                                                          <p>Cuentos en familia:&nbsp;&nbsp;&quot;IMAGINANDO&quot; con el narrador&nbsp;&nbsp;Miguel &Aacute;ngel Granados
+</p>
+                                                                          <script>
+                                                                              var AltoImgListado = $('#ListadoImgImagen0').width();
+                                                                              AltoImgListado = AltoImgListado - $('#tituloitem5').height();
+                                                                              if( $('#fechaitem5') ){
+                                                                                AltoImgListado = AltoImgListado - $('#fechaitem5').height()
+                                                                              }
+                                                                              AltoImgListado = AltoImgListado - 30;
+                                                                              $('#itemlistado5').height( AltoImgListado );
+                                                                          </script>
+                                                                          
+                                                                              <script>
+                                                                                  createEllipsis('itemlistado5');
+                                                                              </script>
+                                                                          
+
+
+
+                                                               </div>
+                                                           </div>
+                                                           <div style="clear: both;"></div>
+                                                    </div>
+                                                
+                                                    <div class="VistaAgendaListaItem" id="VistaAgendaListaItem7" style="border-width: 0px; border-top-width: 1px; border-style: dotted; border-color: #d2d2d2;">
+
+
+                                                           <div class="VistaAgendaListaFecha">
+                                                                <div id="FechaEvento7" style="position: absolute; text-align: center; width: 100%; line-height: 16px;">
+                                                                    <span class="fechacirculodia">31</span> <span class="fechacirculomes">oct</span><br><span class="fechacirculodia">2</span> <span class="fechacirculomes">nov</span>
+                                                                </div>
+
+                                                               <p id="circulo7" class="full-circle"></p>
+                                                               <script>
+                                                                   var h = $('#circulo7').width();
+                                                                   var h2 = h/2;
+                                                                   $('#circulo7').height( h );
+                                                                   $('#circulo7').css('border-radius', h2+'px');
+                                                                   $('#circulo7').css('-webkit-border-radius', h2+'px');
+                                                                   $('#circulo7').css('-moz-border-radius', h2+'px');
+
+                                                                   //var altoparent = $('#VistaAgendaListaItem7').height();
+                                                                   //var altodiv = $('#FechaEvento7').height();
+                                                                   //var margintop = (altoparent/2) - (altodiv/2);
+                                                                   //$('#FechaEvento7').css('margin-top',margintop+'px');
+
+                                                                    var altoparent = $('#circulo7').height();
+                                                                    var altodiv = $('#FechaEvento7').height();
+
+
+                                                                    var margintop = (altoparent / 2) - (altodiv / 2);
+                                                                    margintop = margintop + 20;
+                                                                    $('#FechaEvento7').css('margin-top',margintop+'px');
+                                                               </script>
+
+                                                           </div>
+
+
+
+                                                           <div class="VistaAgendaListaImagen">
+                                                                 <a href="https://www.adeje.es/evento/26113">
+                                                                   
+                                                                        <img src="https://www.adeje.es/website/contenido/default/E26113.jpg"></a>
+                                                                   
+                                                                 </a>
+                                                           </div>
+
+                                                           <div class="VistaAgendaListaDatos">
+
+                                                               <div class="VistaAgendaListaDatosLugar">
+                                                                    
+                                                                        &nbsp;
+                                                                    
+                                                               </div>
+
+                                                               <div class="VistaAgendaListaDatosTitulo">
+                                                                   <a href="https://www.adeje.es/evento/26113">
+                                                                    Día de Todos Los Santos y Fieles Difuntos 2026
+                                                                   </a>
+                                                               </div>
+
+                                                               <div class="VistaAgendaListaDatosDescripcion">
+
+
+                                                                  
+                                                                          <p>Horarios de Misas en el Cementerio y Parroquias de Adeje
+
+S&aacute;bado, 31 octubre.
+
+
+	17:00 h- Parroquia La Milagrosa. Tijoco-La Hoya
+	19:00&nbsp;h- Parroquia San Jos&eacute;. Los Olivos
+
+
+Domingo, 1 noviembre.
+
+
+	&nbsp;9.30 h- Cementerio
+	10:00&nbsp;h- Parroquia Resurrecci&oacute;n del Se&ntilde;or. Arme&ntilde;ime
+	11:00&nbsp;h- Parroquia Santa &Uacute;rsula. Adeje Casco
+	11:00&nbsp;h- Cementerio
+	12:00&nbsp;h- Iglesia de Callao Salvaje
+	12.30 h- Parroquia Nuestra Se&ntilde;ora del Campo. Fa&ntilde;ab&eacute;
+	18:00&nbsp;h- Iglesia de San Sebasti&aacute;n. La Caleta
+	18:00&nbsp;h- Cementerio. Bendici&oacute;n de los Nichos
+
+
+Lunes, 2 noviembre.
+
+
+	&nbsp;9.30 h- Cementerio
+	18:00&nbsp;h- Parroquia Santa &Uacute;rsula. Adeje Casco
+	18:00&nbsp;h- Cementerio
+	19:00&nbsp;h- Parroquia San Jos&eacute;. Los Olivos
+
+</p>
+                                                                          <script>
+                                                                              var AltoImgListado = $('#ListadoImgImagen0').width();
+                                                                              AltoImgListado = AltoImgListado - $('#tituloitem6').height();
+                                                                              if( $('#fechaitem6') ){
+                                                                                AltoImgListado = AltoImgListado - $('#fechaitem6').height()
+                                                                              }
+                                                                              AltoImgListado = AltoImgListado - 30;
+                                                                              $('#itemlistado6').height( AltoImgListado );
+                                                                          </script>
+                                                                          
+                                                                              <script>
+                                                                                  createEllipsis('itemlistado6');
+                                                                              </script>
+                                                                          
+
+
+
+                                                               </div>
+                                                           </div>
+                                                           <div style="clear: both;"></div>
+                                                    </div>
+                                                
+                                                    <div class="VistaAgendaListaItem" id="VistaAgendaListaItem8" style="border-width: 0px; border-top-width: 1px; border-style: dotted; border-color: #d2d2d2;">
+
+
+                                                           <div class="VistaAgendaListaFecha">
+                                                                <div id="FechaEvento8" style="position: absolute; text-align: center; width: 100%; line-height: 16px;">
+                                                                    <span class="fechacirculodia">31</span><br><span class="fechacirculomes">oct 2026</span>
+                                                                </div>
+
+                                                               <p id="circulo8" class="full-circle"></p>
+                                                               <script>
+                                                                   var h = $('#circulo8').width();
+                                                                   var h2 = h/2;
+                                                                   $('#circulo8').height( h );
+                                                                   $('#circulo8').css('border-radius', h2+'px');
+                                                                   $('#circulo8').css('-webkit-border-radius', h2+'px');
+                                                                   $('#circulo8').css('-moz-border-radius', h2+'px');
+
+                                                                   //var altoparent = $('#VistaAgendaListaItem8').height();
+                                                                   //var altodiv = $('#FechaEvento8').height();
+                                                                   //var margintop = (altoparent/2) - (altodiv/2);
+                                                                   //$('#FechaEvento8').css('margin-top',margintop+'px');
+
+                                                                    var altoparent = $('#circulo8').height();
+                                                                    var altodiv = $('#FechaEvento8').height();
+
+
+                                                                    var margintop = (altoparent / 2) - (altodiv / 2);
+                                                                    margintop = margintop + 20;
+                                                                    $('#FechaEvento8').css('margin-top',margintop+'px');
+                                                               </script>
+
+                                                           </div>
+
+
+
+                                                           <div class="VistaAgendaListaImagen">
+                                                                 <a href="https://www.adeje.es/evento/25645">
+                                                                   
+                                                                        <img src="https://www.adeje.es/website/contenido/default/E25645.jpg"></a>
+                                                                   
+                                                                 </a>
+                                                           </div>
+
+                                                           <div class="VistaAgendaListaDatos">
+
+                                                               <div class="VistaAgendaListaDatosLugar">
+                                                                    
+                                                                        &nbsp;
+                                                                    
+                                                               </div>
+
+                                                               <div class="VistaAgendaListaDatosTitulo">
+                                                                   <a href="https://www.adeje.es/evento/25645">
+                                                                    Caminando por la Vida: Ruta Noche de Difuntos – Nivel Familiar
+                                                                   </a>
+                                                               </div>
+
+                                                               <div class="VistaAgendaListaDatosDescripcion">
+
+
+                                                                  
+                                                                          <p>Te invitamos a vivir una experiencia diferente y llena de misterio a trav&eacute;s de una ruta urbana nocturna por la ciudad de San Crist&oacute;bal de La Laguna. Este municipio, cargado de historia, es uno de los lugares con m&aacute;s leyendas, edificios antiguos y relatos populares de Canarias.
+</p>
+                                                                          <script>
+                                                                              var AltoImgListado = $('#ListadoImgImagen0').width();
+                                                                              AltoImgListado = AltoImgListado - $('#tituloitem7').height();
+                                                                              if( $('#fechaitem7') ){
+                                                                                AltoImgListado = AltoImgListado - $('#fechaitem7').height()
+                                                                              }
+                                                                              AltoImgListado = AltoImgListado - 30;
+                                                                              $('#itemlistado7').height( AltoImgListado );
+                                                                          </script>
+                                                                          
+                                                                              <script>
+                                                                                  createEllipsis('itemlistado7');
+                                                                              </script>
+                                                                          
+
+
+
+                                                               </div>
+                                                           </div>
+                                                           <div style="clear: both;"></div>
+                                                    </div>
+                                                
+                                                    <div class="VistaAgendaListaItem" id="VistaAgendaListaItem9" style="border-width: 0px; border-top-width: 1px; border-style: dotted; border-color: #d2d2d2;">
+
+
+                                                           <div class="VistaAgendaListaFecha">
+                                                                <div id="FechaEvento9" style="position: absolute; text-align: center; width: 100%; line-height: 16px;">
+                                                                    <span class="fechacirculodia">4-9</span><br><span class="fechacirculomes">nov</span>
+                                                                </div>
+
+                                                               <p id="circulo9" class="full-circle"></p>
+                                                               <script>
+                                                                   var h = $('#circulo9').width();
+                                                                   var h2 = h/2;
+                                                                   $('#circulo9').height( h );
+                                                                   $('#circulo9').css('border-radius', h2+'px');
+                                                                   $('#circulo9').css('-webkit-border-radius', h2+'px');
+                                                                   $('#circulo9').css('-moz-border-radius', h2+'px');
+
+                                                                   //var altoparent = $('#VistaAgendaListaItem9').height();
+                                                                   //var altodiv = $('#FechaEvento9').height();
+                                                                   //var margintop = (altoparent/2) - (altodiv/2);
+                                                                   //$('#FechaEvento9').css('margin-top',margintop+'px');
+
+                                                                    var altoparent = $('#circulo9').height();
+                                                                    var altodiv = $('#FechaEvento9').height();
+
+
+                                                                    var margintop = (altoparent / 2) - (altodiv / 2);
+                                                                    margintop = margintop + 20;
+                                                                    $('#FechaEvento9').css('margin-top',margintop+'px');
+                                                               </script>
+
+                                                           </div>
+
+
+
+                                                           <div class="VistaAgendaListaImagen">
+                                                                 <a href="https://www.adeje.es/evento/25993">
+                                                                   
+                                                                        <img src="https://www.adeje.es/website/contenido/default/E25993.jpg"></a>
+                                                                   
+                                                                 </a>
+                                                           </div>
+
+                                                           <div class="VistaAgendaListaDatos">
+
+                                                               <div class="VistaAgendaListaDatosLugar">
+                                                                    
+                                                                        &nbsp;
+                                                                    
+                                                               </div>
+
+                                                               <div class="VistaAgendaListaDatosTitulo">
+                                                                   <a href="https://www.adeje.es/evento/25993">
+                                                                    CUARENTOUR: Viaje Cultural a Oporto y Norte de Portugal
+                                                                   </a>
+                                                               </div>
+
+                                                               <div class="VistaAgendaListaDatosDescripcion">
+
+
+                                                                  
+                                                                          <p>Cuarentour sigue sumando destinos y experiencias. Desde el Negociado de Participaci&oacute;n Ciudadana y Convivencia del Ayuntamiento de Adeje les presentamos una nueva propuesta para disfrutar, conocer y compartir: un viaje cultural a Oporto y al norte de Portugal.
+</p>
+                                                                          <script>
+                                                                              var AltoImgListado = $('#ListadoImgImagen0').width();
+                                                                              AltoImgListado = AltoImgListado - $('#tituloitem8').height();
+                                                                              if( $('#fechaitem8') ){
+                                                                                AltoImgListado = AltoImgListado - $('#fechaitem8').height()
+                                                                              }
+                                                                              AltoImgListado = AltoImgListado - 30;
+                                                                              $('#itemlistado8').height( AltoImgListado );
+                                                                          </script>
+                                                                          
+                                                                              <script>
+                                                                                  createEllipsis('itemlistado8');
+                                                                              </script>
+                                                                          
+
+
+
+                                                               </div>
+                                                           </div>
+                                                           <div style="clear: both;"></div>
+                                                    </div>
+                                                
+                                                    <div class="VistaAgendaListaItem" id="VistaAgendaListaItem10" style="border-width: 0px; border-top-width: 1px; border-style: dotted; border-color: #d2d2d2;">
+
+
+                                                           <div class="VistaAgendaListaFecha">
+                                                                <div id="FechaEvento10" style="position: absolute; text-align: center; width: 100%; line-height: 16px;">
+                                                                    <span class="fechacirculodia">22</span><br><span class="fechacirculomes">nov 2026</span>
+                                                                </div>
+
+                                                               <p id="circulo10" class="full-circle"></p>
+                                                               <script>
+                                                                   var h = $('#circulo10').width();
+                                                                   var h2 = h/2;
+                                                                   $('#circulo10').height( h );
+                                                                   $('#circulo10').css('border-radius', h2+'px');
+                                                                   $('#circulo10').css('-webkit-border-radius', h2+'px');
+                                                                   $('#circulo10').css('-moz-border-radius', h2+'px');
+
+                                                                   //var altoparent = $('#VistaAgendaListaItem10').height();
+                                                                   //var altodiv = $('#FechaEvento10').height();
+                                                                   //var margintop = (altoparent/2) - (altodiv/2);
+                                                                   //$('#FechaEvento10').css('margin-top',margintop+'px');
+
+                                                                    var altoparent = $('#circulo10').height();
+                                                                    var altodiv = $('#FechaEvento10').height();
+
+
+                                                                    var margintop = (altoparent / 2) - (altodiv / 2);
+                                                                    margintop = margintop + 20;
+                                                                    $('#FechaEvento10').css('margin-top',margintop+'px');
+                                                               </script>
+
+                                                           </div>
+
+
+
+                                                           <div class="VistaAgendaListaImagen">
+                                                                 <a href="https://www.adeje.es/evento/26112">
+                                                                   
+                                                                        <img src="https://www.adeje.es/website/contenido/default/E26112.jpg"></a>
+                                                                   
+                                                                 </a>
+                                                           </div>
+
+                                                           <div class="VistaAgendaListaDatos">
+
+                                                               <div class="VistaAgendaListaDatosLugar">
+                                                                    
+                                                                        &nbsp;
+                                                                    
+                                                               </div>
+
+                                                               <div class="VistaAgendaListaDatosTitulo">
+                                                                   <a href="https://www.adeje.es/evento/26112">
+                                                                    Carrera por la Vida 2026
+                                                                   </a>
+                                                               </div>
+
+                                                               <div class="VistaAgendaListaDatosDescripcion">
+
+
+                                                                  
+
+
+
+                                                               </div>
+                                                           </div>
+                                                           <div style="clear: both;"></div>
+                                                    </div>
+                                                
+                                                    <div class="VistaAgendaListaItem" id="VistaAgendaListaItem11" style="border-width: 0px; border-top-width: 1px; border-style: dotted; border-color: #d2d2d2;">
+
+
+                                                           <div class="VistaAgendaListaFecha">
+                                                                <div id="FechaEvento11" style="position: absolute; text-align: center; width: 100%; line-height: 16px;">
+                                                                    <span class="fechacirculodia">28</span><br><span class="fechacirculomes">nov 2026</span>
+                                                                </div>
+
+                                                               <p id="circulo11" class="full-circle"></p>
+                                                               <script>
+                                                                   var h = $('#circulo11').width();
+                                                                   var h2 = h/2;
+                                                                   $('#circulo11').height( h );
+                                                                   $('#circulo11').css('border-radius', h2+'px');
+                                                                   $('#circulo11').css('-webkit-border-radius', h2+'px');
+                                                                   $('#circulo11').css('-moz-border-radius', h2+'px');
+
+                                                                   //var altoparent = $('#VistaAgendaListaItem11').height();
+                                                                   //var altodiv = $('#FechaEvento11').height();
+                                                                   //var margintop = (altoparent/2) - (altodiv/2);
+                                                                   //$('#FechaEvento11').css('margin-top',margintop+'px');
+
+                                                                    var altoparent = $('#circulo11').height();
+                                                                    var altodiv = $('#FechaEvento11').height();
+
+
+                                                                    var margintop = (altoparent / 2) - (altodiv / 2);
+                                                                    margintop = margintop + 20;
+                                                                    $('#FechaEvento11').css('margin-top',margintop+'px');
+                                                               </script>
+
+                                                           </div>
+
+
+
+                                                           <div class="VistaAgendaListaImagen">
+                                                                 <a href="https://www.adeje.es/evento/25681">
+                                                                   
+                                                                        <img src="https://www.adeje.es/website/contenido/default/E25681.jpg"></a>
+                                                                   
+                                                                 </a>
+                                                           </div>
+
+                                                           <div class="VistaAgendaListaDatos">
+
+                                                               <div class="VistaAgendaListaDatosLugar">
+                                                                    
+                                                                        &nbsp;
+                                                                    
+                                                               </div>
+
+                                                               <div class="VistaAgendaListaDatosTitulo">
+                                                                   <a href="https://www.adeje.es/evento/25681">
+                                                                    Caminando por la Vida: Ruta de las Palomas – Nivel Alto
+                                                                   </a>
+                                                               </div>
+
+                                                               <div class="VistaAgendaListaDatosDescripcion">
+
+
+                                                                  
+                                                                          <p>Esta ruta circular comienza y finaliza en la Plaza de San Marcos, en el municipio de Tegueste, y nos adentra en el Monte de La Orilla, un espacio de gran valor ecol&oacute;gico y cultural. A lo largo del recorrido caminaremos por antiguos senderos utilizados tradicionalmente por los vecinos del valle para acceder a las zonas de trabajo agr&iacute;cola y forestal.
+</p>
+                                                                          <script>
+                                                                              var AltoImgListado = $('#ListadoImgImagen0').width();
+                                                                              AltoImgListado = AltoImgListado - $('#tituloitem10').height();
+                                                                              if( $('#fechaitem10') ){
+                                                                                AltoImgListado = AltoImgListado - $('#fechaitem10').height()
+                                                                              }
+                                                                              AltoImgListado = AltoImgListado - 30;
+                                                                              $('#itemlistado10').height( AltoImgListado );
+                                                                          </script>
+                                                                          
+                                                                              <script>
+                                                                                  createEllipsis('itemlistado10');
+                                                                              </script>
+                                                                          
+
+
+
+                                                               </div>
+                                                           </div>
+                                                           <div style="clear: both;"></div>
+                                                    </div>
+                                                
+                                                    <div class="VistaAgendaListaItem" id="VistaAgendaListaItem12" style="border-width: 0px; border-top-width: 1px; border-style: dotted; border-color: #d2d2d2;">
+
+
+                                                           <div class="VistaAgendaListaFecha">
+                                                                <div id="FechaEvento12" style="position: absolute; text-align: center; width: 100%; line-height: 16px;">
+                                                                    <span class="fechacirculodia">4-10</span><br><span class="fechacirculomes">mar</span>
+                                                                </div>
+
+                                                               <p id="circulo12" class="full-circle"></p>
+                                                               <script>
+                                                                   var h = $('#circulo12').width();
+                                                                   var h2 = h/2;
+                                                                   $('#circulo12').height( h );
+                                                                   $('#circulo12').css('border-radius', h2+'px');
+                                                                   $('#circulo12').css('-webkit-border-radius', h2+'px');
+                                                                   $('#circulo12').css('-moz-border-radius', h2+'px');
+
+                                                                   //var altoparent = $('#VistaAgendaListaItem12').height();
+                                                                   //var altodiv = $('#FechaEvento12').height();
+                                                                   //var margintop = (altoparent/2) - (altodiv/2);
+                                                                   //$('#FechaEvento12').css('margin-top',margintop+'px');
+
+                                                                    var altoparent = $('#circulo12').height();
+                                                                    var altodiv = $('#FechaEvento12').height();
+
+
+                                                                    var margintop = (altoparent / 2) - (altodiv / 2);
+                                                                    margintop = margintop + 20;
+                                                                    $('#FechaEvento12').css('margin-top',margintop+'px');
+                                                               </script>
+
+                                                           </div>
+
+
+
+                                                           <div class="VistaAgendaListaImagen">
+                                                                 <a href="https://www.adeje.es/evento/26020">
+                                                                   
+                                                                        <img src="https://www.adeje.es/website/contenido/default/E26020.jpg"></a>
+                                                                   
+                                                                 </a>
+                                                           </div>
+
+                                                           <div class="VistaAgendaListaDatos">
+
+                                                               <div class="VistaAgendaListaDatosLugar">
+                                                                    
+                                                                        &nbsp;
+                                                                    
+                                                               </div>
+
+                                                               <div class="VistaAgendaListaDatosTitulo">
+                                                                   <a href="https://www.adeje.es/evento/26020">
+                                                                    CUARENTOUR: Viaje Cultural a Estambul y Capadocia
+                                                                   </a>
+                                                               </div>
+
+                                                               <div class="VistaAgendaListaDatosDescripcion">
+
+
+                                                                  
+                                                                          <p>Desde el Negociado de Participaci&oacute;n Ciudadana, a trav&eacute;s del proyecto Cuarentour, seguimos apostando por ofrecer experiencias &uacute;nicas para disfrutar, compartir y descubrir nuevos destinos.
+</p>
+                                                                          <script>
+                                                                              var AltoImgListado = $('#ListadoImgImagen0').width();
+                                                                              AltoImgListado = AltoImgListado - $('#tituloitem11').height();
+                                                                              if( $('#fechaitem11') ){
+                                                                                AltoImgListado = AltoImgListado - $('#fechaitem11').height()
+                                                                              }
+                                                                              AltoImgListado = AltoImgListado - 30;
+                                                                              $('#itemlistado11').height( AltoImgListado );
+                                                                          </script>
+                                                                          
+                                                                              <script>
+                                                                                  createEllipsis('itemlistado11');
+                                                                              </script>
+                                                                          
+
+
+
+                                                               </div>
+                                                           </div>
+                                                           <div style="clear: both;"></div>
+                                                    </div>
+                                                
+
+
+                                            </div>
+                                    
+
+
+
+
+                            <!-- Auditorio de Adeje: programación -->
+				            <div id="auditorio-iframe-container"><iframe id="auditorioframe" src="https://www.auditoriodeadeje.es/external/embed_iframe.php" allowtransparency="true" scrolling="no"></iframe></div>
+
+
+
+                          
+
+
+                      <!-- ······················ -->
+                      <!-- ... contenido tipo (c) -->
+                      <!-- ······················ -->
+
+                      
+               </div>
+               
+
+					<!-- ���������� -->
+					<!-- MULTIMEDIA -->
+					<!-- ���������� -->
+
+
+
+					
+					<!-- �������������� -->
+					<!-- ... multimedia -->
+					<!-- �������������� -->
+
+
+
+
+
+					<!-- ��������� -->
+					<!-- DESCARGAS -->
+					<!-- ��������� -->
+					
+					<!-- ������������� -->
+					<!-- ... descargas -->
+					<!-- ������������� -->
+
+
+
+
+					<!-- ��������� -->
+					<!--- ' Mapa de Google -->
+					<!-- ��������� -->
+
+					
+
+					<!-- ... mapa de google -->
+
+
+
+					<!-- ��������������������� -->
+					<!-- NOTICIAS RELACIONADAS -->
+					<!-- ��������������������� -->
+                    
+					<!-- ... noticias relacionadas -->
+					<!-- ������������������������� -->
+
+					<!-- ... contenido relacionado -->
+                    
+                    <!-- ......................... -->
+
+				<!--<div class="contenidobox">
+					<div class="fb-comments" data-href="http://www.adeje.es/agenda" data-width="100%" data-numposts="10" style="margin: 0 auto;"></div>
+				</div>
+			-->
+
+
+				</div>
+
+
+
+				
+				<div style="clear: both;"></div>
+			</div>
+		</div>
+
+		
+	<div id="portadaspie">
+		<div class="contenidoboxnombre"><a href="https://www.adeje.es">En portada</a></div>
+		<div id="portadaspieContenido">
+
+			
+				<a href="https://www.adeje.es/contenido/577">
+					<div class="portadaspieitem" id="portadaitem1">
+						<img src="https://www.adeje.es/website/contenido/default/C577-fiestas-patronales-de-adeje.jpg">
+						<br>
+						Fiestas Patronales de Adeje
+					</div>
+				</a>
+			
+				<a href="https://www.adeje.es/data/8543">
+					<div class="portadaspieitem" id="portadaitem2">
+						<img src="https://www.adeje.es/website/contenido/default/D8543-solicitud-de-ayuda-economica-para-la-dotacion-de-material-tecnologico-para-el-curso-2026-2027.jpg">
+						<br>
+						Solicitud de ayuda económica para la dotación de material tecnológico para el curso 2026-2027
+					</div>
+				</a>
+			
+				<a href="https://www.adeje.es/blog/22929-solidaridad-con-venezuela">
+					<div class="portadaspieitem" id="portadaitem3">
+						<img src="https://www.adeje.es/website/contenido/portadas/L25299-portada-item.jpg">
+						<br>
+						Solidaridad con Venezuela
+					</div>
+				</a>
+			
+				<a href="https://www.adeje.es/evento/26009">
+					<div class="portadaspieitem" id="portadaitem4">
+						<img src="https://www.adeje.es/website/contenido/default/E26009.jpg">
+						<br>
+						Adeje Saludable, cuidarte es cuidarnos
+					</div>
+				</a>
+			
+				<a href="https://www.adeje.es/data/8549">
+					<div class="portadaspieitem" id="portadaitem5">
+						<img src="https://www.adeje.es/website/contenido/default/D8549-elecciones-generales-de-29-de-noviembre-de-2026.jpg">
+						<br>
+						Elecciones Generales de 29 de noviembre de 2026
+					</div>
+				</a>
+			
+				<a href="https://www.adeje.es/contenido/6529">
+					<div class="portadaspieitem" id="portadaitem6">
+						<img src="https://www.adeje.es/website/contenido/portadas/L25306-portada-item.jpg">
+						<br>
+						Guaguas urbanas de Adeje
+					</div>
+				</a>
+			
+
+			<div style="clear: both;"></div>
+		</div>
+	</div>
+
+
+
+
+
+	<!-- BOTTOM -->
+		<!-- DESTACADOS PIE -->
+		 <div id="slidedestacadospie"onMouseOver="ShowHideInfoAmpliada('clear');">
+			<div id="slidedestacadospiecontent">
+				<div class="slider1">
+
+					<div class="slide"><a href="https://link.adeje.es/sede-electronica" target="_blank"><img class="imgHoverable" src="https://www.adeje.es/website/img/accesosdirectos/acceso-directo-sede-electronica.png"></a></div>
+
+					<div class="slide"><a href="https://www.adeje.es/subvenciones/fondos-next-generation/proyectos" target=""><img class="imgHoverable" src="https://www.adeje.es/website/img/accesosdirectos/acceso-directo-nextgeneration.png"></a></div>
+
+					<div class="slide"><a href="https://www.adeje.es/subvenciones/fondos-next-generation/proyectos" target=""><img class="imgHoverable" src="https://www.adeje.es/website/img/accesosdirectos/acceso-directo-feder.png"></a></div>
+
+					<div class="slide"><a href="https://www.adeje.es/subvenciones/fondo-europeo-de-desarrollo-regional-feder/plan-edil-centro-urbano-de-adeje" target=""><img class="imgHoverable" src="https://www.adeje.es/website/img/accesosdirectos/acceso-directo-edil.png"></a></div>
+
+					<div class="slide"><a href="https://amigable.adeje.es" target=""><img class="imgHoverable" src="https://www.adeje.es/website/img/accesosdirectos/acceso-directo-adejeamigable.png"></a></div>
+
+              		<div class="slide"><a href="http://archivo.adeje.es/" target="_blank"><img class="imgHoverable" src="https://www.adeje.es/website/img/accesosdirectos/acceso-directo-casafuerte.png"></a></div>
+
+			  		<div class="slide"><a href="http://www.costa-adeje.es" target="_blank"><img class="imgHoverable" src="https://www.adeje.es/website/img/accesosdirectos/acceso-directo-cadeje.png"></a></div>
+
+			  		<div class="slide"><a href="https://vr.adeje.es" target="_blank"><img class="imgHoverable" src="https://www.adeje.es/website/img/accesosdirectos/acceso-directo-vr.png"></a></div>
+
+				</div>
+			</div>
+		 </div>
+		<!-- ... destacados pie -->
+
+		<!-- PIE -->
+		  <div id="pie"onMouseOver="ShowHideInfoAmpliada('clear');">
+
+			<div id="contenedorpie">
+
+				<div id="pieredes">
+						<a href="https://www.facebook.com/ayuntamientodeadeje" target="_blank"><span data-icon="&#xe063;" class="pieredesicon"></span></a>
+						<a href="https://twitter.com/adeje" target="_blank"><span data-icon="&#xe05e;" class="pieredesicon"></span></a>
+						<a href="https://www.tiktok.com/@ayuntamientoadeje"><img src="/website/img/ui/tiktok_ico_circle.png" style="width: 100%; max-width: 50px; margin-left: 1.5%;
+margin-right: 1.5%;"></a>
+<a href="https://instagram.com/ayuntamientoadeje" target="_blank"><span data-icon="&#xe060;" class="pieredesicon"></span></a>
+						<a href="https://www.youtube.com/user/ayuntamientodeadeje" target="_blank"><span data-icon="&#xe05d;" class="pieredesicon"></span></a>
+				</div>
+
+
+			 <div id="piesitemap">
+
+				 <div class="columna">
+					 <p><span class="titulo">Mi Ayuntamiento</span></p>
+					 <ul>
+						 <li><a href="https://www.adeje.es/contenido/317">Gobierno Municipal</a></li>
+						 <li><a href="https://link.adeje.es/sede-electronica">Sede electrónica</a></li>
+						 <li><a href="https://www.adeje.es/contenido/502">Trámites</a></li>
+						 <li><a href="https://www.adeje.es/contenido/463">Perfil del contratante</a></li>
+						 <li><a href="https://www.adeje.es/contenido/23">Oficina de atención a la ciudadanía</a></li>
+						 <li><a href="https://adeje-publicform.incidenciasurbanas.com/">Quejas y sugerencias</a></li>
+						 <li><a href="http://www.costa-adeje.es">Costa Adeje</a></li>
+						 <li><a href="https://www.adeje.es/agenda">Agenda</a></li>
+						 <li><a href="https://www.adeje.es/blog">Blog</a></li>
+					 </ul>
+				 </div>
+
+				 <div class="contenedorColumnas">
+					 
+ 							<div class="columna">
+ 								<div class="titulo"><a href="https://www.adeje.es/contenido/740">Alcaldía</a></div>
+ 								<ul>
+ 									
+ 												<li>
+ 													<a href="https://www.adeje.es/contenido/6504">
+ 														Fundación Canaria Alas
+ 													</a>
+ 												</li>
+ 											
+ 												<li>
+ 													<a href="https://www.adeje.es/contenido/5418">
+ 														Oficina de Planificación Estratégica
+ 													</a>
+ 												</li>
+ 											
+ 												<li>
+ 													<a href="https://www.adeje.es/contenido/582">
+ 														Tu alcalde online
+ 													</a>
+ 												</li>
+ 											
+ 								</ul>
+ 							</div>
+ 					
+ 							<div class="columna">
+ 								<div class="titulo"><a href="https://www.adeje.es/contenido/11">Bienestar Social</a></div>
+ 								<ul>
+ 									
+ 												<li>
+ 													<a href="https://www.adeje.es/contenido/52">
+ 														Atención integral a las personas con diversidad funcional
+ 													</a>
+ 												</li>
+ 											
+ 												<li>
+ 													<a href="https://www.adeje.es/contenido/4">
+ 														Juventud
+ 													</a>
+ 												</li>
+ 											
+ 												<li>
+ 													<a href="https://www.adeje.es/contenido/50">
+ 														Servicios Sociales
+ 													</a>
+ 												</li>
+ 											
+ 								</ul>
+ 							</div>
+ 					
+ 							<div class="columna">
+ 								<div class="titulo"><a href="https://www.adeje.es/contenido/5">Buen gobierno, Hacienda e Innovación</a></div>
+ 								<ul>
+ 									
+ 												<li>
+ 													<a href="https://www.adeje.es/contenido/23">
+ 														Atención a la ciudadanía
+ 													</a>
+ 												</li>
+ 											
+ 												<li>
+ 													<a href="https://www.adeje.es/contenido/28">
+ 														Empresa Municipal de Servicios
+ 													</a>
+ 												</li>
+ 											
+ 												<li>
+ 													<a href="https://www.adeje.es/contenido/478">
+ 														Innovación y modernización
+ 													</a>
+ 												</li>
+ 											
+ 												<li>
+ 													<a href="https://www.adeje.es/contenido/843">
+ 														Obras municipales
+ 													</a>
+ 												</li>
+ 											
+ 												<li>
+ 													<a href="https://www.adeje.es/contenido/22">
+ 														Padrón y estadística
+ 													</a>
+ 												</li>
+ 											
+ 												<li>
+ 													<a href="https://www.adeje.es/contenido/723">
+ 														Plazas y Parques
+ 													</a>
+ 												</li>
+ 											
+ 												<li>
+ 													<a href="https://www.adeje.es/contenido/19">
+ 														Recaudación y Tributos
+ 													</a>
+ 												</li>
+ 											
+ 												<li>
+ 													<a href="https://www.adeje.es/contenido/25">
+ 														Sede Electrónica
+ 													</a>
+ 												</li>
+ 											
+ 												<li>
+ 													<a href="https://www.adeje.es/contenido/204">
+ 														Servicios Municipales
+ 													</a>
+ 												</li>
+ 											
+ 								</ul>
+ 							</div>
+ 					
+ 							<div class="columna">
+ 								<div class="titulo"><a href="https://www.adeje.es/contenido/1">Cultura, Deportes y Educación</a></div>
+ 								<ul>
+ 									
+ 												<li>
+ 													<a href="https://www.adeje.es/contenido/42">
+ 														Bibliotecas
+ 													</a>
+ 												</li>
+ 											
+ 												<li>
+ 													<a href="https://www.adeje.es/contenido/2">
+ 														Cultura y fiestas
+ 													</a>
+ 												</li>
+ 											
+ 												<li>
+ 													<a href="https://www.adeje.es/contenido/3">
+ 														Deportes
+ 													</a>
+ 												</li>
+ 											
+ 												<li>
+ 													<a href="https://www.adeje.es/contenido/41">
+ 														Educación
+ 													</a>
+ 												</li>
+ 											
+ 												<li>
+ 													<a href="https://www.adeje.es/contenido/140">
+ 														Escuela de Música y Danza
+ 													</a>
+ 												</li>
+ 											
+ 												<li>
+ 													<a href="https://www.adeje.es/contenido/729">
+ 														Escuela Infantil
+ 													</a>
+ 												</li>
+ 											
+ 												<li>
+ 													<a href="https://www.adeje.es/contenido/543">
+ 														Participación ciudadana y convivencia
+ 													</a>
+ 												</li>
+ 											
+ 								</ul>
+ 							</div>
+ 					
+ 							<div class="columna">
+ 								<div class="titulo"><a href="https://www.adeje.es/contenido/12">Destino turístico y sostenibilidad</a></div>
+ 								<ul>
+ 									
+ 												<li>
+ 													<a href="https://www.adeje.es/contenido/33">
+ 														Medio Ambiente
+ 													</a>
+ 												</li>
+ 											
+ 												<li>
+ 													<a href="https://www.adeje.es/contenido/49">
+ 														Playas
+ 													</a>
+ 												</li>
+ 											
+ 								</ul>
+ 							</div>
+ 					
+ 							<div class="columna">
+ 								<div class="titulo"><a href="https://www.adeje.es/contenido/4338">Presidencia y Planificación del Territorio</a></div>
+ 								<ul>
+ 									
+ 												<li>
+ 													<a href="https://www.adeje.es/contenido/44">
+ 														Patrimonio histórico-artístico
+ 													</a>
+ 												</li>
+ 											
+ 								</ul>
+ 							</div>
+ 					
+ 							<div class="columna">
+ 								<div class="titulo"><a href="https://www.adeje.es/contenido/680">Salud, calidad de vida y bienestar animal</a></div>
+ 								<ul>
+ 									
+ 												<li>
+ 													<a href="https://www.adeje.es/contenido/163">
+ 														Igualdad y diversidad
+ 													</a>
+ 												</li>
+ 											
+ 												<li>
+ 													<a href="https://www.adeje.es/contenido/51">
+ 														Mayores
+ 													</a>
+ 												</li>
+ 											
+ 												<li>
+ 													<a href="https://www.adeje.es/contenido/46">
+ 														Oficina de información al consumidor (OMIC)
+ 													</a>
+ 												</li>
+ 											
+ 												<li>
+ 													<a href="https://www.adeje.es/contenido/45">
+ 														Salud
+ 													</a>
+ 												</li>
+ 											
+ 												<li>
+ 													<a href="https://www.adeje.es/contenido/898">
+ 														Sanidad
+ 													</a>
+ 												</li>
+ 											
+ 												<li>
+ 													<a href="https://www.adeje.es/contenido/31">
+ 														Servicios funerarios
+ 													</a>
+ 												</li>
+ 											
+ 								</ul>
+ 							</div>
+ 					
+ 							<div class="columna">
+ 								<div class="titulo"><a href="https://www.adeje.es/contenido/4337">Seguridad, promoción de la actividad económica y el empleo</a></div>
+ 								<ul>
+ 									
+ 												<li>
+ 													<a href="https://www.adeje.es/contenido/37">
+ 														Adeje Impulsa
+ 													</a>
+ 												</li>
+ 											
+ 												<li>
+ 													<a href="https://www.adeje.es/contenido/32">
+ 														Agromercado
+ 													</a>
+ 												</li>
+ 											
+ 												<li>
+ 													<a href="https://www.adeje.es/contenido/200">
+ 														Seguridad ciudadana y Protección Civil
+ 													</a>
+ 												</li>
+ 											
+ 												<li>
+ 													<a href="https://www.adeje.es/contenido/290">
+ 														Servicio de movilidad
+ 													</a>
+ 												</li>
+ 											
+ 								</ul>
+ 							</div>
+ 					
+					<div style="clear: both;"></div>
+				 </div>
+
+				 <div style="clear: both;"></div>
+			 </div>
+
+			</div>
+		</div>
+		<!-- ...pie -->
+
+		<!-- barra direccion y enlaces directos -->
+
+		<div id="barrabottom">
+			<div id="contenidobarrabottom">
+
+
+                <div class="pieitems" id="pieescudo">
+                	<a class="VerticalCenter" href="https://www.adeje.es"><img src="https://www.adeje.es/website/img/logo/ayto-adeje-pie.png" style="height: 25px;"></a>
+                </div>
+
+                <div class="pieitems" id="pietelefono" style="line-height: 13px;">
+                	<div id="pietelefonobox">
+						<a class="VerticalCenter" href="https://www.adeje.es/contenido/260">
+							<img src="https://www.adeje.es/website/img/ui/telefonocentralita.png">
+						</a>
+                        <div style="clear: both;"></div>
+                    </div>
+                </div>
+
+                <div class="pieitems" id="piedireccion">
+                	<div class="VerticalCenter">C/ Grande, 1&nbsp;&nbsp;&nbsp;38670, Adeje<br>Horario: 8:00 - 15:00 h</div>
+                </div>
+
+                <div class="pieitems" id="pieaccesos">
+                	<div class="VerticalCenter">
+									<a href="https://www.adeje.es/contenido/4213">ACCESIBILIDAD</a>&nbsp;&nbsp;|&nbsp;&nbsp;
+									<a class="VerticalCenter" href="https://www.adeje.es/aviso-legal">CONDICIONES DE USO</a>&nbsp;&nbsp;|&nbsp;&nbsp;
+									<a href="https://adeje-publicform.incidenciasurbanas.com/">CONTACTO</a>
+
+									</div>
+                </div>
+
+                <div style="clear: both;"></div>
+                <!--
+				<div style="float: left; width: 50%;">
+					<div id="pielogo" class="pieitems" style="padding-left: 10px;">
+						<a href="http://www.adeje.es"><img src="http://www.adeje.es/website/img/logo/ayto-adeje-pie.png" style="height: 25px;"></a>
+					</div>
+					<div id="pieteñefono" class="pieitems">
+						<a href="http://www.adeje.es/contenido/260">
+							<div style="float: left; margin-right: 5px;">
+								<img src="http://www.adeje.es/website/img/ui/centralita.png">
+							</div>
+							<div style="float: left; line-height: 10px;">
+								<span style="font-size: 10px;">CENTRALITA</span><br>922 756 200
+							</div>
+						</a>
+						<div style="clear: both;"></div>
+					</div>
+					<div id="piedireccion" class="pieitems" style="font-size: 11px;">
+						C/ Grande, 1&nbsp;&nbsp;&nbsp;38670, Adeje<br>Horario: 8:00 - 15:00 h
+					</div>
+					<div style="clear: both;"></div>
+				</div>
+
+				<div id="pieaccesosvarios" style="float: left; width: 50%; text-align: right; font-size: 12px;">
+					<a href="http://www.adeje.es/aviso-legal">CONDICIONES DE USO</a> |
+					<a href="https://adeje-publicform.incidenciasurbanas.com/">CONTACTO</a> |
+					<a href="http://www.adeje.es/contenido/4213">ACCESIBILIDAD</a>
+				</div>
+
+				<div style="clear: both;"></div>
+                -->
+			</div>
+		</div>
+
+		<!-- ... barra direccion y enlaces directos -->
+
+	<!-- ...bottom -->
+<!-- http://mmenu.frebsite.nl/ -->
+<!-- Menu movil -->
+<nav id="my-menu" style="background: #ffffff;color: #292929;font-size: 24px;margin-top: 0px;">
+  <ul style="font-size: 22px;">
+    
+      <li>
+        <a href="https://www.adeje.es/contenido/740">Alcaldía</a>
+        <ul  style="font-size: 22px;">
+          
+            <li>
+              <a href="https://www.adeje.es/contenido/6504">
+                Fundación Canaria Alas
+              </a>
+            </li>
+            
+            <li>
+              <a href="https://www.adeje.es/contenido/5418">
+                Oficina de Planificación Estratégica
+              </a>
+            </li>
+            
+            <li>
+              <a href="https://www.adeje.es/contenido/582">
+                Tu alcalde online
+              </a>
+            </li>
+            
+        </ul>
+      </li>
+    
+      <li>
+        <a href="https://www.adeje.es/contenido/11">Bienestar Social</a>
+        <ul  style="font-size: 22px;">
+          
+            <li>
+              <a href="https://www.adeje.es/contenido/52">
+                Atención integral a las personas con diversidad funcional
+              </a>
+            </li>
+            
+            <li>
+              <a href="https://www.adeje.es/contenido/4">
+                Juventud
+              </a>
+            </li>
+            
+            <li>
+              <a href="https://www.adeje.es/contenido/50">
+                Servicios Sociales
+              </a>
+            </li>
+            
+        </ul>
+      </li>
+    
+      <li>
+        <a href="https://www.adeje.es/contenido/5">Buen gobierno, Hacienda e Innovación</a>
+        <ul  style="font-size: 22px;">
+          
+            <li>
+              <a href="https://www.adeje.es/contenido/23">
+                Atención a la ciudadanía
+              </a>
+            </li>
+            
+            <li>
+              <a href="https://www.adeje.es/contenido/28">
+                Empresa Municipal de Servicios
+              </a>
+            </li>
+            
+            <li>
+              <a href="https://www.adeje.es/contenido/478">
+                Innovación y modernización
+              </a>
+            </li>
+            
+            <li>
+              <a href="https://www.adeje.es/contenido/843">
+                Obras municipales
+              </a>
+            </li>
+            
+            <li>
+              <a href="https://www.adeje.es/contenido/22">
+                Padrón y estadística
+              </a>
+            </li>
+            
+            <li>
+              <a href="https://www.adeje.es/contenido/723">
+                Plazas y Parques
+              </a>
+            </li>
+            
+            <li>
+              <a href="https://www.adeje.es/contenido/19">
+                Recaudación y Tributos
+              </a>
+            </li>
+            
+            <li>
+              <a href="https://www.adeje.es/contenido/25">
+                Sede Electrónica
+              </a>
+            </li>
+            
+            <li>
+              <a href="https://www.adeje.es/contenido/204">
+                Servicios Municipales
+              </a>
+            </li>
+            
+        </ul>
+      </li>
+    
+      <li>
+        <a href="https://www.adeje.es/contenido/1">Cultura, Deportes y Educación</a>
+        <ul  style="font-size: 22px;">
+          
+            <li>
+              <a href="https://www.adeje.es/contenido/42">
+                Bibliotecas
+              </a>
+            </li>
+            
+            <li>
+              <a href="https://www.adeje.es/contenido/2">
+                Cultura y fiestas
+              </a>
+            </li>
+            
+            <li>
+              <a href="https://www.adeje.es/contenido/3">
+                Deportes
+              </a>
+            </li>
+            
+            <li>
+              <a href="https://www.adeje.es/contenido/41">
+                Educación
+              </a>
+            </li>
+            
+            <li>
+              <a href="https://www.adeje.es/contenido/140">
+                Escuela de Música y Danza
+              </a>
+            </li>
+            
+            <li>
+              <a href="https://www.adeje.es/contenido/729">
+                Escuela Infantil
+              </a>
+            </li>
+            
+            <li>
+              <a href="https://www.adeje.es/contenido/543">
+                Participación ciudadana y convivencia
+              </a>
+            </li>
+            
+        </ul>
+      </li>
+    
+      <li>
+        <a href="https://www.adeje.es/contenido/12">Destino turístico y sostenibilidad</a>
+        <ul  style="font-size: 22px;">
+          
+            <li>
+              <a href="https://www.adeje.es/contenido/33">
+                Medio Ambiente
+              </a>
+            </li>
+            
+            <li>
+              <a href="https://www.adeje.es/contenido/49">
+                Playas
+              </a>
+            </li>
+            
+        </ul>
+      </li>
+    
+      <li>
+        <a href="https://www.adeje.es/contenido/4338">Presidencia y Planificación del Territorio</a>
+        <ul  style="font-size: 22px;">
+          
+            <li>
+              <a href="https://www.adeje.es/contenido/44">
+                Patrimonio histórico-artístico
+              </a>
+            </li>
+            
+        </ul>
+      </li>
+    
+      <li>
+        <a href="https://www.adeje.es/contenido/680">Salud, calidad de vida y bienestar animal</a>
+        <ul  style="font-size: 22px;">
+          
+            <li>
+              <a href="https://www.adeje.es/contenido/163">
+                Igualdad y diversidad
+              </a>
+            </li>
+            
+            <li>
+              <a href="https://www.adeje.es/contenido/51">
+                Mayores
+              </a>
+            </li>
+            
+            <li>
+              <a href="https://www.adeje.es/contenido/46">
+                Oficina de información al consumidor (OMIC)
+              </a>
+            </li>
+            
+            <li>
+              <a href="https://www.adeje.es/contenido/45">
+                Salud
+              </a>
+            </li>
+            
+            <li>
+              <a href="https://www.adeje.es/contenido/898">
+                Sanidad
+              </a>
+            </li>
+            
+            <li>
+              <a href="https://www.adeje.es/contenido/31">
+                Servicios funerarios
+              </a>
+            </li>
+            
+        </ul>
+      </li>
+    
+      <li>
+        <a href="https://www.adeje.es/contenido/4337">Seguridad, promoción de la actividad económica y el empleo</a>
+        <ul  style="font-size: 22px;">
+          
+            <li>
+              <a href="https://www.adeje.es/contenido/37">
+                Adeje Impulsa
+              </a>
+            </li>
+            
+            <li>
+              <a href="https://www.adeje.es/contenido/32">
+                Agromercado
+              </a>
+            </li>
+            
+            <li>
+              <a href="https://www.adeje.es/contenido/200">
+                Seguridad ciudadana y Protección Civil
+              </a>
+            </li>
+            
+            <li>
+              <a href="https://www.adeje.es/contenido/290">
+                Servicio de movilidad
+              </a>
+            </li>
+            
+        </ul>
+      </li>
+    
+    <li><a href="#">Mi ayuntamiento</a>
+      <ul  style="font-size: 22px;">
+        <li><a href="https://www.adeje.es/contenido/317">Gobierno Municipal</a></li>
+        <li><a href="http://www.ayuntamientodeadeje.es/">Sede electrónica</a></li>
+        <li><a href="https://www.adeje.es/contenido/502">Trámites</a></li>
+        <li><a href="https://www.adeje.es/contenido/463">Perfil del contratante</a></li>
+        <li><a href="https://www.adeje.es/contenido/23">Oficina de atención a la ciudadanía</a></li>
+        <li><a href="https://www.adeje.es/website/buzon.php">Quejas y sugerencias</a></li>
+        <li><a href="http://www.costa-adeje.es">Costa Adeje</a></li>
+        <li><a href="https://www.adeje.es/agenda">Agenda</a></li>
+        <li><a href="https://www.adeje.es/blog">Blog</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+<!-- ... menu movil -->
+
+
+	</div>
+
+	
+
+<div id="chat-button-hide-show" class="" onclick="toogleChatBotBienvenida();">
+  <div id="chat-button-hide">CERRAR</div>
+  <div id="chat-button-show">BIENVENIDA-IA</div>
+</div>
+
+<script src="https://chat-adeje.expertbrain.ai/adeje-chat.js"></script> 
+ 
+<!-- PONER TODO ESTE CODIGO EN EL BODY AL FINAL DE LA PAGINA -->
+<!-- ============================================ -->
+  <!-- HTML MÍNIMO DEL CHAT -->
+  <!-- ============================================ -->
+  
+  <!-- Botón flotante del chat -->
+  <button id="chat-launcher" aria-label="Abrir chat" title="Bienvenida-IA">
+    <img src="https://360.jeremiaslopez.com/Bienvenida.gif" alt="Bienvenida-IA">
+  </button>
+
+  <!-- Tooltip del botón -->
+  <div id="chat-tooltip">Bienvenida-IA</div>
+
+  <!-- Flecha para cerrar chat -->
+  <div id="chat-arrow" aria-label="Cerrar chat" title="Cerrar chat">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M12 16a1 1 0 0 1-.7-.29l-6-6a1 1 0 1 1 1.4-1.42L12 13.59l5.3-5.3a1 1 0 0 1 1.4 1.42l-6 6A1 1 0 0 1 12 16z" fill="currentColor"/>
+    </svg>
+  </div>
+
+  <!-- Ventana del chat -->
+  <div id="chat-window">
+    <!-- Header -->
+    <div id="chat-header">
+      <img id="chat-header-avatar" src="https://360.jeremiaslopez.com/Bienvenida.png" alt="Bienvenida">
+      <h2 id="chat-header-title">Adeje Amigable</h2>
+      <div id="chat-header-buttons">
+        <button id="chat-refresh" class="chat-header-btn" aria-label="Refrescar chat" title="Refrescar chat">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M1 4v6h6M23 20v-6h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <button id="chat-close" class="chat-header-btn" aria-label="Cerrar chat" title="Cerrar chat">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    
+    <!-- Área de mensajes -->
+    <div id="chat-messages"></div>
+    
+    <!-- Input -->
+    <div id="chat-input-container">
+      <textarea id="chat-input" placeholder="Escribe aquí" rows="1" maxlength="150"></textarea>
+      <button id="chat-send" aria-label="Enviar mensaje">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M2 21l21-9L2 3v7l15 2-15 2v7z" fill="currentColor"/>
+        </svg>
+      </button>
+    </div>
+    
+    <!-- Footer -->
+    <div id="chat-footer">
+      Powered by <a href="https://expertbrain.ai" target="_blank" rel="noopener">Expertbrain</a>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- CONFIGURACIÓN Y SCRIPT DEL CHAT -->
+  <!-- ============================================ -->
+  
+  <!-- Configuración del chat (opcional - personaliza estos valores) -->
+  <script>
+    window.CHAT_CONFIG = {
+      webhookUrl: "https://ayuntamientoadeje.expertbrain.ai/webhook/04c44166-b03c-4015-a5a8-a60c51336d99/chat",
+      welcomeMessage: `👋 ¡Hola! Soy Bienvenida, tu vecina virtual del Ayuntamiento de Adeje.
+Estoy aquí para orientarte, responder a tus dudas y ayudarte a encontrar la información que necesites.
+👉 ¿En qué puedo ayudarte hoy?`,
+      errorMessage: "Algo salió mal, intenta de nuevo.",
+      maxChars: 150,
+      maxCharsWarning: "Has superado el límite de 150 caracteres.",
+      botAvatar: "https://360.jeremiaslopez.com/Bienvenida.png",
+      userAvatar: "https://360.jeremiaslopez.com/Stefann.png"
+    };
+  </script>
+  
+  <!-- Script externo con toda la lógica del chat -->
+  <script src="/chat/adeje-chat.js"></script>
+
+  <!-- FIN DEL CÓDGIO PARA CHATBOT DE ADEJE -->	
+
+  <script>
+
+    function changeStatusChatbot(){
+      $.post('/ajax_changeStatusChatbot.asp',{
+          },function(data){}
+      )       
+    }
+
+    function initCheckStatusChatbot(){
+      $.post('/ajax_initCheckStatusChatbot.asp',{
+          },function(data){
+            if(data == "hidden"){
+              $('#chat-launcher').addClass('hidden');
+              $('#chat-button-hide-show').addClass('hidden');
+            }
+          }
+      )      
+    }
+
+    function toogleChatBotBienvenida(){
+      changeStatusChatbot();
+      if( $('#chat-launcher').hasClass('hidden') ){
+        $('#chat-launcher').removeClass('hidden');
+        $('#chat-button-hide-show').removeClass('hidden');
+      }else{
+        $('#chat-launcher').addClass('hidden');
+        $('#chat-button-hide-show').addClass('hidden');
+      }
+    }
+
+    //initCheckStatusChatbot();
+  </script>
+
+	<script>
+		setTimeout( function(){
+			$('#main-menu').css('z-index','99999');
+			$('#menu-actualidad').css('z-index','99998');
+			$('#menu-actualidad').css('z-index','99998');
+			$('#iconoSubMenuMovil').css('z-index','99997');
+		}  , 3000 );
+	</script>
+
+	
+
+
+<script type="text/javascript">
+
+
+		function showHideListPerfiles(){
+			var idPerfil = $('#perfilesAyudas').val();
+			if(idPerfil == '0'){
+				$('.ListadoImgItem').fadeIn(500);
+			}else{
+				$('.ListadoImgItem').fadeOut(500);
+				$('.perfil-'+idPerfil).fadeIn(1000);
+			}
+		}
+
+		$(window).scroll(function(){
+			//console.log('scroll iniciado ');
+			//var scroll = $(window).scrollTop();
+			//var posActua = $('#contenido').scrollTop();
+			//if (posActua <= scroll) {
+				//console.log('Scroll contenido: ' + posActua + ' / Scroll actual: ' + scroll);
+			//}
+		});
+
+
+		function centradoV(){
+
+			var wdocument = $(document).width();
+			var hdocument = $(document).height();
+
+			if( wdocument > 580 ){
+
+				$(".centradoV").each(function() {
+					var altoThis = $( this ).height();
+					var idParent = $( this ).parent().attr('id');
+					var altoParent = $('#' + idParent).height();
+					var margenTop = ( altoParent / 2 ) - ( altoThis / 2 );
+					$(this).css('padding-top', margenTop + 'px');
+				});
+
+			}
+
+		}
+
+
+		function showHideSubmenuMovil(){
+			var estado = $('#submenuMovil').css('display');
+			if(estado=='none'){
+				//$('#submenuMovil').css('display','inline');
+				$('#submenuMovil').fadeIn(500);
+			}else{
+				//$('#submenuMovil').css('display','none');
+				$('#submenuMovil').fadeOut(500);
+			}
+		}
+
+
+		jQuery(document).ready(function() {
+
+			$("#my-menu").mmenu({
+				blockUI: true,
+				preventDefault: true
+			});
+
+			  $('.slider1').bxSlider({
+				slideWidth: 240,
+				minSlides: 1,
+				maxSlides: 3,
+				moveSlides: 1,
+				slideMargin: 80,
+				auto: true,
+				autoHover: true,
+				touchEnabled: true
+			  });
+
+				$('.sliderVideos').bxSlider({
+				slideWidth: 100,
+				minSlides: 1,
+				maxSlides: 2,
+				moveSlides: 1,
+				slideMargin: 10,
+				auto: true,
+				autoHover: true,
+				touchEnabled: true
+			  });
+
+
+		 	if( /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent) ) {
+				 //$.colorbox({reposition: true, top: 0, left: 0, transition: 'none', speed:'50', inline:true, href:"#contactus"}).fadeIn(100);
+					$(".verfotos").colorbox({
+					  reposition: true, top: 0, transition: 'none', speed:'50',
+					   maxWidth: "98%",
+					   maxHeight: "98%"
+					  });
+			 } else {
+				 //$.colorbox({width:"400px", height:"260px", transition: 'none', speed:'50', inline:true, href:"#contactus"}).fadeIn(100);
+					 $(".verfotos").colorbox({
+					   rel:'verfotos',
+					   transition:"fade",
+					   maxWidth: "98%",
+					   maxHeight: "98%"
+					   });
+			 }
+
+			  $(".verfotos").colorbox({
+				rel:'verfotos',
+				transition:"fade",
+				maxWidth: "98%",
+				maxHeight: "98%"
+				});
+
+			  $(".embed").colorbox({iframe:true, width:"80%", height:"80%", overlayClose:false });
+
+				$(".contacto").colorbox({iframe:true, width:"100%", height:"100%", overlayClose:false });
+
+			  //var iHeight = $(window).width() - 600;
+			  //var iWidth = (iHeight * 640) / 390;
+
+			  var iWidth = $(window).width() - 400;
+			  if(iWidth>=1280){
+				iWidth = 800;
+			  }else{
+
+			  }
+			  var iHeight = (iWidth * 390) / 640;
+
+			  //$(".youtube").colorbox({iframe:true, innerWidth:640, innerHeight:390});
+			  $(".youtube").colorbox({
+				iframe:true,
+				innerWidth: iWidth,
+				innerHeight: iHeight
+				});
+
+
+			  iHeight = $(window).height() - 300;
+
+			  iWidth = (iHeight * 500) / 409;
+			  //$(".vimeo").colorbox({iframe:true, innerWidth:500, innerHeight:409});
+			  $(".vimeo").colorbox({
+				iframe:true,
+				innerWidth: iWidth,
+				innerHeight: iHeight
+				});
+
+
+
+			 $("#fileuploader").uploadFile({
+				url:"http://www.adeje.es/website/buzon_upload.php",
+				fileName:"myfile",
+				allowedTypes:"pdf,doc,rtf,txt,jpg,jpeg,png,gif,docx",
+				multiple:true,
+				maxFileCount: 3,
+				maxFileSize: 3 * 1024 * 1024,
+				onSubmit:function(){
+					$('#botonEnviarBuzon').css('visibility','hidden');
+				},
+				onSuccess:function(files,data,xhr,pd)
+				{
+					//files: list of files
+					//data: response from server
+					//xhr : jquer xhr object
+					//var ficherosAdjuntos = $('#ficherosAdjuntos').val();
+
+					buzonRenameUploads(data);
+
+
+				},
+				afterUploadAll:function(){
+					$('#botonEnviarBuzon').css('visibility','visible');
+				}
+			});
+
+
+
+			redimensiona();
+
+
+			var maxButtonHeight = 0;
+
+
+			jQuery('.botonSpecialSection').each(function() {
+				heightButton = $(this).height();
+				if( heightButton > maxButtonHeight ){
+					maxButtonHeight = heightButton + 40;
+					$('.botonSpecialSection').css('height',maxButtonHeight+'px');
+				}
+
+			});
+
+
+
+		});
+
+
+		$(window).resize(function() {
+			redimensiona();
+			$('#stickycenter').val('false');
+		});
+
+		$(window).load (
+			function() {
+
+				VerticalCenter();
+
+				redimensiona();
+
+				//CentrarVerticalmenteClass('centrado');
+
+
+
+				$('#cab').css('visibility','visible');
+
+				$('.bwWrapper').BlackAndWhite({
+					hoverEffect:true,
+					//webworkerPath: 'src/'
+					responsive:true
+				});
+
+
+			   
+
+					   var container = document.querySelector('#VistaAgendaGrid');
+					   var msnry = new Masonry( container, {
+						 // options
+						 //columnWidth: 200,
+						 itemSelector: '.VistaAgendaGridItem'
+					   });
+
+			   
+						shareCounts('fb','http://www.adeje.es/agenda');
+						//shareCounts('twitter','http://www.adeje.es/agenda');
+						shareCounts('gplus','http://www.adeje.es/agenda');
+					
+
+			}
+
+		);
+
+		function CentrarVerticalmente(iddiv){
+			var estadosticky = $('#stickycenter').val();
+
+				var parentid = $('#'+iddiv).parent().attr('id');
+
+				var altoparent = $('#'+parentid).height();
+				var altodiv = $('#'+iddiv).height();
+				var margintop = (altoparent/2) - (altodiv/2);
+				$('#'+iddiv).css('margin-top',margintop+'px');
+				if(iddiv=='FechaEvento'){
+					//alert(iddiv + ',' + parentid + ': ' + altoparent + ',Alto div: ' + altodiv);
+				}
+		}
+
+		function CentrarVerticalmenteClass(iddiv){
+
+			var estadosticky = $('#stickycenter').val();
+
+			var parentid = $('#'+iddiv).parent().attr('id');
+			var altoparent = $('#'+parentid).height();
+			var altodiv = $('#'+iddiv).height();
+			var margintop = (altoparent/2) - (altodiv/2);
+			$('#'+iddiv).css('margin-top',margintop+'px');
+		}
+
+		function CenterVertical(iddiv){
+			var parentid = $('.'+iddiv).parent().attr('id');
+			var altoparent = $('#'+parentid).height();
+			var altodiv = $('.'+iddiv).height();
+			var margintop = (altoparent/2) - (altodiv/2);
+			$('.'+iddiv).css('margin-top',margintop+'px');
+		}
+
+		$( "#menubox1" ).mouseleave(function() {
+			$("#menubox1").fadeOut(100);
+		});
+
+		$( "#menubox2" ).mouseleave(function() {
+			$("#menubox2").fadeOut(100);
+		});
+
+		$( "#menubox3" ).mouseleave(function() {
+			$("#menubox3").fadeOut(100);
+		});
+
+		$( "#menubox4" ).mouseleave(function() {
+			$("#menubox4").fadeOut(100);
+		});
+
+		$( "#menubox5" ).mouseleave(function() {
+			$("#menubox5").fadeOut(100);
+		});
+
+		function showhidemenumobile(){
+			var estadomenumobile = $('#estadomenumobile').val();
+
+			if(estadomenumobile == 'closed'){
+				$('#menumobilecontent').fadeIn(100);
+				$('#estadomenumobile').val('opened');
+			}else{
+				$('#menumobilecontent').fadeOut(100);
+				$('#estadomenumobile').val('closed');
+			}
+		}
+
+		function redimensiona(){
+
+
+
+
+			if ($('#webcam').length > 0) {
+				var anchoContentFilas = $('#HTMLfila').width();
+				var altoContentFilas = ( anchoContentFilas * 500 ) / 800;
+    			$('#webcam').width(anchoContentFilas);
+				$('#webcam').height(altoContentFilas);
+			}
+
+			var altoDiapo = $('#SoyAdejeBoxes').height();
+			$('#soyAdejeDiapo').height(altoDiapo);
+
+			
+
+			var wdocument = $(document).width();
+			var hdocument = $(document).height();
+
+
+			$('#circuloficha').width( $('#imgresp').width() );
+
+			var hboxmenunextlogo =$('#boxmenunextlogo').height();
+			$('#menutools').height(hboxmenunextlogo);
+
+			//$('#box1').html(wdocument + 'x' + hdocument);
+
+			var wbox1 = $('#box1').width();
+			var hbox1 = (wbox1*300) / 620;
+			$('.box1').height(hbox1);
+
+			var wbox2 = $('#destacado1').width();
+			var hbox2 = wbox2;
+			if(wdocument<480){
+				hbox2 = hbox1;
+			}
+			$('.box2').height(hbox2);
+
+			$('.box2 .transparenteonhover').width(wbox2);
+			$('.box2 .transparenteonhover').height(hbox2);
+
+			$('.box2 .infoampliada').width(wbox2);
+			$('.box2 .infoampliada').height(hbox2);
+
+			$('.box2 .bandainfo').css('width',wbox2);
+
+			var bandainfoh = (hbox2*60) / 300;
+			$('.box2 .bandainfo').height(bandainfoh);
+
+			var bandainfomtop = ((hbox2*240) / 300) + 1;
+
+			$('.box2 .bandainfo').css('margin-top',bandainfomtop);
+
+			var titularbandainfomargintop = 20;
+			var fontSizetitularbandainfo = 18;
+
+
+			$('#boxcero .bandainfo').css('width',wbox1);
+			$('#boxcero').height(hbox1);
+			hboxcero = hbox1;
+			var bandainfoh = (hboxcero*60) / 300;
+			$('#boxcero .bandainfo').height(bandainfoh);
+
+			var bandainfomtop = ((hbox1*240) / 620) + 1;
+
+
+			//bandainfomtop = hbox1 - bandainfoh;
+			//$('#boxcero .bandainfo').css('margin-top',bandainfomtop+'px');
+			$('#boxcero .bandainfo').css('margin-top',hbox1+'px');
+
+
+
+			if(wdocument>=960){
+
+				
+
+				VerticalCenter();
+
+				var HBuscadorContenido = $('.boxunderbarrabusquedacontent').height();
+				var HBuscadorContenidoLateral = $('.boxunderbarrabusquedalateral').height();
+
+				if (HBuscadorContenido>HBuscadorContenidoLateral){
+					$('.boxunderbarrabusquedalateral').height( HBuscadorContenido + 40);
+				}
+
+			}
+
+			if(wdocument<960){
+				titularbandainfomargintop = (bandainfoh * 20) / 60;
+				fontSizetitularbandainfo = parseInt( ((bandainfoh * 20) / 60) )+"px";
+				$('.box2 .bandainfo .titular').css('margin-top',titularbandainfomargintop+'px');
+				$(".box2 .bandainfo .titular").css('font-size', fontSizetitularbandainfo);
+
+				
+
+			}
+
+			if(wdocument<580){
+				titularbandainfomargintop = (bandainfoh * 5) / 60;
+				fontSizetitularbandainfo = parseInt( ((bandainfoh * 40) / 60) )+"px";
+				$('.box2 .bandainfo .titular').css('margin-top',titularbandainfomargintop+'px');
+				$(".box2 .bandainfo .titular").css('font-size', fontSizetitularbandainfo);
+			}
+
+
+
+			var wbox3 = $('.box3').width();
+
+			if (wdocument>480){
+				var hbox3 = (wbox3*140) / 300;
+			}else{
+				var hbox3 = hbox1;
+			}
+			$('.box3').height(hbox3);
+
+			var hlogo = $('#logomain').height();
+			$('#boxmenunextlogo').height(hlogo);
+
+			$('#contenedorclimainicio').css('height',hbox3+'px');
+
+
+			// Tamaño fuente pictograma meteo
+			var fontSize = parseInt( hbox3 - 60 )+"px";
+
+			$("#meteoicon").css('font-size', fontSize);
+
+			var fontSizeTitularBox2 = 35;
+			var fontSizeSubtitularBox2 = 14;
+
+			if(wdocument > 720){
+				fontSizeTitularBox2 = ((hbox2 * 35) / 320);
+				fontSizeSubtitularBox2 = ((hbox2 * 16) / 320);
+			}
+
+			if(wdocument<=720){
+				fontSizeTitularBox2 = ((hbox2 * 38) / 320);
+				fontSizeSubtitularBox2 = ((hbox2 * 24) / 320);
+			}
+
+			if(wdocument<=580){
+				fontSizeTitularBox2 = ((hbox2 * 48) / 320);
+				fontSizeSubtitularBox2 = ((hbox2 * 34) / 320);
+			}
+
+			$(".box2 .infoampliada .titular").css('font-size', fontSizeTitularBox2+'px');
+			$(".box2 .infoampliada .subtitular").css('font-size', fontSizeSubtitularBox2+'px');
+			//$('#buscador').val(wdocument + 'x' + hdocument + '<br>fontSizeTitularBox2: ' + fontSizeTitularBox2);
+
+			$('#cabecera').css('visibility','visible');
+			$('#bodycontent').css('visibility','visible');
+			$('#slidedestacadospie').css('visibility','visible');
+			$('#pie').css('visibility','visible');
+
+			var hmenubox1 = $('#menubox1').height();
+			//alert(hmenubox1);
+			$('#altanewsletter').height( hmenubox1 );
+
+			// Items pie con el mismo alto
+			var hmax = 1;
+			$('.pieitems').each(function(){
+				var hthis = $(this).height();
+				if(hthis > hmax){
+					hmax = hthis;
+				}
+			});
+
+			var screenW = $(document).width();
+			var screenH = $(document).height();
+
+			if(screenW >580){
+				$('.pieitems').height( hmax );
+			}
+
+			
+
+
+			// Adaptamos la cabecera especial al dispositivo
+			// La propiedad background: url(...) siempre debe estar antes que la propiedad background-size, background-position, etc... y por tanto hay que definir estas opciones después
+
+			
+
+			centradoV();
+
+			VerticalCenter();
+		}
+
+		$(".box2").mouseleave(function(){
+			ShowHideInfoAmpliada('clear');
+		});
+
+
+		function ShowHideInfoAmpliada(IdDiv){
+
+			$('.box2 .infoampliada').hide();
+
+			if(IdDiv !='clear'){
+
+				$('#' + IdDiv).show();
+			}
+		}
+
+		$(window).scroll(function(){
+
+			var EsDispositivoMovil = false;
+			if( /Android|webOS|iPhone|iPod|BlackBerry/i.test(navigator.userAgent) ) {
+				EsDispositivoMovil = true;
+			}
+
+			//EsDispositivoMovil = true; //Eliminar
+
+			if( EsDispositivoMovil == true ) {
+
+				  // Muestra el Stickyheader version movil a partir del pixel 100 de scroll
+
+				  if($(document).scrollTop() > 240)
+				  {
+				  	  //$('#stickymobile').css('visibility','visible');
+				  	  //var AltoStickyMobile = $('#stickymobile').height();
+				  	  //$('#menumobile').css('top',AltoStickyMobile+'px');
+				  }
+				  else
+				  {
+				  	  var AltoContenedorCabecera = $('#contenedorcabecera').height();
+					  $('#stickymobile').css('visibility','hidden');
+					  $('#menumobile').css('top',AltoContenedorCabecera+'px');
+				  }
+
+			}else{
+				  // Muestra el Stickyheader a partir del pixel 100 de scroll
+				  if($(document).scrollTop() > 240)
+				  {
+					  //$('#homestickyheader').fadeIn(100);
+					  $('#homestickyheader').css('visibility','visible');
+					  $('.menubox').css('position','fixed');
+					  $('.menubox').css('top','45px');
+				  }
+				  else
+				  {
+					  //$('#homestickyheader').fadeOut(100);
+					  $('#homestickyheader').css('visibility','hidden');
+					  $('.menubox').css('position','absolute');
+					  $('.menubox').css('top','');
+				  }
+			}
+		});
+
+		// Efecto hover en imagenes
+			function HoverImgOf(filename)
+			{
+			   var re = new RegExp("(.+)\\.(gif|png|jpg)", "g");
+			   return filename.replace(re, "$1-hover.$2");
+			}
+
+			function NormalImgOf(filename)
+			{
+			   var re = new RegExp("(.+)-hover\\.(gif|png|jpg)", "g");
+			   return filename.replace(re, "$1.$2");
+			}
+
+
+		   // http://www.yart.com.au/Resources/jQuery/jQuery---Auto-replace-image-on-hover.aspx
+		   // Change the image of hoverable images
+		   $(".imgHoverable").hover( function() {
+			   var hoverImg = HoverImgOf($(this).attr("src"));
+			   $(this).attr("src", hoverImg);
+			 }, function() {
+			   var normalImg = NormalImgOf($(this).attr("src"));
+			   $(this).attr("src", normalImg);
+			 }
+		   );
+
+
+		function ShowMenu(id){
+
+			var MenuSelected = $('#MenuSelected').val();
+
+			if (MenuSelected == id){
+
+			}else{
+				$('#Menu' + id).addClass('selected');
+				$('#menubox' + id).fadeIn(100);
+				$('#MenuSelected').val(id);
+				//$('#homestickyheader').css('box-shadow', '0px 0px 0px #aaa');
+
+				if (MenuSelected != ''){
+					$('#Menu' + MenuSelected).removeClass('selected');
+					$('#menubox' + MenuSelected).fadeOut(100);
+				}
+
+				// Igualamamos los altos de los div para el borde
+				var max = -1;
+				$("#menubox3 .menuboxcontent .menuboxcol3").each(function() {
+					var h = $(this).height();
+					max = h > max ? h : max;
+				});
+				$("#menubox3 .menuboxcontent .menuboxcol3").css('min-height',max+'px');
+
+				max = -1;
+				$("#menubox2 .menuboxcontent .menuboxcol3").each(function() {
+					var h = $(this).height();
+					max = h > max ? h : max;
+				});
+				$("#menubox2 .menuboxcontent .menuboxcol3").css('min-height',max+'px');
+
+			}
+
+			if(id == '0'){
+				// Sticky header shadow
+				//$('#homestickyheader').css('box-shadow', '0px 3px 3px #aaa');
+			}
+
+
+
+
+		}
+
+function AjustaEllipsis ( id ) {
+
+    $container = $("#" + containerId);
+
+
+    var containerHeight = $container.height();
+    var $text = $container.find("p");
+
+	var conta = 0;
+
+    while ( $text.outerHeight() > containerHeight ) {
+        conta++;
+		if(conta>50){
+			break;
+		}
+		$text.text(function (index, text) {
+            return text.replace(/\W*\s(\S)*$/, '...');
+        });
+    }
+  }
+
+
+	// On window load. This waits until images have loaded which is essential
+	$(window).load(function(){
+
+		// Fade in images so there isn't a color "pop" document load and then on window load
+		$(".item img").fadeIn(500);
+
+		// clone image
+		$('.item img').each(function(){
+			var el = $(this);
+			el.css({"position":"absolute"}).wrap("<div class='img_wrapper' style='display: inline-block'>").clone().addClass('img_grayscale').css({"position":"absolute","z-index":"998","opacity":"0"}).insertBefore(el).queue(function(){
+				var el = $(this);
+				el.parent().css({"width":this.width,"height":this.height});
+				el.dequeue();
+			});
+			this.src = grayscale(this.src);
+		});
+
+		// Fade image
+		$('.item img').mouseover(function(){
+			$(this).parent().find('img:first').stop().animate({opacity:1}, 1000);
+		})
+		$('.img_grayscale').mouseout(function(){
+			$(this).stop().animate({opacity:0}, 1000);
+		});
+	});
+
+	// Grayscale w canvas method
+	function grayscale(src){
+		var canvas = document.createElement('canvas');
+		var ctx = canvas.getContext('2d');
+		var imgObj = new Image();
+		imgObj.src = src;
+		canvas.width = imgObj.width;
+		canvas.height = imgObj.height;
+		ctx.drawImage(imgObj, 0, 0);
+		var imgPixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
+		for(var y = 0; y < imgPixels.height; y++){
+			for(var x = 0; x < imgPixels.width; x++){
+				var i = (y * 4) * imgPixels.width + x * 4;
+				var avg = (imgPixels.data[i] + imgPixels.data[i + 1] + imgPixels.data[i + 2]) / 3;
+				imgPixels.data[i] = avg;
+				imgPixels.data[i + 1] = avg;
+				imgPixels.data[i + 2] = avg;
+			}
+		}
+		ctx.putImageData(imgPixels, 0, 0, 0, 0, imgPixels.width, imgPixels.height);
+		return canvas.toDataURL();
+    }
+
+	//$(function() {
+		//$( '#dl-menu' ).dlmenu({
+			//animationClasses : { classin : 'dl-animate-in-2', classout : 'dl-animate-out-2' }
+		//});
+
+
+	//});
+
+ 	function OpenCloseMenuMobile(){
+ 		var estado = $('#menumobile').css('visibility');
+
+ 		if(estado == 'hidden'){
+			$('#menumobile').css('visibility','visible');
+		}else{
+			$('#menumobile').css('visibility','hidden');
+
+		}
+
+	   var EsDispositivoMovil = false;
+	   if( /Android|webOS|iPhone|iPod|BlackBerry/i.test(navigator.userAgent) ) {
+		   EsDispositivoMovil = true;
+	   }
+
+
+
+		if($(document).scrollTop() > 100)
+		{
+			var AltoStickyMobile = $('#stickymobile').height();
+			$('#menumobile').css('top',AltoStickyMobile+'px');
+		}
+		else
+		{
+			var AltoContenedorCabecera = $('#contenedorcabecera').height();
+			var paddingContenedorCabecera = $('#contenedorcabecera').css('padding-top');
+			paddingContenedorCabecera = parseInt(paddingContenedorCabecera) + parseInt($('#contenedorcabecera').css('padding-bottom'));
+			AltoContenedorCabecera = AltoContenedorCabecera + paddingContenedorCabecera;
+			$('#menumobile').css('top',AltoContenedorCabecera+'px');
+		}
+
+
+ 	}
+
+
+	$( ".banner" ).mouseover(function() {
+	 	$('.banner').animate({
+   			'right': "0"
+		});
+	});
+
+
+	$( ".banner" ).mouseleave(function() {
+	 	$('.banner').animate({
+   			'right': "-300"
+		});
+	});
+
+
+
+</script>
+
+
+
+
+
+<script>
+	// Radio Player 2
+	$(function(){
+		$('#audio-player').mediaelementplayer({
+			alwaysShowControls: true,
+			features: ['playpause','progress','volume'],
+			audioVolume: 'horizontal',
+			audioWidth: 450,
+			audioHeight: 70,
+			iPadUseNativeControls: false,
+			iPhoneUseNativeControls: false,
+			AndroidUseNativeControls: false
+	  });
+	});
+</script>
+
+<script>
+	// Radio player 1
+	$(
+  function(){
+  var aud = $('audio')[0];
+  $('.play-pause').on('click', function(){
+  if (aud.paused) {
+    aud.play();
+    $('.play-pause').removeClass('icon-play');
+    $('.play-pause').addClass('icon-stop');
+  }
+  else {
+    aud.pause();
+    $('.play-pause').removeClass('icon-stop');
+    $('.play-pause').addClass('icon-play');
+  }
+
+})
+  $('.next').on('click', function(){
+  aud.src = 'another audio source';
+})
+  aud.ontimeupdate = function(){
+    $('.progress').css('width', aud.currentTime / aud.duration * 100 + '%')
+  }
+})
+</script>
+
+
+
+
+<script>
+	function cookiesAllAccepted(){
+		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+		ga('create', 'UA-5930066-1', 'auto');
+		ga('send', 'pageview');
+	}
+</script>
+
+
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4b0532078daec97',t:'MTc5MjA4MzA0Ng=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
