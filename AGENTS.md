@@ -8,7 +8,11 @@
 ## Security
 - Only http/https; every outbound request goes through `SafeHttpClient` (SSRF guard).
 - Never log secrets (API keys, tokens); mask query values of key/token params.
-- No HTML scraping, no AI calls, no paid APIs.
+- HTML is read only for configured sources, with deterministic parsers (JSON-LD, microdata,
+  embedded JSON, repeated blocks); respect robots.txt and never bypass blocks, challenges,
+  authentication or paywalls (a 401/403/challenge page means status `blocked`).
+- AI is optional, local only (loopback Ollama), disabled by default and never sees raw HTML;
+  no paid APIs. Optional renderers (Playwright/Crawl4AI) are imported lazily and sandboxed.
 
 ## Data
 - Never guess missing fields (price, island, dates): use null.
