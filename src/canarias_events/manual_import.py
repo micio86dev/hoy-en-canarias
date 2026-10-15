@@ -17,6 +17,7 @@ from canarias_events.date_range import explicit_window
 from canarias_events.http import SafeHttpClient
 from canarias_events.models import Event
 from canarias_events.pipeline import ingest_events
+from canarias_events.social import REFUSED_HOSTS
 from canarias_events.sources.base import FetchContext, SourceConfig
 from canarias_events.sources.web import WebAdapter
 from canarias_events.statuses import HOLD_NEEDS_REVIEW
@@ -33,7 +34,6 @@ ORGANIZER_SOURCE = SourceConfig(
 )  # fmt: skip
 # Facebook and Instagram are never read automatically: no scraping, private sessions, cookies
 # or browsers. The organizer can send the event with ``submit-event`` instead.
-REFUSED_HOSTS = ("facebook.com", "fb.com", "fb.me", "fb.watch", "instagram.com", "instagr.am")
 REFUSAL = (
     "Facebook and Instagram pages are never read automatically (no scraping, no private "
     "sessions). Ask the organizer to send the event with `submit-event`, or enter it by hand."

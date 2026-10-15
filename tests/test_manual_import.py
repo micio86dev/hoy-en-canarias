@@ -12,6 +12,7 @@ import httpx
 import pytest
 import respx
 
+from canarias_events import manual_import, social
 from canarias_events.database import Database
 from canarias_events.date_range import TZ
 from canarias_events.http import InvalidPayload, UnsafeUrlError
@@ -334,3 +335,12 @@ def test_an_ics_file_needs_the_organizer_name(tmp_path: Path) -> None:
     assert event.organizer_name == "Asociación Alfareros"
     assert event.source_event_id == "abc-1@alfareros.example.org"
     assert event.extra["provenance"] == "organizer_submission"
+
+
+def test_refused_hosts_are_the_social_registry_hosts() -> None:
+    assert manual_import.REFUSED_HOSTS is social.REFUSED_HOSTS
+    for host in social.REFUSED_HOSTS:
+        found = social.classify_social_url(f"https://{host}/page")
+        assert found is not None and found[0] in ("facebook", "instagram")
+        with pytest.raises(RefusedUrl):
+            manual_import.check_url(f"https://www.{host}/page")

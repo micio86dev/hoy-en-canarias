@@ -155,6 +155,18 @@ def test_links_stay_on_the_same_domain_or_listed_official_domains() -> None:
     ]
 
 
+def test_a_malformed_href_is_skipped_not_fatal() -> None:
+    html = (
+        '<a href="http://[::1/agenda">Agenda rota</a>'
+        '<a href="https://[2001:db8::/eventos">Eventos rotos</a>'
+        '<a href="/agenda/buena">Agenda</a>'
+    )
+    links = extract_candidate_links(
+        html, "https://www.example.org/", official_domains=set(), known=set(), limit=10
+    )
+    assert links == ["https://www.example.org/agenda/buena"]
+
+
 def test_link_count_is_bounded() -> None:
     links = extract_candidate_links(
         PAGE, "https://www.example.org/", official_domains=set(), known=set(), limit=2

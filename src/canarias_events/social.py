@@ -211,9 +211,12 @@ def scheduled_sources(registry: SocialRegistry) -> list[SourceConfig]:
     return [to_source_config(s) for s in registry.sources if schedule_blocker(s) is None]
 
 
-_FACEBOOK = ("facebook.com", "fb.com", "fb.me", "fb.watch")
+FACEBOOK_HOSTS = ("facebook.com", "fb.com", "fb.me", "fb.watch")
+INSTAGRAM_HOSTS = ("instagram.com", "instagr.am")
+# Pages on these hosts are never read, whatever the command (import-url refuses them upfront).
+REFUSED_HOSTS = (*FACEBOOK_HOSTS, *INSTAGRAM_HOSTS)
 _PLATFORM_HOSTS: tuple[tuple[str, tuple[str, ...], str], ...] = (
-    ("instagram", ("instagram.com", "instagr.am"), "requires_authorization"),
+    ("instagram", INSTAGRAM_HOSTS, "requires_authorization"),
     ("meetup", ("meetup.com",), "requires_authorization"),
     ("telegram", ("t.me", "telegram.me", "telegram.org"), "manual_only"),
     ("bluesky", ("bsky.app",), "api_public"),
@@ -233,7 +236,7 @@ def classify_social_url(url: str) -> tuple[str, str] | None:
     def on(*domains: str) -> bool:
         return any(host == d or host.endswith(f".{d}") for d in domains)
 
-    if on(*_FACEBOOK):
+    if on(*FACEBOOK_HOSTS):
         groups = parts.path.lower().startswith("/groups/")
         return "facebook", "excluded" if groups else "requires_authorization"
     if "eventbrite" in host.split("."):

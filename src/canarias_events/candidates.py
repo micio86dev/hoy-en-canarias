@@ -60,6 +60,17 @@ def _agenda_like(href: str, text: str) -> bool:
     return any(word in folded for word in _AGENDA_WORDS)
 
 
+def _agenda_link(anchor: Any, base_url: str, allowed: set[str]) -> str | None:
+    """The absolute URL of an agenda-like anchor on an allowed domain, else None."""
+    href = urljoin(base_url, (anchor.get("href") or "").strip())
+    parts = urlsplit(href)
+    if parts.scheme not in ("http", "https") or not parts.hostname:
+        return None
+    if registrable_domain(parts.hostname) not in allowed or classify_social_url(href):
+        return None
+    return href if _agenda_like(href, anchor.text_content() or "") else None
+
+
 def extract_candidate_links(
     html: str, base_url: str, *, official_domains: set[str], known: set[str], limit: int
 ) -> list[str]:
@@ -71,16 +82,12 @@ def extract_candidate_links(
     seen = {canonical_url(u) for u in known}
     found: list[str] = []
     for anchor in root.xpath("//a[@href]"):
-        href = urljoin(base_url, (anchor.get("href") or "").strip())
-        parts = urlsplit(href)
-        if parts.scheme not in ("http", "https") or not parts.hostname:
+        try:
+            href = _agenda_link(anchor, base_url, allowed)
+            key = canonical_url(href) if href else None
+        except ValueError:  # e.g. an unterminated IPv6 bracket: skip that link only
             continue
-        if registrable_domain(parts.hostname) not in allowed or classify_social_url(href):
-            continue
-        if not _agenda_like(href, anchor.text_content() or ""):
-            continue
-        key = canonical_url(href)
-        if key in seen:
+        if href is None or key is None or key in seen:
             continue
         seen.add(key)
         found.append(href)
