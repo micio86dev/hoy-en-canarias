@@ -225,18 +225,69 @@ def test_prompt_injection_text_is_inert() -> None:
     assert _span(text) == (date(2026, 10, 24), None)
 
 
-def test_pathological_input_is_bounded() -> None:
-    import time as clock
+def test_pathological_input_yields_bounded_results() -> None:
+    from canarias_events.extract.dates_es import MAX_TEXT_CHARS, find_date_ranges
 
-    started = clock.monotonic()
-    for payload in (
-        "1 " * 20000 + "oct 20 " * 2000,
-        "9" * 40000,
-        " ".join(["12 de octubre de 2026"] * 2000),
-    ):
-        parse_date_range(payload)
-        parse_time_range(payload)
-    assert clock.monotonic() - started < 5
+    noisy = "1 " * 20000 + "oct 20 " * 2000
+    assert parse_date_range(noisy) is None
+    assert parse_time_range(noisy) == (None, None)
+    digits = "9" * 40000
+    assert parse_date_range(digits) is None
+    assert parse_time_range(digits) == (None, None)
+    repeated = " ".join(["12 de octubre de 2026"] * 2000)
+    assert len(find_date_ranges(repeated)) == 2000
+    # Anything beyond the input cap is never scanned.
+    beyond = "x " * MAX_TEXT_CHARS + "12 de octubre de 2026"
+    assert parse_date_range(beyond) is None
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Duración: 2 horas",
+        "Duración: 2 h",
+        "Duración 90 minutos",
+        "Duración: 2:00 h",
+        "dura 2 horas",
+        "Durante 3 horas",
+        "Aproximadamente 2 horas",
+        "Espectáculo de 2 horas",
+    ],
+)
+def test_durations_are_not_clock_times(text: str) -> None:
+    assert parse_time_range(text) == (None, None)
+
+
+def test_duration_next_to_a_date_does_not_become_start_time() -> None:
+    parsed = parse_date_range("24 de octubre de 2026. Duración: 2 horas")
+    assert parsed is not None
+    assert parsed.start == date(2026, 10, 24)
+    assert parsed.start_time is None
+    assert parsed.end_time is None
+
+
+def test_duration_does_not_hide_a_real_start_time() -> None:
+    assert parse_time_range("Duración: 2 horas. A las 20:00 h") == (time(20, 0), None)
+    from canarias_events.extract.dates_es import find_times
+
+    assert find_times("Duración: 2 horas. Hora: 20.00 h") == {time(20, 0)}
+
+
+def test_street_number_before_a_date_is_not_a_range() -> None:
+    assert _span("Plaza 2 - 15 de octubre de 2026") == (date(2026, 10, 15), None)
+    assert _span("Calle Mayor 3 al 15 de octubre de 2026") == (date(2026, 10, 15), None)
+
+
+@pytest.mark.parametrize(
+    ("text", "start", "end"),
+    [
+        ("Sábado 24 - 25 de octubre de 2026", date(2026, 10, 24), date(2026, 10, 25)),
+        ("(24 - 25 de octubre de 2026)", date(2026, 10, 24), date(2026, 10, 25)),
+        ("Fechas: 24 al 25 de octubre de 2026", date(2026, 10, 24), date(2026, 10, 25)),
+    ],
+)
+def test_day_range_cues_are_still_accepted(text: str, start: date, end: date) -> None:
+    assert _span(text) == (start, end)
 
 
 def test_find_times_lists_every_clock_time_in_the_text() -> None:

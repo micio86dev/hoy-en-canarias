@@ -58,7 +58,16 @@ _RE_MONTH_FIRST = re.compile(
     rf"(?:\s*,?\s*(?P<y>{_YEAR})(?!\d))?"
 )
 _RE_WEEKDAY_GLUE = re.compile(r"(?<![a-z0-9])[lmxjvsd](?=\d{1,2}\s+(?:de\s+)?[a-z]{3})")
-_RE_DAY_ONLY_BEFORE = re.compile(rf"{_DAY_GUARD}(?P<d>\d{{1,2}})(?![\d:/]|\.\d){_SEP}$")
+# A leading bare day is a range start only after a range cue (string start, punctuation, "del",
+# "desde el", a weekday); "Plaza 2 - 15 de octubre" has a street number there instead.
+_RANGE_CUE = (
+    r"(?:^\s*|(?<=[,;:(\[!¡.])\s*|(?<=\bdel )|(?<=\bdesde el )|(?<=\bdesde )|(?<=\bel )"
+    r"|(?<=\bde )|(?<=\bfrom )|(?<=\blunes )|(?<=\bmartes )|(?<=\bmiercoles )|(?<=\bjueves )"
+    r"|(?<=\bviernes )|(?<=\bsabado )|(?<=\bdomingo ))"
+)
+_RE_DAY_ONLY_BEFORE = re.compile(
+    rf"{_RANGE_CUE}(?P<d>\d{{1,2}})(?![\d:/]|\.\d){_SEP}$"
+)
 _RE_SEP_ONLY_BEFORE = re.compile(rf"{_SEP}$")
 _RE_WS_ONLY = re.compile(r"\s*$")
 
@@ -171,14 +180,32 @@ def _make_time(hour: str, minute: str | None, ap: str | None) -> time | None:
     return time(h, mi)
 
 
+_RE_DURATION_CUE = re.compile(r"(?:duracion|dura|durante|aprox\w*|unas)\W*(?:de\s+|de\s+unas\s+)?$")
+_RE_AT_CUE = re.compile(r"(?:\ba\s+las?|\bhora)\W*$")
+_UNIT_LOOKBACK = 24
+
+
 def _token_ok(sep: str | None, has_h: bool, has_ap: bool) -> bool:
     if sep == ":":
         return True
     return has_h or has_ap  # "18.00 horas", "20h", "8 pm"; a bare "1.2" is not a time
 
 
+def _is_duration(folded: str, m: re.Match[str], p: str) -> bool:
+    """True for "Duración: 2 horas", "dura 2 h", "de 2 horas": a length, not a clock time."""
+    before = folded[max(0, m.start(f"{p}h") - _UNIT_LOOKBACK) : m.start(f"{p}h")]
+    if _RE_DURATION_CUE.search(before):
+        return True
+    unit = m.group(f"{p}hs") or ""
+    bare = m.group(f"{p}s") is None
+    # A bare hour followed by the long unit ("2 horas") is a length unless introduced by "a las".
+    return bare and unit.rstrip(".").startswith("hora") and not _RE_AT_CUE.search(before)
+
+
 def _times_in(folded: str) -> tuple[time | None, time | None]:
     for m in _RE_TIME_RANGE.finditer(folded):
+        if _is_duration(folded, m, "a"):
+            continue
         first = _make_time(m.group("ah"), m.group("ami"), m.group("aap"))
         second = _make_time(m.group("bh"), m.group("bmi"), m.group("bap"))
         if first is None or second is None:
@@ -190,6 +217,8 @@ def _times_in(folded: str) -> tuple[time | None, time | None]:
         if (sep_a == ":" or sep_b == ":") or has_h:
             return first, second
     for m in _RE_TIME.finditer(folded):
+        if _is_duration(folded, m, "a"):
+            continue
         value = _make_time(m.group("ah"), m.group("ami"), m.group("aap"))
         if value is None:
             continue
@@ -203,6 +232,8 @@ def find_times(text: str) -> set[time]:
     folded = _fold(text[:MAX_TEXT_CHARS])
     found: set[time] = set()
     for m in _RE_TIME_RANGE.finditer(folded):
+        if _is_duration(folded, m, "a"):
+            continue
         for prefix in ("a", "b"):
             value = _make_time(
                 m.group(f"{prefix}h"), m.group(f"{prefix}mi"), m.group(f"{prefix}ap")
@@ -212,6 +243,8 @@ def find_times(text: str) -> set[time]:
             ):
                 found.add(value)
     for m in _RE_TIME.finditer(folded):
+        if _is_duration(folded, m, "a"):
+            continue
         value = _make_time(m.group("ah"), m.group("ami"), m.group("aap"))
         if value is not None and _token_ok(
             m.group("as"), bool(m.group("ahs")), bool(m.group("aap"))
@@ -318,16 +351,16 @@ def _group(folded: str, items: list[_Item]) -> list[_Span]:
             continue
         # "19-23 oct", "Del 15 al 19 de octubre": a bare day, a separator, then a full date.
         window_start = max(0, item.start - 40)
-        before = _RE_DAY_ONLY_BEFORE.search(folded[window_start : item.start])
-        if before and (not spans or window_start + before.start() >= spans[-1].end):
+        before = _RE_DAY_ONLY_BEFORE.search(folded, window_start, item.start)
+        if before and (not spans or before.start() >= spans[-1].end):
             day = int(before.group("d"))
             month, year = item.month, item.year
             if day > item.day:
                 month -= 1
                 if month == 0:
                     month, year = 12, (year - 1) if year is not None else None
-            lead_start = window_start + before.start()
-            lead = _Item(day, month, year, lead_start, window_start + before.end("d"), "day")
+            lead_start = before.start("d")
+            lead = _Item(day, month, year, lead_start, before.end("d"), "day")
             spans.append(_Span(lead, item, lead_start, item.end))
             continue
         nxt = items[index + 1] if index + 1 < len(items) else None
