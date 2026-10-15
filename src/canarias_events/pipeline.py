@@ -37,6 +37,7 @@ from canarias_events.statuses import (
     FAILED,
     NEEDS_REVIEW,
     PARTIAL,
+    RATE_LIMITED,
     SUCCEEDED,
 )
 
@@ -211,7 +212,7 @@ def _apply_result(
     stats["anomalies"] = codes
     reason = ",".join(c for c in codes if c not in INFORMATIONAL)
     hold: str | None = None  # why the events are held back instead of published
-    if result.status == BLOCKED:  # 401/403/429 or challenge page: not bypassed
+    if result.status in (BLOCKED, RATE_LIMITED):  # 401/403/429 or challenge page: not bypassed
         message = next((w for w in result.warnings if w.startswith("blocked")), "blocked: denied")
         stats["error"] = message
         if result.events:  # partial data from a source that then blocked us: doubtful

@@ -668,16 +668,29 @@ def test_news_page_with_dates_is_not_an_agenda(make_ctx: Ctx) -> None:
 
 
 @respx.mock
-@pytest.mark.parametrize("status", [401, 403, 429])
-def test_blocked_sources_stop_without_retrying_or_bypassing(make_ctx: Ctx, status: int) -> None:
+@pytest.mark.parametrize(("status", "adapter_status"), [(401, "blocked"), (403, "blocked")])
+def test_blocked_sources_stop_without_retrying_or_bypassing(
+    make_ctx: Ctx, status: int, adapter_status: str
+) -> None:
     robots()
     route = respx.get(LISTING).mock(return_value=httpx.Response(status))
     result = adapter().fetch(make_ctx())
-    assert result.status == "blocked"
+    assert result.status == adapter_status
     assert result.events == []
     assert result.extraction_ok is False
     assert route.call_count == 1
     assert any(str(status) in w for w in result.warnings)
+
+
+@respx.mock
+def test_rate_limit_is_reported_as_rate_limited_not_blocked(make_ctx: Ctx) -> None:
+    robots()
+    respx.get(LISTING).mock(return_value=httpx.Response(429, headers={"Retry-After": "1"}))
+    result = adapter().fetch(make_ctx())
+    assert result.status == "rate_limited"
+    assert result.events == []
+    assert result.extraction_ok is False
+    assert any("429" in w for w in result.warnings)
 
 
 @respx.mock

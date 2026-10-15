@@ -528,6 +528,35 @@ def test_blocked_without_events_stays_a_failure(db: Database, client: SafeHttpCl
     assert db.recent_source_runs("w", limit=1)[0].source_status == "blocked"
 
 
+def test_rate_limited_without_events_is_a_failure_recorded_as_rate_limited(
+    db: Database, client: SafeHttpClient
+) -> None:
+    result = SourceFetchResult(
+        status="rate_limited", extraction_ok=False, warnings=["blocked: HTTP 429 (not bypassed)"]
+    )
+    report = run_scripted(db, client, result)
+    assert report["sources_failed"] == ["w"]
+    assert db.recent_source_runs("w", limit=1)[0].source_status == "rate_limited"
+
+
+def test_a_rate_limited_source_is_retried_on_the_next_run(
+    db: Database, client: SafeHttpClient
+) -> None:
+    cfg = make_cfg("w")
+    limited = SourceFetchResult(
+        status="rate_limited", extraction_ok=False, warnings=["blocked: HTTP 429 (not bypassed)"]
+    )
+    calls: list[int] = []
+
+    def factory(c: SourceConfig) -> SourceAdapter:
+        calls.append(1)
+        return Scripted(c, limited)
+
+    for _ in range(3):
+        run_import(db, [cfg], WINDOW, client=client, now=NOW, adapter_factory=factory)
+    assert len(calls) == 3  # no 72h cool-down: below the failure threshold it just runs again
+
+
 def test_http_forbidden_exception_is_recorded_as_blocked(
     db: Database, client: SafeHttpClient
 ) -> None:

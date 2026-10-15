@@ -112,3 +112,15 @@ def test_blocked_failures_are_not_temporary_failures() -> None:
     runs = [run_at(i, source_status="blocked") for i in (80, 90, 100)]
     assert reason(None, runs, None) is None  # past the cool-down, and no backoff streak
     assert "cool-down" in (reason(None, [run_at(1, source_status="blocked")], None) or "")
+
+
+def test_a_rate_limit_is_a_temporary_failure_not_a_cool_down() -> None:
+    assert reason(None, [run_at(1, source_status="rate_limited")], None) is None
+
+
+def test_repeated_rate_limits_back_off_exponentially() -> None:
+    runs = [run_at(h, source_status="rate_limited") for h in (1, 10, 20)]
+    assert "backoff" in (reason(None, runs, None) or "")
+    assert "backoff" not in (
+        reason(None, [run_at(h, source_status="blocked") for h in (1, 10, 20)], None) or ""
+    )

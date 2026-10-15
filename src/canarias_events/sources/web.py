@@ -59,6 +59,7 @@ from canarias_events.sources.base import (
     SourceFetchResult,
     resolve_island,
 )
+from canarias_events.statuses import BLOCKED, RATE_LIMITED
 
 logger = logging.getLogger("canarias_events.web")
 
@@ -152,6 +153,15 @@ class _Page:
 class _Blocked(Exception):
     """401/403/429 or a challenge page: the crawl stops (never bypassed)."""
 
+    def __init__(self, reason: str, status: int | None = None) -> None:
+        super().__init__(reason)
+        self.status = status
+
+
+def _stop_status(http_status: int | None) -> str:
+    """429 is a temporary rate limit; 401/403 and challenge pages need a human."""
+    return RATE_LIMITED if http_status == 429 else BLOCKED
+
 
 class _RobotsDisallowed(Exception):
     pass
@@ -208,6 +218,7 @@ class _Run:
         self.cache: dict[str, _Page] = {}
         self.renderers: list[Renderer] = []
         self.block_reason: str | None = None
+        self.block_status: int | None = None
         self.limit_warned = False
         self.reference = ctx.now.date()
         cap = ctx.page_cap
@@ -264,7 +275,7 @@ class _Run:
             response = self.ctx.client.get(url, allowed_hosts=self.hosts)
         except HttpError as exc:
             if exc.status in BLOCKING_STATUSES:
-                raise _Blocked(f"HTTP {exc.status} for {mask_secrets(url)}") from exc
+                raise _Blocked(f"HTTP {exc.status} for {mask_secrets(url)}", exc.status) from exc
             raise
         if html:
             try:
@@ -287,6 +298,7 @@ class _Run:
             return self.fetch(url, html=html)
         except _Blocked as exc:
             self.block_reason = str(exc)
+            self.block_status = exc.status
         except (_RobotsDisallowed, _PageLimit):
             pass
         except FetchError as exc:
@@ -433,6 +445,7 @@ class _Run:
                     break
                 except RenderError as exc:
                     if exc.status in BLOCKING_STATUSES:
+                        self.block_status = exc.status
                         self.block_reason = (
                             f"HTTP {exc.status} while rendering {mask_secrets(page.url)}"
                         )
@@ -513,7 +526,7 @@ class _Run:
         try:
             pages = self.load_listing()
         except _Blocked as exc:
-            return self.finish_blocked(str(exc))
+            return self.finish_blocked(str(exc), exc.status)
         except _RobotsDisallowed:
             result.status = "robots_disallowed"
             result.warnings.append("source skipped: robots.txt does not allow fetching the listing")
@@ -544,7 +557,7 @@ class _Run:
                 tier = "llm"
         if self.block_reason is not None:
             result.warnings.append(f"blocked: {self.block_reason} (not bypassed)")
-            result.status = "blocked"
+            result.status = _stop_status(self.block_status)
         if not found:
             if self.block_reason is None:
                 result.status = "needs_manual_review"
@@ -571,8 +584,8 @@ class _Run:
             return "", []
         return self.static_tiers(rendered, prefix="render+")
 
-    def finish_blocked(self, reason: str) -> SourceFetchResult:
-        self.result.status = "blocked"
+    def finish_blocked(self, reason: str, http_status: int | None = None) -> SourceFetchResult:
+        self.result.status = _stop_status(http_status)
         self.result.extraction_ok = False
         self.result.warnings.append(f"blocked: {reason} (not bypassed)")
         return self.result
