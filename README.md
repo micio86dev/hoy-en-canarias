@@ -534,6 +534,9 @@ over time.
 - **HTML portals**: terms were not reviewed; only public pages allowed by `robots.txt` are read.
 - **Cabildo de Tenerife CKAN**: CC-BY, **attribution required**.
 - **Ticketmaster**: API terms (attribution and link back; no revenue use on the free key).
+- Hola event images (header and gallery, exported as `image_url` and `extra.images`) and tags
+  are captured as links to the source's own files; image rights stay with the source, so link
+  to them and do not re-host.
 - Hola dates are **date-only**. Tribe sites often declare a wrong timezone; non-IANA values are
   read as Canary wall time. `params.force_timezone` handles iCal feeds labelled `TZID=UTC`.
 - The per-event `source_license` is exported; check it before reuse.

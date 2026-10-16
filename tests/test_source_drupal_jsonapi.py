@@ -264,3 +264,157 @@ def test_payload_without_data_list_is_invalid(make_ctx: MakeCtx) -> None:
 
     with pytest.raises(InvalidPayload):
         DrupalJsonApiAdapter(cfg()).fetch(make_ctx())
+
+
+# --------------------------------------------------------------------------- media and tags
+
+ORIGIN = f"https://{HOST}"
+
+
+def media_events(payload: dict[str, Any] | None = None) -> dict[str, Any]:
+    data = payload or fixture_json("holaislascanarias_events_media.json")
+    data.get("links", {}).pop("next", None)
+    return data
+
+
+def fetch_media(make_ctx: MakeCtx, payload: dict[str, Any]) -> dict[str, Any]:
+    single(payload)
+    events = DrupalJsonApiAdapter(cfg()).fetch(make_ctx()).events
+    return {e.title: e for e in events}
+
+
+@respx.mock
+def test_header_image_wins_and_gallery_follows(make_ctx: MakeCtx) -> None:
+    events = fetch_media(make_ctx, media_events())
+
+    batalla = events["Batalla del Cuchillete y Tamasite"]
+    header = f"{ORIGIN}/sites/default/files/events/batalla%20tamasite.jpg"
+    gallery = f"{ORIGIN}/sites/default/files/events/batalla_tamasite_1.jpg"
+    assert batalla.image_url == header
+    images = batalla.extra["images"]
+    assert [(i["url"], i["role"]) for i in images] == [(header, "header"), (gallery, "gallery")]
+    assert set(images[0]) == {"url", "alt", "width", "height", "role"}
+
+
+@respx.mock
+def test_gallery_image_used_when_no_header(make_ctx: MakeCtx) -> None:
+    events = fetch_media(make_ctx, media_events())
+
+    trail = events["Trail Pino Santo"]
+    url = f"{ORIGIN}/sites/default/files/events/trail_pino_santo2025_1010.png"
+    assert trail.image_url == url
+    assert [i["role"] for i in trail.extra["images"]] == ["gallery"]
+    assert trail.extra["images"][0]["url"] == url
+
+
+@respx.mock
+def test_image_dimensions_and_alt_come_from_relationship_meta(make_ctx: MakeCtx) -> None:
+    payload = media_events()
+    media = next(i for i in payload["included"] if i["attributes"].get("name") == "cana_dulce")
+    ref = media["relationships"]["field_media_image"]["data"]
+    ref["meta"] = {"alt": "Cana dulce", "title": "t", "width": 800, "height": 600}
+
+    events = fetch_media(make_ctx, payload)
+
+    image = events["Fiestas de la Caña Dulce y La Concepción"].extra["images"][0]
+    assert (image["alt"], image["width"], image["height"]) == ("Cana dulce", 800, 600)
+
+
+@respx.mock
+def test_missing_file_is_skipped_never_guessed(make_ctx: MakeCtx) -> None:
+    payload = media_events()
+    payload["included"] = [
+        i
+        for i in payload["included"]
+        if not (i["type"] == "file--file" and "trail_pino" in i["attributes"]["uri"]["url"])
+    ]
+
+    trail = fetch_media(make_ctx, payload)["Trail Pino Santo"]
+
+    assert trail.image_url is None
+    assert "images" not in trail.extra
+
+
+@respx.mock
+def test_file_without_url_and_non_http_urls_are_skipped(make_ctx: MakeCtx) -> None:
+    payload = media_events()
+    for item in payload["included"]:
+        if item["type"] != "file--file":
+            continue
+        uri = item["attributes"]["uri"]
+        if "cana_dulce" in uri["url"]:
+            item["attributes"]["uri"] = {"value": uri["value"]}
+        if "origen_dinner" in uri["url"]:
+            uri["url"] = "javascript:alert(1)"
+
+    events = fetch_media(make_ctx, payload)
+
+    assert "images" not in events["Fiestas de la Caña Dulce y La Concepción"].extra
+    assert "images" not in events["Origen Dinner Show"].extra
+    assert events["Origen Dinner Show"].image_url is None
+
+
+@respx.mock
+def test_media_relationship_may_be_a_list_and_images_are_deduplicated(
+    make_ctx: MakeCtx,
+) -> None:
+    payload = media_events()
+    item = payload["data"][1]  # Trail Pino Santo
+    ref = item["relationships"]["field_h_image_gallery"]["data"]
+    item["relationships"]["field_h_image_gallery"]["data"] = [ref, copy.deepcopy(ref)]
+
+    trail = fetch_media(make_ctx, payload)["Trail Pino Santo"]
+
+    assert len(trail.extra["images"]) == 1
+
+
+@respx.mock
+def test_tags_come_from_field_t_tags(make_ctx: MakeCtx) -> None:
+    payload = media_events()
+    payload["data"][0]["relationships"]["field_t_tags"]["data"] = [
+        {"type": "taxonomy_term--tags", "id": "t1"},
+        {"type": "taxonomy_term--tags", "id": "t2"},
+    ]
+    payload["included"] += [
+        {"type": "taxonomy_term--tags", "id": "t1", "attributes": {"name": "Senderismo"}},
+        {"type": "taxonomy_term--tags", "id": "t2", "attributes": {"name": "Tradición"}},
+    ]
+
+    batalla = fetch_media(make_ctx, payload)["Batalla del Cuchillete y Tamasite"]
+
+    assert batalla.tags == ["Senderismo", "Tradición"]
+
+
+@respx.mock
+def test_events_without_media_keep_working(make_ctx: MakeCtx) -> None:
+    payload = fixture_json("holaislascanarias_events_page2.json")
+    payload["links"].pop("next", None)
+
+    events = fetch_media(make_ctx, payload)
+
+    assert all("images" not in e.extra for e in events.values())
+
+
+@respx.mock
+def test_request_includes_media_and_tags(make_ctx: MakeCtx) -> None:
+    payload = media_events()
+    route = respx.get(host=HOST, path=PATH).mock(return_value=httpx.Response(200, json=payload))
+
+    DrupalJsonApiAdapter(cfg()).fetch(make_ctx())
+
+    query = route.calls.last.request.url.params
+    includes = query["include"].split(",")
+    for path in (
+        "field_t_tags",
+        "field_h_images",
+        "field_h_images.field_media_image",
+        "field_h_image_gallery",
+        "field_h_image_gallery.field_media_image",
+    ):
+        assert path in includes
+    for field in ("field_t_tags", "field_h_images", "field_h_image_gallery"):
+        assert field in query["fields[node--event]"].split(",")
+    assert query["fields[taxonomy_term--tags]"] == "name"
+    assert query["fields[media--header_images]"] == "name,field_media_image"
+    assert query["fields[media--list_image]"] == "name,field_media_image"
+    assert query["fields[file--file]"] == "uri"

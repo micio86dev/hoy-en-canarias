@@ -1,0 +1,562 @@
+{
+ "jsonapi": {
+  "version": "1.0",
+  "meta": {
+   "links": {
+    "self": {
+     "href": "http://jsonapi.org/format/1.0/"
+    }
+   }
+  }
+ },
+ "data": [
+  {
+   "type": "node--event",
+   "id": "f023c942-c53b-4c1f-902e-a419231af081",
+   "attributes": {
+    "title": "Batalla del Cuchillete y Tamasite",
+    "changed": "2026-09-24T16:08:01+00:00",
+    "path": {
+     "alias": "/eventos/fuerteventura/batalla-del-cuchillete-y-tamasite",
+     "pid": 351127,
+     "langcode": "es"
+    },
+    "field_event_city": "Tuineje",
+    "field_event_description": "La Batalla de Tamasite, celebrada cada año en Tuineje, Fuerteventura, conmemora la histórica defensa del pueblo majorero ante los corsarios ingleses en 1740. Este evento festivo, cargado de valor cultural y simbólico, se caracteriza por la recreación de los enfrentamientos entre los habitantes de la isla y los invasores, donde destaca el uso de herramientas agrícolas como símbolo de resistencia. Además de las representaciones teatrales, la festividad incluye música tradicional, procesiones, y actividades comunitarias que invitan tanto a residentes como a visitantes a revivir este capítulo crucial de la historia de Fuerteventura.",
+    "field_event_free": "1",
+    "field_event_latitude": "28.325658",
+    "field_event_longitude": "-14.047429",
+    "field_event_tickets_website": null,
+    "field_event_website": {
+     "uri": "https://fiestasmap.com/fiesta/fiestas-juradas-de-san-miguel-y-batallas-de-tamasite-tuineje",
+     "title": "Batalla del Cuchillete y Tamasite website",
+     "options": {
+      "attributes": {
+       "target": "_blank"
+      }
+     }
+    },
+    "field_e_calculated_end_date": "2026-10-13",
+    "field_e_end_date": "2026-10-13",
+    "field_e_start_date": "2026-10-09"
+   },
+   "relationships": {
+    "field_event_category": {
+     "data": {
+      "type": "taxonomy_term--event_category",
+      "id": "1013b646-6223-40d1-83c3-965f7a770c58",
+      "meta": {
+       "drupal_internal__target_id": 20
+      }
+     }
+    },
+    "field_h_images": {
+     "data": {
+      "type": "media--header_images",
+      "id": "bbe421dd-bdd3-4c6a-a136-382edc34bd34",
+      "meta": {
+       "drupal_internal__target_id": 137863
+      }
+     }
+    },
+    "field_h_image_gallery": {
+     "data": {
+      "type": "media--list_image",
+      "id": "80f4b375-802c-4250-a289-a1f28923c53f",
+      "meta": {
+       "drupal_internal__target_id": 302626
+      }
+     }
+    },
+    "field_t_islands": {
+     "data": [
+      {
+       "type": "taxonomy_term--islands",
+       "id": "8a5b5017-9142-4b3e-929f-6c19b1897332",
+       "meta": {
+        "drupal_internal__target_id": 4
+       }
+      }
+     ]
+    },
+    "field_t_municipality": {
+     "data": [
+      {
+       "type": "taxonomy_term--islands",
+       "id": "966f88d4-c93f-48c8-b2bc-b941b2c8a0d3",
+       "meta": {
+        "drupal_internal__target_id": 54508
+       }
+      }
+     ]
+    },
+    "field_t_tags": {
+     "data": []
+    }
+   }
+  },
+  {
+   "type": "node--event",
+   "id": "ecd0ca9b-a5cd-4013-ad65-50f66ae9f1d5",
+   "attributes": {
+    "title": "Trail Pino Santo",
+    "changed": "2026-09-03T15:08:01+00:00",
+    "path": {
+     "alias": "/eventos/gran-canaria/trail-pino-santo",
+     "pid": 793840,
+     "langcode": "es"
+    },
+    "field_event_city": "Santa Brígida",
+    "field_event_description": "El Trail Pino Santo es una carrera de montaña de 12 km que combina deporte y naturaleza en un entorno espectacular. Además, incluye una ruta de senderismo guiado de 8-9 km, ideal para quienes prefieren un ritmo más relajado. Este evento ofrece a los participantes la oportunidad de disfrutar del paisaje montañoso mientras recorren parte del Paisaje Protegido de Pino Santo. Organizado por una asociación vecinal dentro del Proyecto Social de Recuperación del Patrimonio Caminero, busca preservar y dar a conocer este entorno natural desde 2023.",
+    "field_event_free": "0",
+    "field_event_latitude": "28.035952",
+    "field_event_longitude": "-15.497250",
+    "field_event_tickets_website": null,
+    "field_event_website": {
+     "uri": "https://trailpinosanto.com/",
+     "title": "Trail Pino Santo website",
+     "options": {
+      "attributes": {
+       "target": "_blank"
+      }
+     }
+    },
+    "field_e_calculated_end_date": "2026-12-06",
+    "field_e_end_date": "2026-12-06",
+    "field_e_start_date": "0026-12-06"
+   },
+   "relationships": {
+    "field_event_category": {
+     "data": {
+      "type": "taxonomy_term--event_category",
+      "id": "aa99a904-4040-4aa9-b807-510006f3bddc",
+      "meta": {
+       "drupal_internal__target_id": 31
+      }
+     }
+    },
+    "field_h_images": {
+     "data": null
+    },
+    "field_h_image_gallery": {
+     "data": {
+      "type": "media--list_image",
+      "id": "080990a3-91fb-4eef-aa4c-4fcd4b8d05c5",
+      "meta": {
+       "drupal_internal__target_id": 301573
+      }
+     }
+    },
+    "field_t_islands": {
+     "data": [
+      {
+       "type": "taxonomy_term--islands",
+       "id": "fb7d93fb-a35f-4262-bb26-35a1ca5852d1",
+       "meta": {
+        "drupal_internal__target_id": 2
+       }
+      }
+     ]
+    },
+    "field_t_municipality": {
+     "data": [
+      {
+       "type": "taxonomy_term--islands",
+       "id": "7a1539a6-64cb-4a79-8a21-fcb9ba068614",
+       "meta": {
+        "drupal_internal__target_id": 54547
+       }
+      }
+     ]
+    },
+    "field_t_tags": {
+     "data": []
+    }
+   }
+  },
+  {
+   "type": "node--event",
+   "id": "f2da303e-e102-4266-9724-683b59fe4e82",
+   "attributes": {
+    "title": "Fiestas de la Caña Dulce y La Concepción",
+    "changed": "2026-10-06T15:08:01+00:00",
+    "path": {
+     "alias": "/eventos/gran-canaria/fiestas-de-la-cana-dulce-y-la-concepcion",
+     "pid": 821377,
+     "langcode": "es"
+    },
+    "field_event_city": "Jinámar",
+    "field_event_description": "Las Fiestas de la Caña Dulce y La Concepción en Jinámar, Gran Canaria, son una celebración tradicional en honor a la Inmaculada Concepción y están declaradas Fiesta de Interés Turístico. Este evento combina actividades culturales, deportivas y religiosas, incluyendo el pregón inaugural, conciertos, muestras de artesanía, degustaciones de productos locales y la popular \"Gran Chupada\" de caña dulce. Además, se realizan exhibiciones de juegos tradicionales y lucha canaria, conciertos de grupos tradicionales y fuegos artificiales, destacando la riqueza cultural y el sentido de comunidad de este histórico festejo.",
+    "field_event_free": "1",
+    "field_event_latitude": "28.031474",
+    "field_event_longitude": "-15.409210",
+    "field_event_tickets_website": null,
+    "field_event_website": null,
+    "field_e_calculated_end_date": "2026-12-08",
+    "field_e_end_date": "2026-12-08",
+    "field_e_start_date": "2016-11-28"
+   },
+   "relationships": {
+    "field_event_category": {
+     "data": {
+      "type": "taxonomy_term--event_category",
+      "id": "39d38d38-dee5-480c-b439-a4f8fe309a37",
+      "meta": {
+       "drupal_internal__target_id": 43
+      }
+     }
+    },
+    "field_h_images": {
+     "data": null
+    },
+    "field_h_image_gallery": {
+     "data": {
+      "type": "media--list_image",
+      "id": "d81167c8-a259-4e8a-915a-27cd4c2a5ae4",
+      "meta": {
+       "drupal_internal__target_id": 302822
+      }
+     }
+    },
+    "field_t_islands": {
+     "data": [
+      {
+       "type": "taxonomy_term--islands",
+       "id": "fb7d93fb-a35f-4262-bb26-35a1ca5852d1",
+       "meta": {
+        "drupal_internal__target_id": 2
+       }
+      }
+     ]
+    },
+    "field_t_municipality": {
+     "data": [
+      {
+       "type": "taxonomy_term--islands",
+       "id": "946aef4e-1837-4007-a148-8e3480b76340",
+       "meta": {
+        "drupal_internal__target_id": 54559
+       }
+      }
+     ]
+    },
+    "field_t_tags": {
+     "data": []
+    }
+   }
+  },
+  {
+   "type": "node--event",
+   "id": "246c2cdf-4182-4a2d-9b22-79f197b4cfbc",
+   "attributes": {
+    "title": "Origen Dinner Show",
+    "changed": "2026-01-26T11:32:01+00:00",
+    "path": {
+     "alias": "/eventos/gran-canaria/origen-dinner-show",
+     "pid": 755143,
+     "langcode": "es"
+    },
+    "field_event_city": "San Agustín",
+    "field_event_description": "El show ORIGEN es una experiencia inmersiva 360º  que se celebra en la Sala Scala Gran Canaria. Mientras degustas un menú de alta calidad gastronómica con productos canarios kilómetro cero, también puedes disfrutar de un show único de más de tres horas lleno de luz, acompañado de proyecciones audiovisuales y un gran elenco de primer orden internacional con cantantes, bailarines, acróbatas y Drag Queens. \r\n ",
+    "field_event_free": "0",
+    "field_event_latitude": "27.770801",
+    "field_event_longitude": "-15.543104",
+    "field_event_tickets_website": {
+     "uri": "https://scaladinner.janto.es/espectaculo/origen-2024/ORIGENA24",
+     "title": "Origen Dinner Show tickets website",
+     "options": {
+      "attributes": {
+       "target": "_blank"
+      }
+     }
+    },
+    "field_event_website": {
+     "uri": "https://salascala.com/origen-dinner-show/",
+     "title": "Origen Dinner Show website",
+     "options": {
+      "attributes": {
+       "target": "_blank"
+      }
+     }
+    },
+    "field_e_calculated_end_date": "2026-12-27",
+    "field_e_end_date": "2026-12-27",
+    "field_e_start_date": "2025-11-06"
+   },
+   "relationships": {
+    "field_event_category": {
+     "data": {
+      "type": "taxonomy_term--event_category",
+      "id": "1013b646-6223-40d1-83c3-965f7a770c58",
+      "meta": {
+       "drupal_internal__target_id": 20
+      }
+     }
+    },
+    "field_h_images": {
+     "data": null
+    },
+    "field_h_image_gallery": {
+     "data": {
+      "type": "media--list_image",
+      "id": "2b310c33-7889-4dae-858c-0b462fa15f2e",
+      "meta": {
+       "drupal_internal__target_id": 286165
+      }
+     }
+    },
+    "field_t_islands": {
+     "data": [
+      {
+       "type": "taxonomy_term--islands",
+       "id": "fb7d93fb-a35f-4262-bb26-35a1ca5852d1",
+       "meta": {
+        "drupal_internal__target_id": 2
+       }
+      }
+     ]
+    },
+    "field_t_municipality": {
+     "data": [
+      {
+       "type": "taxonomy_term--islands",
+       "id": "4248380a-48f7-4714-85a7-66e8008282c0",
+       "meta": {
+        "drupal_internal__target_id": 54544
+       }
+      }
+     ]
+    },
+    "field_t_tags": {
+     "data": []
+    }
+   }
+  }
+ ],
+ "included": [
+  {
+   "type": "taxonomy_term--islands",
+   "id": "fb7d93fb-a35f-4262-bb26-35a1ca5852d1",
+   "attributes": {
+    "name": "Gran Canaria"
+   }
+  },
+  {
+   "type": "taxonomy_term--islands",
+   "id": "8a5b5017-9142-4b3e-929f-6c19b1897332",
+   "attributes": {
+    "name": "Fuerteventura"
+   }
+  },
+  {
+   "type": "taxonomy_term--islands",
+   "id": "7a1539a6-64cb-4a79-8a21-fcb9ba068614",
+   "attributes": {
+    "name": "Santa Brígida"
+   }
+  },
+  {
+   "type": "taxonomy_term--islands",
+   "id": "946aef4e-1837-4007-a148-8e3480b76340",
+   "attributes": {
+    "name": "Telde"
+   }
+  },
+  {
+   "type": "taxonomy_term--islands",
+   "id": "4248380a-48f7-4714-85a7-66e8008282c0",
+   "attributes": {
+    "name": "San Bartolomé de Tirajana"
+   }
+  },
+  {
+   "type": "taxonomy_term--islands",
+   "id": "966f88d4-c93f-48c8-b2bc-b941b2c8a0d3",
+   "attributes": {
+    "name": "Tuineje"
+   }
+  },
+  {
+   "type": "taxonomy_term--event_category",
+   "id": "aa99a904-4040-4aa9-b807-510006f3bddc",
+   "attributes": {
+    "name": "Deportes de Resistencia"
+   }
+  },
+  {
+   "type": "taxonomy_term--event_category",
+   "id": "39d38d38-dee5-480c-b439-a4f8fe309a37",
+   "attributes": {
+    "name": "Fiestas Populares"
+   }
+  },
+  {
+   "type": "taxonomy_term--event_category",
+   "id": "1013b646-6223-40d1-83c3-965f7a770c58",
+   "attributes": {
+    "name": "Espectáculo"
+   }
+  },
+  {
+   "type": "media--header_images",
+   "id": "bbe421dd-bdd3-4c6a-a136-382edc34bd34",
+   "attributes": {
+    "name": "batalla tamasite.jpg"
+   },
+   "relationships": {
+    "field_media_image": {
+     "data": {
+      "type": "file--file",
+      "id": "d88d7471-2940-4b46-9cea-d5dfa57d024e",
+      "meta": {
+       "alt": "batalla tamasite.jpg",
+       "title": null,
+       "width": 339,
+       "height": 480,
+       "drupal_internal__target_id": 62143
+      }
+     }
+    }
+   }
+  },
+  {
+   "type": "file--file",
+   "id": "d88d7471-2940-4b46-9cea-d5dfa57d024e",
+   "attributes": {
+    "uri": {
+     "value": "public://events/batalla tamasite.jpg",
+     "url": "/sites/default/files/events/batalla%20tamasite.jpg"
+    }
+   }
+  },
+  {
+   "type": "media--list_image",
+   "id": "080990a3-91fb-4eef-aa4c-4fcd4b8d05c5",
+   "attributes": {
+    "name": "trail_pino_santo2025_1010"
+   },
+   "relationships": {
+    "field_media_image": {
+     "data": {
+      "type": "file--file",
+      "id": "e1228027-355d-41b2-b6a2-41224c6087ed",
+      "meta": {
+       "alt": "trail_pino_santo2025_1010",
+       "title": null,
+       "width": 480,
+       "height": 480,
+       "drupal_internal__target_id": 223462
+      }
+     }
+    }
+   }
+  },
+  {
+   "type": "media--list_image",
+   "id": "d81167c8-a259-4e8a-915a-27cd4c2a5ae4",
+   "attributes": {
+    "name": "cana_dulce"
+   },
+   "relationships": {
+    "field_media_image": {
+     "data": {
+      "type": "file--file",
+      "id": "0daac4e6-9044-488d-b685-c41cbffb4a15",
+      "meta": {
+       "alt": "cana_dulce",
+       "title": null,
+       "width": 480,
+       "height": 480,
+       "drupal_internal__target_id": 226561
+      }
+     }
+    }
+   }
+  },
+  {
+   "type": "media--list_image",
+   "id": "2b310c33-7889-4dae-858c-0b462fa15f2e",
+   "attributes": {
+    "name": "origen_dinner_show"
+   },
+   "relationships": {
+    "field_media_image": {
+     "data": {
+      "type": "file--file",
+      "id": "3ea6b855-4017-4b1c-969f-dd26c3ec698f",
+      "meta": {
+       "alt": "origen_dinner_show",
+       "title": null,
+       "width": 480,
+       "height": 480,
+       "drupal_internal__target_id": 208348
+      }
+     }
+    }
+   }
+  },
+  {
+   "type": "media--list_image",
+   "id": "80f4b375-802c-4250-a289-a1f28923c53f",
+   "attributes": {
+    "name": "batalla_tamasite_1"
+   },
+   "relationships": {
+    "field_media_image": {
+     "data": {
+      "type": "file--file",
+      "id": "058f1b35-96c1-4e95-95a9-baace00c5496",
+      "meta": {
+       "alt": "batalla_tamasite_1",
+       "title": null,
+       "width": 480,
+       "height": 480,
+       "drupal_internal__target_id": 222826
+      }
+     }
+    }
+   }
+  },
+  {
+   "type": "file--file",
+   "id": "e1228027-355d-41b2-b6a2-41224c6087ed",
+   "attributes": {
+    "uri": {
+     "value": "public://events/trail_pino_santo2025_1010.png",
+     "url": "/sites/default/files/events/trail_pino_santo2025_1010.png"
+    }
+   }
+  },
+  {
+   "type": "file--file",
+   "id": "0daac4e6-9044-488d-b685-c41cbffb4a15",
+   "attributes": {
+    "uri": {
+     "value": "public://events/cana_dulce.png",
+     "url": "/sites/default/files/events/cana_dulce.png"
+    }
+   }
+  },
+  {
+   "type": "file--file",
+   "id": "3ea6b855-4017-4b1c-969f-dd26c3ec698f",
+   "attributes": {
+    "uri": {
+     "value": "public://events/origen_dinner_show.png",
+     "url": "/sites/default/files/events/origen_dinner_show.png"
+    }
+   }
+  },
+  {
+   "type": "file--file",
+   "id": "058f1b35-96c1-4e95-95a9-baace00c5496",
+   "attributes": {
+    "uri": {
+     "value": "public://events/batalla_tamasite_1.jpg",
+     "url": "/sites/default/files/events/batalla_tamasite_1.jpg"
+    }
+   }
+  }
+ ],
+ "links": {}
+}

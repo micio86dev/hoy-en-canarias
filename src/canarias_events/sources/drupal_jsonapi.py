@@ -6,9 +6,10 @@ were verified against the live API on 2026-10-15.
 
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 from datetime import date
 from typing import Any
-from urllib.parse import urlsplit
+from urllib.parse import urljoin, urlsplit
 
 from canarias_events.geo import normalize_municipality
 from canarias_events.http import InvalidPayload, mask_secrets, same_host_as
@@ -28,15 +29,45 @@ EVENT_FIELDS = (
     "title,path,changed,field_event_city,field_event_description,field_event_free,"
     "field_event_latitude,field_event_longitude,field_event_tickets_website,field_event_website,"
     "field_e_start_date,field_e_end_date,field_e_calculated_end_date,field_t_islands,"
-    "field_t_municipality,field_event_category"
+    "field_t_municipality,field_event_category,field_t_tags,field_h_images,field_h_image_gallery"
 )
-INCLUDE = "field_t_islands,field_t_municipality,field_event_category"
+INCLUDE = (
+    "field_t_islands,field_t_municipality,field_event_category,field_t_tags,"
+    "field_h_images,field_h_images.field_media_image,"
+    "field_h_image_gallery,field_h_image_gallery.field_media_image"
+)
+IMAGE_FIELDS = (("field_h_images", "header"), ("field_h_image_gallery", "gallery"))
 
-Included = dict[tuple[str, str], str]
+Ref = tuple[str, str]
+
+
+@dataclass
+class Included:
+    """Lookup tables built from the ``included`` section of one JSON:API page."""
+
+    names: dict[Ref, str] = field(default_factory=dict)  # taxonomy term -> name
+    media_files: dict[Ref, dict[str, Any]] = field(default_factory=dict)  # media -> image ref
+    file_urls: dict[Ref, str] = field(default_factory=dict)  # file--file -> site-relative url
 
 
 def _link_uri(value: object) -> str | None:
     return clean_text(value.get("uri")) if isinstance(value, dict) else None
+
+
+def _refs(relationships: object, field_name: str) -> list[dict[str, Any]]:
+    """Resource identifiers of a relationship that may be an object, a list or null."""
+    rel = relationships.get(field_name) if isinstance(relationships, dict) else None
+    data = rel.get("data") if isinstance(rel, dict) else None
+    return [ref for ref in (data if isinstance(data, list) else [data]) if isinstance(ref, dict)]
+
+
+def _first_ref(relationships: object, field_name: str) -> dict[str, Any] | None:
+    refs = _refs(relationships, field_name)
+    return refs[0] if refs else None
+
+
+def _int_or_none(value: object) -> int | None:
+    return value if isinstance(value, int) and not isinstance(value, bool) else None
 
 
 def _day(value: object) -> date | None:
@@ -67,6 +98,10 @@ class DrupalJsonApiAdapter(SourceAdapter):
             "fields[node--event]": EVENT_FIELDS,
             "fields[taxonomy_term--islands]": "name",
             "fields[taxonomy_term--event_category]": "name",
+            "fields[taxonomy_term--tags]": "name",
+            "fields[media--header_images]": "name,field_media_image",
+            "fields[media--list_image]": "name,field_media_image",
+            "fields[file--file]": "uri",
         }
         while url is not None:
             payload = ctx.client.get_json(url, params=params, allowed_hosts={parts.hostname or ""})
@@ -101,15 +136,28 @@ class DrupalJsonApiAdapter(SourceAdapter):
 
     @staticmethod
     def _index(included: object) -> Included:
-        index: Included = {}
-        if isinstance(included, list):
-            for term in included:
-                if not isinstance(term, dict):
-                    continue
-                attributes = term.get("attributes")
-                name = clean_text(attributes.get("name")) if isinstance(attributes, dict) else None
-                if name and isinstance(term.get("type"), str) and isinstance(term.get("id"), str):
-                    index[(term["type"], term["id"])] = name
+        index = Included()
+        if not isinstance(included, list):
+            return index
+        for entry in included:
+            if not isinstance(entry, dict):
+                continue
+            kind, ident = entry.get("type"), entry.get("id")
+            if not isinstance(kind, str) or not isinstance(ident, str):
+                continue
+            attributes = entry.get("attributes")
+            attributes = attributes if isinstance(attributes, dict) else {}
+            if kind == "file--file":
+                uri = attributes.get("uri")
+                url = clean_text(uri.get("url")) if isinstance(uri, dict) else None
+                if url:
+                    index.file_urls[(kind, ident)] = url
+            elif kind.startswith("media--"):
+                ref = _first_ref(entry.get("relationships"), "field_media_image")
+                if ref:
+                    index.media_files[(kind, ident)] = ref
+            elif name := clean_text(attributes.get("name")):
+                index.names[(kind, ident)] = name
         return index
 
     @staticmethod
@@ -121,10 +169,38 @@ class DrupalJsonApiAdapter(SourceAdapter):
         names: list[str] = []
         for ref in refs:
             if isinstance(ref, dict):
-                name = included.get((str(ref.get("type")), str(ref.get("id"))))
+                name = included.names.get((str(ref.get("type")), str(ref.get("id"))))
                 if name and name not in names:
                     names.append(name)
         return names
+
+    @staticmethod
+    def _images(item: dict[str, Any], included: Included, origin: str) -> list[dict[str, Any]]:
+        """Images published for the event, header first; unresolvable media are skipped."""
+        images: list[dict[str, Any]] = []
+        seen: set[str] = set()
+        for field_name, role in IMAGE_FIELDS:
+            for media in _refs(item.get("relationships"), field_name):
+                file_ref = included.media_files.get((str(media.get("type")), str(media.get("id"))))
+                path = file_ref and included.file_urls.get(
+                    (str(file_ref.get("type")), str(file_ref.get("id")))
+                )
+                url = urljoin(origin + "/", path) if path else None
+                if not url or not url.startswith(("http://", "https://")) or url in seen:
+                    continue
+                seen.add(url)
+                meta = file_ref.get("meta") if file_ref else None
+                meta = meta if isinstance(meta, dict) else {}
+                images.append(
+                    {
+                        "url": url,
+                        "alt": clean_text(meta.get("alt")),
+                        "width": _int_or_none(meta.get("width")),
+                        "height": _int_or_none(meta.get("height")),
+                        "role": role,
+                    }
+                )
+        return images
 
     # ------------------------------------------------------------------ mapping
 
@@ -150,6 +226,8 @@ class DrupalJsonApiAdapter(SourceAdapter):
         islands = self._term_names(item, "field_t_islands", included)
         municipalities = self._term_names(item, "field_t_municipality", included)
         categories = self._term_names(item, "field_event_category", included)
+        tags = [t for t in self._term_names(item, "field_t_tags", included) if t not in categories]
+        images = self._images(item, included, origin)
         city = clean_text(attributes.get("field_event_city"))
         municipality = (
             normalize_municipality(municipalities[0])
@@ -181,12 +259,16 @@ class DrupalJsonApiAdapter(SourceAdapter):
         if website:
             extra["event_website"] = website
 
+        if images:
+            extra["images"] = images
+
         result.add_event(
             source_id,
             title=title,
             description=html_to_text(clean_text(attributes.get("field_event_description"))) or None,
             category=categories[0] if categories else None,
-            tags=categories[1:],
+            tags=[*categories[1:], *(t for t in tags if t not in categories[1:])],
+            image_url=images[0]["url"] if images else None,
             start_date=start,
             end_date=end,
             all_day=True,
