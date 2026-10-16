@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 from typing import Any
 
 from sqlalchemy import Date, Float, cast, func, literal, or_, select
@@ -186,3 +186,16 @@ def map_events(session: Session, filters: EventFilters, limit: int) -> tuple[lis
     )
     rows = list(session.scalars(stmt).all())
     return rows[:limit], len(rows) > limit
+
+
+def sitemap_entries(
+    session: Session, today: date, limit: int = 50_000
+) -> list[tuple[str, datetime]]:
+    """Indexable events: upcoming and not flagged stale, with their last update for <lastmod>."""
+    stmt = (
+        select(Event.slug, Event.updated_at)
+        .where(LOCAL_END >= today, Event.stale.is_(False))
+        .order_by(LOCAL_START, Event.id)
+        .limit(limit)
+    )
+    return [(slug, updated) for slug, updated in session.execute(stmt).all()]

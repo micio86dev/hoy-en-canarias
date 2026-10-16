@@ -18,5 +18,5 @@ import type { CountList } from '~/types/api'
 
 const { t } = useI18n()
 const { data: categories } = await useAsyncData('categories-index', () => $fetch<CountList>('/api/v1/categories'))
-useSeoMeta({ title: () => t('nav.categories') })
+useSiteSeo(() => ({ title: t('nav.categories'), description: t('site.description'), path: '/categorias' }))
 </script>

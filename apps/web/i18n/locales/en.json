@@ -119,5 +119,25 @@
     "noPoints": "No events with a location in this area.",
     "truncated": "Only the first 1000 events in this area are shown. Zoom in to see more.",
     "openEvent": "View event"
+  },
+  "privacy": {
+    "title": "Privacy",
+    "intro": "Hoy en Canarias can be browsed without an account or sign-up. Here is what we process and what we do not.",
+    "dataTitle": "What data we process",
+    "noAccount": "We do not ask for an account, email address or personal data to browse.",
+    "noLocation": "Your location is used only if you tap “Use my location”, to centre the map. It is not stored or sent to our servers.",
+    "voice": "Voice search is handled by your browser's speech recognition. We do not record or store audio.",
+    "noTracking": "This version uses no tracking cookies and no third-party analytics.",
+    "updated": "Last reviewed: October 2026."
+  },
+  "about": {
+    "title": "About",
+    "body": "Hoy en Canarias brings public events from the eight islands together in one place, with their date, venue and source.",
+    "sources": "Each event shows where it came from. When something is unclear we leave it blank rather than guess."
+  },
+  "error": {
+    "title": "Page not found",
+    "body": "The link may have changed, or the event is no longer published.",
+    "home": "Back to home"
   }
 }

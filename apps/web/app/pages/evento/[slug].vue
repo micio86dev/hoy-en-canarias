@@ -74,6 +74,7 @@
 <script setup lang="ts">
 import type { EventDetail, EventPage } from '~/types/api'
 import { formatEventWhen } from '~/utils/dates'
+import { buildEventJsonLd, safeJsonLd } from '~/utils/seo'
 
 const { t, locale } = useI18n()
 const route = useRoute()
@@ -125,8 +126,26 @@ async function share(): Promise<void> {
   shareStatus.value = t('event.linkCopied')
 }
 
-useSeoMeta({
-  title: () => `${current.title} · ${t('site.name')}`,
-  description: () => current.description?.slice(0, 160) ?? t('site.description'),
-})
+const config = useRuntimeConfig()
+const pagePath = `/evento/${current.slug}`
+useSiteSeo(() => ({
+  title: `${current.title} · ${t('site.name')}`,
+  description: current.description?.slice(0, 160) ?? t('site.description'),
+  path: pagePath,
+  image: current.image_url,
+}))
+
+useHead(() => ({
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: safeJsonLd(
+        buildEventJsonLd(current, {
+          siteUrl: String(config.public.siteUrl).replace(/\/$/, ''),
+          url: `${String(config.public.siteUrl).replace(/\/$/, '')}${pagePath}`,
+        }),
+      ),
+    },
+  ],
+}))
 </script>

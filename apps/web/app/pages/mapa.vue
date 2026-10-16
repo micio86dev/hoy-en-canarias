@@ -79,5 +79,5 @@ function locate(): void {
   )
 }
 
-useSeoMeta({ title: () => t('nav.map') })
+useSiteSeo(() => ({ title: t('nav.map'), description: t('map.lead'), path: '/mapa' }))
 </script>

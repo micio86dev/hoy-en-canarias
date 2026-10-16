@@ -31,5 +31,5 @@ const { data: page } = await useAsyncData(`category-${category}`, () =>
 const events = computed(() => page.value?.items ?? [])
 const total = computed(() => page.value?.total ?? 0)
 
-useSeoMeta({ title: () => `${t(`categories.${category}`)} · ${t('site.name')}` })
+useSiteSeo(() => ({ title: `${t(`categories.${category}`)} · ${t('site.name')}`, description: t('site.description'), path: `/categorias/${category}` }))
 </script>

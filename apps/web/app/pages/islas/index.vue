@@ -19,5 +19,5 @@ import { islandToSegment } from '~/utils/route-segments'
 
 const { t } = useI18n()
 const { data: islands } = await useAsyncData('islands-index', () => $fetch<CountList>('/api/v1/islands'))
-useSeoMeta({ title: () => t('nav.islands') })
+useSiteSeo(() => ({ title: t('nav.islands'), description: t('site.description'), path: '/islas' }))
 </script>

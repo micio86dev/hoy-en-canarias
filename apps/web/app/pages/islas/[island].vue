@@ -19,6 +19,7 @@
 </template>
 
 <script setup lang="ts">
+import { islandToSegment } from '~/utils/route-segments'
 import { countKey } from '~/utils/plural'
 import type { CountList, EventPage } from '~/types/api'
 import { islandFromSegment } from '~/utils/route-segments'
@@ -41,5 +42,5 @@ const events = computed(() => page.value?.items ?? [])
 const total = computed(() => page.value?.total ?? 0)
 const municipalities = computed(() => places.value?.items ?? [])
 
-useSeoMeta({ title: () => `${island} · ${t('site.name')}`, description: () => t('site.description') })
+useSiteSeo(() => ({ title: `${island} · ${t('site.name')}`, description: t('site.description'), path: `/islas/${islandToSegment(island)}` }))
 </script>

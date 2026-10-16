@@ -23,7 +23,7 @@ Public, multilingual (es/en/it) event discovery portal for the Canary Islands: F
 - [x] P6 Home + search (URL-synced filters, date presets, island/category chips, pagination) + event cards + voice search.
 - [x] P7 Event detail (sanitised text, provenance, related, share) + island and category index/detail pages.
 - [x] P8 Map (Leaflet client-only, markercluster, bbox sync, list alternative, opt-in geolocation).
-- [ ] P9 SEO/GEO: meta, hreflang, JSON-LD, sitemaps, robots, llms.txt, privacy.
+- [x] P9 SEO/GEO: canonical + Open Graph per page, hreflang, Event JSON-LD, sitemap, robots, llms.txt, privacy/about, 404.
 - [ ] P10 Vitest + Playwright e2e.
 - [ ] P11 Visual/a11y/Lighthouse pass, README and docs.
 
@@ -82,3 +82,13 @@ Public, multilingual (es/en/it) event discovery portal for the Canary Islands: F
 - Geolocation requires an explicit tap, centres the map and is never stored.
 - Default tiles are OpenStreetMap for development (`NUXT_PUBLIC_TILE_URL` overrides at runtime). OSM's tile policy does not permit heavy production traffic; a paid or self-hosted provider is needed for production.
 - The in-browser map render is not yet verified: it is covered by the Playwright suite (P10) and the visual pass (P11).
+- P9: API suite 106 passed (sitemap-data: upcoming and non-stale only). Web suite 42 passed (canonical paths, JSON-LD: Canary offsets, date-only fallback, no invented offers or status, safe escaping, sitemap alternates and XML escaping). Typecheck and build exit 0. Live SSR: `/sitemap.xml` 200 with 27 URLs (9 pages x 3 locales, each with es/en/it + x-default alternates); `/robots.txt`, `/llms.txt` 200; event page carries canonical, og:title and Event JSON-LD; `/buscar` indexable, `/buscar?island=Tenerife` noindex.
+
+## Decisions and deviations (P9)
+- The sitemap is built in the web server from `GET /api/v1/sitemap-data` (added in the API, read-only, excludes stale events). The API's own URL is never public.
+- JSON-LD carries only fields the source provided. `eventStatus` is set only for known statuses; `offers` only for a known free flag or a known minimum price.
+- Filtered search pages are `noindex`, the plain search page is indexable, so internal filter combinations do not multiply into indexable duplicates.
+- Route names are still shared across languages (`/en/evento/<slug>`, `/it/...`). Fully localised route names are not done yet; this is a known gap.
+- `llms.txt` is a supplementary discovery aid only; no claim is made that it improves AI visibility.
+- Site verification tokens (Search Console and others) are not added: the brief forbids inventing them. They belong in the README (P11).
+- `NUXT_PUBLIC_SITE_URL` is read at build time for hreflang and canonical URLs, so each deployed environment must set it when building.

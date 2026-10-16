@@ -119,5 +119,25 @@
     "noPoints": "No hay eventos con ubicación en esta zona.",
     "truncated": "Se muestran los primeros 1000 eventos de la zona. Acerca el mapa para ver más.",
     "openEvent": "Ver evento"
+  },
+  "privacy": {
+    "title": "Privacidad",
+    "intro": "Hoy en Canarias se puede consultar sin cuenta ni registro. Estos son los datos que tratamos y los que no.",
+    "dataTitle": "Qué datos tratamos",
+    "noAccount": "No pedimos cuenta, correo ni datos personales para navegar.",
+    "noLocation": "Tu ubicación solo se usa si pulsas «Usar mi ubicación», para centrar el mapa. No se guarda ni se envía a nuestros servidores.",
+    "voice": "La búsqueda por voz la gestiona el reconocimiento de voz de tu navegador. No grabamos ni guardamos audio.",
+    "noTracking": "No usamos cookies de seguimiento ni analítica de terceros en esta versión.",
+    "updated": "Última revisión: octubre de 2026."
+  },
+  "about": {
+    "title": "Acerca de",
+    "body": "Hoy en Canarias reúne eventos públicos de las ocho islas en un solo lugar, con su fecha, lugar y fuente.",
+    "sources": "Cada evento indica de dónde procede. Si algo no está claro, lo dejamos en blanco en lugar de adivinarlo."
+  },
+  "error": {
+    "title": "Página no encontrada",
+    "body": "Puede que el enlace haya cambiado o que el evento ya no esté publicado.",
+    "home": "Volver al inicio"
   }
 }

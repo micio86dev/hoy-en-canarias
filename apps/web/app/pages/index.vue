@@ -83,8 +83,5 @@ function onSearch(query: { q?: string; preset?: SearchFilters['preset']; island?
   router.push({ path: localePath('/buscar'), query: filtersToRouteQuery({ ...query }) })
 }
 
-useSeoMeta({
-  title: () => t('site.name'),
-  description: () => t('site.description'),
-})
+useSiteSeo(() => ({ title: t('site.name'), description: t('site.description'), path: '/' }))
 </script>

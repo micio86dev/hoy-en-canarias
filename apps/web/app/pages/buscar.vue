@@ -88,8 +88,11 @@ function pageQuery(page: number): Record<string, string> {
   return filtersToRouteQuery({ ...filters.value, page })
 }
 
-useSeoMeta({
-  title: () => t('search.title'),
-  robots: 'noindex, follow',
-})
+const hasFilters = computed(() => Object.keys(filters.value).length > 0)
+useSiteSeo(() => ({
+  title: t('search.title'),
+  description: t('site.description'),
+  path: '/buscar',
+  noindex: hasFilters.value,
+}))
 </script>
