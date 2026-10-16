@@ -211,8 +211,14 @@ def test_same_start_with_other_end_date_is_only_a_possible_duplicate(db: Databas
                           end_date=date(2026, 10, 22), all_day=True))  # fmt: skip
     result = ingest(
         db,
-        make_event(start_datetime=None, end_datetime=None, start_date=date(2026, 10, 21),
-                   all_day=True, source_name="Source s2", source_event_id="z"),  # fmt: skip
+        make_event(
+            start_datetime=None,
+            end_datetime=None,
+            start_date=date(2026, 10, 21),
+            all_day=True,
+            source_name="Source s2",
+            source_event_id="z",
+        ),  # fmt: skip
         "s2",
     )
     assert (result.outcome, result.possible_duplicates) == ("new", 1)
@@ -225,7 +231,9 @@ def test_suffix_that_is_not_the_venue_is_kept(db: Database) -> None:
         db,
         make_event(
             title="Concierto de Navidad - Coro infantil y orquesta juvenil",
-            venue_name="Teatro Leal", source_name="Source s2", source_event_id="z",
+            venue_name="Teatro Leal",
+            source_name="Source s2",
+            source_event_id="z",
         ),  # fmt: skip
         "s2",
     )

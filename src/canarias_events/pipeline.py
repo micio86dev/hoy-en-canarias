@@ -74,9 +74,7 @@ def implausible_dates(event: Event) -> bool:
     start = event.start_date or (event.start_datetime.date() if event.start_datetime else None)
     if start is None:
         return False
-    end: date | None = event.end_date or (
-        event.end_datetime.date() if event.end_datetime else None
-    )
+    end: date | None = event.end_date or (event.end_datetime.date() if event.end_datetime else None)
     if start.year < EARLIEST_PLAUSIBLE_YEAR:
         return True
     return end is not None and (end - start).days > MAX_PLAUSIBLE_SPAN_DAYS
