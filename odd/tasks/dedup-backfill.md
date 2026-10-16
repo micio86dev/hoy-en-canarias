@@ -49,5 +49,12 @@ aae39e9 merges such copies at ingest, but pairs stored earlier stay as two event
 ### B2 (route: direct inline; copy of scratchpad/test2w/events.sqlite)
 - Dry-run: 2 pairs listed, counts unchanged [217, 225, 10]. Run: merged Segunda jornada BTT and Séptima jornada Senderismo -> [215, 225, 8]; both keep image and original venue; integrity_check ok; second run merges 0.
 
+### Review follow-ups (route: direct inline)
+- Commit faaa904. RDD lineage review-b2cfd83e2ba372b0 (a209f5a..faaa904, high, 4 lenses) APPROVED and acknowledged; boundary now faaa904.
+- R3-ingest-copy-overwrites-fields (WARNING) confirmed in narrower form: a same-source copy merged at ingest (aae39e9), or later updated, replaced the first record's values. No per-run flapping (unchanged links skip the merge). Fix: copies are fill_only at merge and on update; the earliest record of the source still updates normally. RED: test_a_same_source_copy_only_fills_gaps_at_merge_and_on_update. GREEN 1382 passed.
+- R2-tautological-final-assertion fixed (asserts keep/drop ids and dropped row gone).
+- Live: two fresh imports of cabildo + deportes_tenerife; second run 0 updated; Segunda jornada keeps "Área Recreativa Chanajiga".
+- Open suggestions (not done): README skip-rule wording, CLI skipped-path test, stronger absorb assertions, None-check style, silent off-host image skip log.
+
 ## Next step
-Done. RDD assess after commit.
+Done.

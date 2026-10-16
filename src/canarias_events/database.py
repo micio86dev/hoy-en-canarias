@@ -649,7 +649,9 @@ class Database:
                 return self._update_existing(event, source_id, key, new_hash, now)
             if decision.kind == "merge" and decision.event_id is not None:
                 event_id = decision.event_id
-                self._merge_into(event_id, event, source_id, now)
+                # A second record of a source already linked here is a republished copy.
+                copy = source_id in self._link_sources(event_id)
+                self._merge_into(event_id, event, source_id, now, fill_only=copy)
                 self._insert_link(event_id, event, source_id, key, new_hash, decision.method, now)
                 return UpsertResult(event_id, "merged")
             event_id = self._insert_event(event, source_id, now)
@@ -674,7 +676,8 @@ class Database:
                 (now.isoformat(), now.isoformat(), event_id),
             )
             return UpsertResult(event_id, "unchanged")
-        self._merge_into(event_id, event, source_id, now)
+        copy = self._is_later_copy(event_id, source_id, key)
+        self._merge_into(event_id, event, source_id, now, fill_only=copy)
         self.conn.execute(
             """UPDATE event_sources SET source_url=?, official_event_url=?,
                  canonical_official_url=?, raw_data=?, content_hash=?, last_seen_at=?
@@ -683,6 +686,25 @@ class Database:
              new_hash, now.isoformat(), source_id, key),
         )  # fmt: skip
         return UpsertResult(event_id, "updated")
+
+    def _link_sources(self, event_id: str) -> set[str]:
+        rows = self.conn.execute(
+            "SELECT source_id FROM event_sources WHERE event_id = ?", (event_id,)
+        ).fetchall()
+        return {row[0] for row in rows}
+
+    def _is_later_copy(self, event_id: str, source_id: str, key: str) -> bool:
+        """Whether an earlier record of the same source is linked to the same event."""
+        row = self.conn.execute(
+            """SELECT 1 FROM event_sources AS other, event_sources AS this
+               WHERE this.source_id = ? AND this.source_event_id = ?
+                 AND other.event_id = ? AND other.source_id = this.source_id
+                 AND other.source_event_id != this.source_event_id
+                 AND (other.first_seen_at, other.rowid) < (this.first_seen_at, this.rowid)
+               LIMIT 1""",
+            (source_id, key, event_id),
+        ).fetchone()
+        return row is not None
 
     @staticmethod
     def _canon(event: Event) -> str | None:

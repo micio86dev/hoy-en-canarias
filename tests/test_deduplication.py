@@ -117,6 +117,29 @@ def test_same_source_copy_with_the_same_url_and_times_is_merged(db: Database) ->
     assert db.count("possible_duplicates") == 0
 
 
+def test_a_same_source_copy_only_fills_gaps_at_merge_and_on_update(db: Database) -> None:
+    url = "https://club.test/e/1"
+    first = ingest(db, make_event(source_event_id="a", official_event_url=url, venue_name="Área"))
+    copy = make_event(
+        source_event_id="b", official_event_url=url, venue_name="Otro", description="Extra"
+    )
+    assert ingest(db, copy).outcome == "merged"
+    stored = db.get_event(first.event_id)
+    assert stored is not None
+    assert (stored.venue_name, stored.description) == ("Área", "Extra")
+    changed = copy.model_copy(update={"venue_name": "Otro más"})
+    assert ingest(db, changed).outcome == "updated"
+    stored = db.get_event(first.event_id)
+    assert stored is not None
+    assert stored.venue_name == "Área"
+    # The first record of the source still updates the event as before.
+    primary = make_event(source_event_id="a", official_event_url=url, venue_name="Nuevo")
+    ingest(db, primary)
+    stored = db.get_event(first.event_id)
+    assert stored is not None
+    assert stored.venue_name == "Nuevo"
+
+
 def test_same_source_same_url_with_another_end_time_is_not_merged(db: Database) -> None:
     ingest(db, make_event(source_event_id="a", official_event_url="https://club.test/e/1"))
     other = make_event(
@@ -712,4 +735,5 @@ def test_second_run_finds_nothing(db: Database) -> None:
     db.absorb_event(pair.keep_id, pair.drop_id, pair.source_id, NOW)
     assert find_same_source_copies(db) == []
     assert db.count("events") == 1
-    assert {keep_id, drop_id} >= {pair.keep_id}
+    assert (pair.keep_id, pair.drop_id) == (keep_id, drop_id)
+    assert db.get_event(drop_id) is None
