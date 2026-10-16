@@ -25,8 +25,7 @@ class Settings(BaseSettings):
     import_max_attempts: int = Field(default=2, ge=1, le=5)
     import_retry_backoff_seconds: float = Field(default=60.0, ge=0, le=3600)
     typesafe_api_key: SecretStr | None = None
-    moderation_reject_above: float = Field(default=0.9, ge=0, le=1)
-    moderation_approve_below: float = Field(default=0.05, ge=0, le=1)
+    moderation_reject_above: float = Field(default=0.5, ge=0, le=1)
 
     @field_validator("cors_origins", mode="before")
     @classmethod

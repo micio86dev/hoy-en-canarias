@@ -1,7 +1,7 @@
 from datetime import date
 
 import pytest
-from hoy_api.moderation.jev import read_verdict
+from hoy_api.moderation.jev import Verdict, read_verdict
 from hoy_api.moderation.redact import redact_personal_data
 from hoy_api.moderation.rules import SubmissionFacts, check_rules
 
@@ -78,3 +78,30 @@ def test_malformed_or_missing_answers_are_unknown_never_guessed(payload: dict[st
 
     assert verdict.probability is None
     assert verdict.usable is False
+
+
+class _Model:
+    def __init__(self, probability: float | None) -> None:
+        self.probability = probability
+
+    def spam_probability(self, text: str) -> Verdict:
+        return Verdict(self.probability)
+
+
+def test_automatic_decision_publishes_below_the_threshold() -> None:
+    from hoy_api.moderation.service import decide
+
+    assert decide(facts(), _Model(0.3), TODAY, reject_above=0.5).status == "approved"
+
+
+def test_automatic_decision_rejects_at_and_above_the_threshold() -> None:
+    from hoy_api.moderation.service import decide
+
+    assert decide(facts(), _Model(0.5), TODAY, reject_above=0.5).status == "rejected"
+    assert decide(facts(), _Model(0.9), TODAY, reject_above=0.5).reason == "spam_model"
+
+
+def test_without_a_verdict_the_submission_waits_as_a_safe_default() -> None:
+    from hoy_api.moderation.service import decide
+
+    assert decide(facts(), _Model(None), TODAY, reject_above=0.5).status == "pending"

@@ -92,7 +92,6 @@ def submit(
         state.moderator,
         local_today(now),
         reject_above=state.settings.moderation_reject_above,
-        approve_below=state.settings.moderation_approve_below,
     )
     payload = body.model_dump(exclude={"honeypot"}, mode="json")
     submission = store(session, payload, decision, now)

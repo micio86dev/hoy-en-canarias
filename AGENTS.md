@@ -16,9 +16,10 @@
 - AI is optional, local only (loopback Ollama), disabled by default and never sees raw HTML;
   no paid APIs.
 - Exception (decided by the owner): TypeSafe jev may moderate visitor-submitted event text, a
-  narrow yes/no probability, only after contact details are removed, only as one signal next
-  to deterministic rules. It never publishes on its own in the uncertain band, and it is off
-  unless TYPESAFE_API_KEY is set. Source pages still never reach any model. Optional renderers (Playwright/Crawl4AI) are imported lazily and sandboxed.
+  narrow spam probability, only after contact details are removed. Moderation is automatic: at or
+  above 0.5 the submission is rejected, below it is published. Deterministic rules run first, and
+  without a model verdict nothing is published. It is off unless TYPESAFE_API_KEY is set. Source
+  pages still never reach any model. Optional renderers (Playwright/Crawl4AI) are imported lazily and sandboxed.
 
 ## Data
 - Never guess missing fields (price, island, dates): use null.

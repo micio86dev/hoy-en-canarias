@@ -33,10 +33,10 @@ def decide(
     moderator: SpamModel,
     today: date,
     reject_above: float,
-    approve_below: float,
 ) -> Decision:
-    """Deterministic rules first. The model is consulted only when they pass, and never
-    decides alone in the uncertain band: that case waits for a person."""
+    """Automatic decision. Deterministic rules first; then one threshold on jev's spam
+    probability: at or above it the submission is rejected, below it published. Without a
+    verdict (no model key or a failed call) nothing is published and it waits."""
     reasons = check_rules(facts, today)
     if reasons:
         return Decision("rejected", reasons[0])
@@ -46,9 +46,7 @@ def decide(
         return Decision("pending", "no_verdict")
     if verdict.probability >= reject_above:
         return Decision("rejected", "spam_model")
-    if verdict.probability <= approve_below:
-        return Decision("approved", None)
-    return Decision("pending", "uncertain")
+    return Decision("approved", None)
 
 
 def to_projected(submission_id: UUID, payload: dict[str, Any]) -> ProjectedEvent:
