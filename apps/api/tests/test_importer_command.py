@@ -45,3 +45,13 @@ def test_json_formatter_emits_structured_fields() -> None:
     assert payload["message"] == "import succeeded"
     assert payload["run_id"] == 7
     assert datetime.fromisoformat(payload["ts"]).tzinfo == UTC
+
+
+def test_window_starts_on_the_canary_calendar_day_not_utc() -> None:
+    from hoy_api.importer import window_from
+
+    # 23:30 UTC on 15 October is already 16 October in the Canary Islands.
+    window = window_from(datetime(2026, 10, 15, 23, 30, tzinfo=UTC), days=60)
+
+    assert window.start == date(2026, 10, 16)
+    assert window.end == date(2026, 12, 15)

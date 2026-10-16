@@ -1,10 +1,11 @@
 import subprocess
 from collections.abc import Callable
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 
 from sqlalchemy.orm import Session, sessionmaker
 
+from hoy_api.scheduling import import_window
 from hoy_api.worker import (
     CycleOutcome,
     ImporterRunner,
@@ -37,6 +38,12 @@ def format_stderr_tail(stderr: str) -> str:
     return "\n".join(lines[-STDERR_TAIL_LINES:])
 
 
+def window_from(instant: datetime, days: int) -> ImportWindow:
+    """Today (Canary calendar) through ``days`` ahead, inclusive."""
+    start, end = import_window(instant, days)
+    return ImportWindow(start=start, end=end)
+
+
 def subprocess_runner(command: str, sqlite_path: Path, timeout_seconds: int) -> ImporterRunner:
     def run(window: ImportWindow) -> RunnerResult:
         completed = subprocess.run(
@@ -65,11 +72,7 @@ def run_configured_cycle(
     max_attempts: int,
     backoff_seconds: float,
 ) -> CycleOutcome:
-    current = now()
-    window = ImportWindow(
-        start=current.date(),
-        end=current.date() + timedelta(days=window_days),
-    )
+    window = window_from(now(), window_days)
     return run_import_cycle(
         session_factory=session_factory,
         sqlite_path=sqlite_path,
