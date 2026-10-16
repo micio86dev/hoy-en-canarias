@@ -24,7 +24,7 @@ Accounts, sync, email alerts, server storage, tracking of any kind.
 - [ ] T4 Commit the integration (T2) as `feat(web): guest favourites on cards, event page and /favoritos`.
 
 ## Checks
-- Unit: `pnpm exec vitest run` (68 tests before T2 files were added; see the run record below).
+- Unit: `pnpm exec vitest run`: 12 files, 68 tests passing (T2 added no new tests, so the count is unchanged).
 - Typecheck: `pnpm typecheck` exit 0.
 - Not run: E2E and accessibility suites (require the Docker stack).
 
