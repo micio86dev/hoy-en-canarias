@@ -1,10 +1,13 @@
 <template>
-  <div
-    ref="host"
-    class="h-[60vh] min-h-80 w-full overflow-hidden rounded-card ring-1 ring-ink/10"
-    role="region"
-    :aria-label="t('map.regionLabel')"
-  />
+  <div>
+    <div
+      ref="host"
+      class="h-[60vh] min-h-80 w-full overflow-hidden rounded-card ring-1 ring-ink/10"
+      role="region"
+      :aria-label="t('map.regionLabel')"
+    />
+    <p v-if="loadFailed" class="mt-3 text-sm text-ink-muted" role="status">{{ t('map.unavailable') }}</p>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -12,6 +15,9 @@ import type { Map as LeafletMap, LayerGroup } from 'leaflet'
 import type { MapPoint } from '~/types/api'
 import { CANARY_DEFAULT_VIEW, boundsToBbox, pointsWithCoordinates, type GeoBounds } from '~/utils/map-geo'
 import { formatEventWhen } from '~/utils/dates'
+import markerIconUrl from 'leaflet/dist/images/marker-icon.png'
+import markerIcon2xUrl from 'leaflet/dist/images/marker-icon-2x.png'
+import markerShadowUrl from 'leaflet/dist/images/marker-shadow.png'
 
 // Client-only: Leaflet needs the DOM, and it is imported lazily so pages without a map stay light.
 const props = defineProps<{
@@ -23,10 +29,11 @@ const { t, locale } = useI18n()
 const localePath = useLocalePath()
 const config = useRuntimeConfig()
 
-const host = ref<HTMLElement | null>(null)
+const host = useTemplateRef<HTMLElement>('host')
 let map: LeafletMap | null = null
 let markers: LayerGroup | null = null
 let leaflet: typeof import('leaflet') | null = null
+const loadFailed = ref(false)
 let moveTimer: ReturnType<typeof setTimeout> | undefined
 
 function toBounds(value: { getSouth(): number; getWest(): number; getNorth(): number; getEast(): number }): GeoBounds {
@@ -62,15 +69,31 @@ function render(): void {
 
 onMounted(async () => {
   if (!host.value) return
-  leaflet = await import('leaflet')
+  try {
+    await mountMap(host.value)
+  } catch (error) {
+    // Never swallow this silently: the list alternative still works, and the reason is logged.
+    console.error('event map could not be loaded', error)
+    loadFailed.value = true
+  }
+})
+
+async function mountMap(container: HTMLElement): Promise<void> {
+  const module = await import('leaflet')
+  // leaflet.markercluster is a classic script that reads a global L. Expose a plain copy of the
+  // module (ES module namespaces cannot be extended), then load the plugin against it.
+  ;(window as unknown as { L: typeof module }).L = { ...module }
   await Promise.all([
     import('leaflet/dist/leaflet.css'),
     import('leaflet.markercluster/dist/MarkerCluster.css'),
     import('leaflet.markercluster/dist/MarkerCluster.Default.css'),
   ])
   await import('leaflet.markercluster')
+  leaflet = (window as unknown as { L: typeof module }).L
+  // Bundled marker images: Leaflet cannot find its default icons under Vite's asset handling.
+  leaflet.Icon.Default.mergeOptions({ iconUrl: markerIconUrl, iconRetinaUrl: markerIcon2xUrl, shadowUrl: markerShadowUrl })
 
-  map = leaflet.map(host.value, {
+  map = leaflet.map(container, {
     center: CANARY_DEFAULT_VIEW.center,
     zoom: CANARY_DEFAULT_VIEW.zoom,
     scrollWheelZoom: false,
@@ -89,7 +112,7 @@ onMounted(async () => {
   })
   emit('boundsChange', boundsToBbox(toBounds(map.getBounds())))
   render()
-})
+}
 
 watch(
   () => props.points,
@@ -109,3 +132,11 @@ onBeforeUnmount(() => {
   map = null
 })
 </script>
+
+<style scoped>
+/* Leaflet injects the attribution link; underline it so it is not told apart by colour alone. */
+:deep(.leaflet-control-attribution a) {
+  text-decoration: underline;
+}
+</style>
+

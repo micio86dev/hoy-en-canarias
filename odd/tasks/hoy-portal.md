@@ -94,3 +94,14 @@ Public, multilingual (es/en/it) event discovery portal for the Canary Islands: F
 - `NUXT_PUBLIC_SITE_URL` is read at build time for hreflang and canonical URLs, so each deployed environment must set it when building.
 - Review follow-up (P9): `eventAttendanceMode` and `offers.availability` are no longer asserted, because the source does not provide them. Covered by a test.
 - Review follow-up (P9): no currency is assumed. JSON-LD omits `priceCurrency` and omits paid offers when the source gives no currency; the card shows a bare amount. Covered by tests.
+- P10: Playwright suite green: 34 passed (17 visitor and accessibility scenarios on desktop and mobile). Covers: homepage, search, filters with URL state and clear, island navigation, event detail, localised navigation and language switch, no geolocation request on load, map and list alternative, empty state, not-found page, canonical + robots + Event JSON-LD, filtered search noindex, mobile overflow, and axe WCAG 2.2 AA on home, search, islands and map. Unit suite 46 passed; API 108 passed; importer 1382 passed.
+
+## Findings and fixes (P10)
+- The map never mounted: `leaflet.markercluster` is a classic script that reads a global `L`, and the ESM namespace is not extensible. Fixed by exposing a plain copy of the module as `window.L` before loading the plugin. Also removed the `.client` suffix (it fought the page's `ClientOnly`), and bundled the Leaflet marker images.
+- Load errors were swallowed in production. They are now logged, and a visible note points to the list.
+- Language switcher: `NuxtLinkLocale` re-applied the locale prefix to an already localised path. It now uses a plain `NuxtLink`.
+- Search race: the submit read a `v-model` value that had not been bound yet when the visitor typed before hydration. Submit now reads the form field itself. Stable over 8 repeated runs.
+- axe flagged links distinguishable only by colour, in the map list and in Leaflet's attribution. Both are underlined.
+
+## How to run the E2E suite
+Requires the disposable Postgres: `docker compose --profile test up -d db_test`. Then `pnpm test:e2e` in `apps/web` (builds, resets the test schema, starts the API on 8766 and the web app on 3210).

@@ -41,7 +41,10 @@ function onRecognized(transcript: string): void {
   text.value = transcript
 }
 
-function submit(): void {
-  emit('search', parse(text.value))
+// Read the field at submit time: text typed before hydration finishes is still in the DOM.
+function submit(event: Event): void {
+  const form = event.target as HTMLFormElement
+  const typed = String(new FormData(form).get('q') ?? text.value)
+  emit('search', parse(typed))
 }
 </script>

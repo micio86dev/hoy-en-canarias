@@ -118,7 +118,8 @@
     "listTitle": "Events in this area",
     "noPoints": "No events with a location in this area.",
     "truncated": "Only the first 1000 events in this area are shown. Zoom in to see more.",
-    "openEvent": "View event"
+    "openEvent": "View event",
+    "unavailable": "The map is not available right now. The list below shows the same events."
   },
   "privacy": {
     "title": "Privacy",

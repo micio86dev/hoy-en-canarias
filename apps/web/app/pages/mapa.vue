@@ -29,7 +29,7 @@
       <p v-if="!points.length" class="text-ink-muted">{{ t('map.noPoints') }}</p>
       <ul v-else class="grid gap-3 sm:grid-cols-2" role="list">
         <li v-for="point in points" :key="point.slug" class="rounded-card bg-sand p-4">
-          <NuxtLinkLocale :to="`/evento/${point.slug}`" class="font-medium text-ink hover:text-link">{{ point.title }}</NuxtLinkLocale>
+          <NuxtLinkLocale :to="`/evento/${point.slug}`" class="font-medium text-ink underline underline-offset-4 decoration-ink/40 hover:text-link">{{ point.title }}</NuxtLinkLocale>
           <p class="text-sm text-ink-muted">{{ point.island ?? '' }}</p>
         </li>
       </ul>

@@ -1,6 +1,6 @@
 <template>
   <nav :aria-label="t('language.label')" class="flex items-center gap-1 text-sm">
-    <NuxtLinkLocale
+    <NuxtLink
       v-for="item in availableLocales"
       :key="item.code"
       :to="switchLocalePath(item.code)"
@@ -9,7 +9,7 @@
       class="rounded-pill px-2 py-1 font-medium text-ink-muted hover:text-ink aria-[current=true]:bg-ocean aria-[current=true]:text-paper"
     >
       {{ t(`language.${item.code}`) }}
-    </NuxtLinkLocale>
+    </NuxtLink>
   </nav>
 </template>
 

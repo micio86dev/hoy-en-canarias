@@ -12,7 +12,7 @@
     "preview": "nuxt preview",
     "typecheck": "nuxt typecheck",
     "test": "vitest run",
-    "test:e2e": "playwright test"
+    "test:e2e": "NUXT_PUBLIC_SITE_URL=http://127.0.0.1:3210 nuxt build && playwright test"
   },
   "dependencies": {
     "@nuxt/fonts": "^1.0.1",
