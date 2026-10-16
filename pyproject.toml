@@ -51,6 +51,9 @@ markers = [
     "live: opt-in tests that hit the real network (run with -m live)",
 ]
 
+[tool.uv.workspace]
+members = ["apps/api"]
+
 [tool.ruff]
 line-length = 100
 target-version = "py312"

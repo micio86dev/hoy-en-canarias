@@ -1,0 +1,39 @@
+name: hoy-en-canarias
+
+services:
+  db:
+    image: pgvector/pgvector:0.8.1-pg17
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-hoy}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hoy_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-hoy}
+    ports:
+      - "${POSTGRES_HOST_PORT:-55432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hoy} -d ${POSTGRES_DB:-hoy}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  db_test:
+    image: pgvector/pgvector:0.8.1-pg17
+    environment:
+      POSTGRES_USER: hoy
+      POSTGRES_PASSWORD: hoy_test_password
+      POSTGRES_DB: hoy_test
+    ports:
+      - "${POSTGRES_TEST_HOST_PORT:-55433}:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hoy -d hoy_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    profiles: ["test"]
+
+volumes:
+  pgdata:

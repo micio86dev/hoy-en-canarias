@@ -15,3 +15,12 @@ data/
 .env
 .env.local
 .atl/
+
+# Hoy en Canarias portal (apps/web)
+node_modules/
+.nuxt/
+.output/
+.data/
+playwright-report/
+test-results/
+blob-report/
