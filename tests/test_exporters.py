@@ -336,4 +336,5 @@ def test_malformed_venues_file_does_not_block_the_export(
     by_title = {e["title"]: e for e in read_json(paths["events"])}
     assert by_title["En el Leal"]["map"]["precision"] == "municipality"
     assert paths["geojson"].exists()
-    assert "venues" in caplog.text
+    [record] = [r for r in caplog.records if r.name == "canarias_events.exporters"]
+    assert record.levelname == "WARNING" and "ignored" in record.getMessage()

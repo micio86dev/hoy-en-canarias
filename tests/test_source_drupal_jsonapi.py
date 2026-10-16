@@ -355,6 +355,20 @@ def test_file_without_url_and_non_http_urls_are_skipped(make_ctx: MakeCtx) -> No
 
 
 @respx.mock
+@pytest.mark.parametrize("url", ["https://evil.test/x.jpg", "//evil.test/x.jpg"])
+def test_image_urls_on_another_host_are_skipped(make_ctx: MakeCtx, url: str) -> None:
+    payload = media_events()
+    for item in payload["included"]:
+        if item["type"] == "file--file" and "origen_dinner" in item["attributes"]["uri"]["url"]:
+            item["attributes"]["uri"]["url"] = url
+
+    origen = fetch_media(make_ctx, payload)["Origen Dinner Show"]
+
+    assert origen.image_url is None
+    assert "images" not in origen.extra
+
+
+@respx.mock
 def test_media_relationship_may_be_a_list_and_images_are_deduplicated(
     make_ctx: MakeCtx,
 ) -> None:

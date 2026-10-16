@@ -70,6 +70,11 @@ def _int_or_none(value: object) -> int | None:
     return value if isinstance(value, int) and not isinstance(value, bool) else None
 
 
+def _same_origin(url: str, origin: str) -> bool:
+    a, b = urlsplit(url), urlsplit(origin)
+    return a.scheme in ("http", "https") and (a.scheme, a.netloc) == (b.scheme, b.netloc)
+
+
 def _day(value: object) -> date | None:
     moment = parse_datetime_any(value)
     return moment.day if moment else None
@@ -186,7 +191,9 @@ class DrupalJsonApiAdapter(SourceAdapter):
                     (str(file_ref.get("type")), str(file_ref.get("id")))
                 )
                 url = urljoin(origin + "/", path) if path else None
-                if not url or not url.startswith(("http://", "https://")) or url in seen:
+                # Only the source's own files: an absolute or protocol-relative path to another
+                # host (or a non-http scheme) is not something this source publishes as its own.
+                if not url or not _same_origin(url, origin) or url in seen:
                     continue
                 seen.add(url)
                 meta = file_ref.get("meta") if file_ref else None
