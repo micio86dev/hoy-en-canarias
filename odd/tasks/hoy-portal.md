@@ -20,7 +20,7 @@ Public, multilingual (es/en/it) event discovery portal for the Canary Islands: F
 - [x] P3 Search repositories + public endpoints (events, detail, related, map, islands, categories, municipalities, health/ready).
 - [x] P4 Worker scheduler (04:00 Canary, DST-safe, advisory lock, bounded retries, import_runs) + `hoy` CLI + admin trigger.
 - [x] P5 Nuxt foundation: tokens (single @theme source, contrast-tested), fonts, i18n es/en/it, layout with skip link, language switcher.
-- [ ] P6 Home + search + cards + filters + voice search.
+- [x] P6 Home + search (URL-synced filters, date presets, island/category chips, pagination) + event cards + voice search.
 - [ ] P7 Event detail + island/municipality/category pages.
 - [ ] P8 Map (Leaflet, clustering, list alternative, opt-in geolocation).
 - [ ] P9 SEO/GEO: meta, hreflang, JSON-LD, sitemaps, robots, llms.txt, privacy.
@@ -61,3 +61,10 @@ Public, multilingual (es/en/it) event discovery portal for the Canary Islands: F
 - `baseUrl` (for hreflang absolute URLs) is read from NUXT_PUBLIC_SITE_URL at BUILD time. A production build must set it explicitly.
 - Dark mode not implemented yet (light palette only); P11 decides whether to add it.
 - Nav links to /buscar, /islas, /categorias, /mapa, /acerca, /privacidad are not built yet and currently log Vue Router warnings. They are built in P6 to P9.
+- P6: web suite green: 24 passed (locale parity, WCAG contrast, URL state, voice parser es/en/it, Canary date formatting). Typecheck exit 0, build exit 0. Live check with the API on 127.0.0.1:8765: home lists real events, `/buscar?island=Tenerife` returns the 2 Tenerife events, and an unknown slug returns the API error body through the proxy.
+
+## Decisions and deviations (P6)
+- The browser never calls the API directly: a read-only Nitro proxy (`server/api/v1/[...path].get.ts`) forwards GET requests to `NUXT_API_BASE` only, with a path allow-list and a timeout.
+- Voice search is progressive enhancement: rendered only where `SpeechRecognition` exists; recognised text fills the field for review and is parsed on submit, the same way as typed text.
+- Local port 8000 is held by an unrelated Docker Desktop forward on this machine; the API runs on 8765 in local checks.
+- Event detail links point to `/evento/<slug>`, built in P7. Until then they 404.
