@@ -1,77 +1,29 @@
 import sqlite3
-from collections.abc import Generator
 from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
-from alembic import command
 from hoy_api.publish.service import PublishReport, publish_from_sqlite
-from sqlalchemy import create_engine, text
+from sqlalchemy import text
 from sqlalchemy.orm import Session, sessionmaker
 
-from canarias_events.database import Database, Decision
-from canarias_events.models import Event as ImportedEvent
-from canarias_events.sources.base import SourceConfig
-from tests.conftest import TEST_DATABASE_URL, require_test_database_name
-from tests.integration.test_migrations import _alembic_config
+from tests.integration.seed import imported, seed_importer
 
 NOW = datetime(2026, 10, 16, 3, 0, tzinfo=UTC)
 FIESTA_TITLE = "Año Nuevo: «Fiesta» en La Laguna"
 
 
 @pytest.fixture
-def session_factory() -> Generator[sessionmaker[Session], None, None]:
-    require_test_database_name(TEST_DATABASE_URL)
-    reset = create_engine(TEST_DATABASE_URL, isolation_level="AUTOCOMMIT")
-    with reset.connect() as conn:
-        conn.execute(text("DROP SCHEMA IF EXISTS public CASCADE"))
-        conn.execute(text("CREATE SCHEMA public"))
-    reset.dispose()
-    command.upgrade(_alembic_config(TEST_DATABASE_URL), "head")
-    engine = create_engine(TEST_DATABASE_URL)
-    yield sessionmaker(bind=engine, expire_on_commit=False)
-    engine.dispose()
-
-
-def _imported(source_id: str, eid: str, title: str, **overrides: object) -> ImportedEvent:
-    base: dict[str, object] = {
-        "title": title,
-        "source_name": f"Fuente {source_id}",
-        "source_event_id": eid,
-        "source_url": f"https://{source_id}.test/e/{eid}",
-        "start_datetime": datetime(2026, 10, 21, 20, 0, tzinfo=UTC),
-        "island": "Tenerife",
-        "municipality": "Adeje",
-        "category": "Conciertos",
-        "tags": ["música"],
-    }
-    base.update(overrides)
-    return ImportedEvent.model_validate(base)
-
-
-def _seed_importer(path: Path, events: list[tuple[str, ImportedEvent]]) -> None:
-    with Database(path) as db:
-        db.sync_sources(
-            [
-                SourceConfig(id="a", name="Fuente a", adapter="web", url="https://a.test/"),
-                SourceConfig(id="b", name="Fuente b", adapter="web", url="https://b.test/"),
-            ]
-        )
-        for source_id, event in events:
-            db.upsert(event, source_id, Decision("new"), NOW)
-
-
-@pytest.fixture
 def importer_path(tmp_path: Path) -> Path:
     path = tmp_path / "importer.sqlite"
-    _seed_importer(
+    seed_importer(
         path,
         [
-            ("a", _imported("a", "1", FIESTA_TITLE)),
-            ("a", _imported("a", "2", "Taller de cerámica", category="Taller")),
+            ("a", imported("a", "1", FIESTA_TITLE)),
+            ("a", imported("a", "2", "Taller de cerámica", category="Taller")),
             (
                 "b",
-                _imported(
+                imported(
                     "b",
                     "9",
                     "Concierto con enlace roto",
@@ -195,7 +147,7 @@ def test_empty_importer_export_does_not_mark_everything_stale(
 ) -> None:
     publish_from_sqlite(importer_path, session_factory, NOW)
     empty_path = importer_path.with_name("empty.sqlite")
-    _seed_importer(empty_path, [])
+    seed_importer(empty_path, [])
 
     report = publish_from_sqlite(empty_path, session_factory, NOW)
 

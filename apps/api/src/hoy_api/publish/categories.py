@@ -45,6 +45,7 @@ CATEGORY_RULES: tuple[tuple[str, tuple[str, ...]], ...] = (
 )
 
 FALLBACK_CATEGORY = "other"
+CATEGORY_KEYS: tuple[str, ...] = (*(name for name, _ in CATEGORY_RULES), FALLBACK_CATEGORY)
 
 
 def _fold(value: str) -> str:

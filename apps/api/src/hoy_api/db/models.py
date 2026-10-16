@@ -5,6 +5,7 @@ from hoy_api.db.base import Base
 from sqlalchemy import (
     BigInteger,
     Boolean,
+    Computed,
     Date,
     DateTime,
     Double,
@@ -14,13 +15,21 @@ from sqlalchemy import (
     UniqueConstraint,
     text,
 )
-from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.dialects.postgresql import ARRAY, TSVECTOR
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+# Mirrors the generated column in migration 0002; the database computes it on write.
+SEARCH_TSV_EXPRESSION = (
+    "setweight(to_tsvector('simple', hoy_unaccent(coalesce(title, ''))), 'A') || "
+    "setweight(to_tsvector('simple', hoy_unaccent("
+    "coalesce(venue_name, '') || ' ' || coalesce(municipality, ''))), 'B') || "
+    "setweight(to_tsvector('simple', hoy_unaccent(coalesce(description, ''))), 'C')"
+)
+
 
 class Event(Base):
-    """A published event. Mirrors migration 0002; ``search_tsv`` is DB-generated and not mapped."""
+    """A published event. Mirrors migration 0002."""
 
     __tablename__ = "events"
 
@@ -61,6 +70,11 @@ class Event(Base):
     first_seen_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     last_seen_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     last_verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    search_tsv: Mapped[str | None] = mapped_column(
+        TSVECTOR,
+        Computed(SEARCH_TSV_EXPRESSION, persisted=True),
+        deferred=True,
+    )
     published_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=text("now()")
     )

@@ -1,7 +1,7 @@
 from functools import lru_cache
 from typing import Annotated
 
-from pydantic import SecretStr, field_validator
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     site_url: str = "http://localhost:3000"
     cors_origins: Annotated[list[str], NoDecode] = ["http://localhost:3000"]
     admin_token: SecretStr | None = None
+    rate_limit_per_minute: int = Field(default=120, ge=1, le=10_000)
 
     @field_validator("cors_origins", mode="before")
     @classmethod
