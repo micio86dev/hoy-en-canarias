@@ -152,5 +152,32 @@
     "x": "X",
     "facebook": "Facebook",
     "email": "Email"
+  },
+  "submit": {
+    "title": "Pubblica un evento",
+    "intro": "Conosci un evento che non è qui? Raccontacelo. Lo controlliamo prima di pubblicarlo.",
+    "privacy": "Non chiediamo nome né e-mail. Non scrivere dati di contatto nella descrizione: li rimuoviamo automaticamente.",
+    "send": "Invia",
+    "sending": "Invio in corso…",
+    "failed": "Impossibile inviare ora. Riprova più tardi.",
+    "received": "Grazie, lo abbiamo ricevuto.",
+    "receivedBody": "Lo controlliamo prima di pubblicarlo. Se rispetta le condizioni, comparirà in agenda.",
+    "chooseIsland": "Scegli un'isola",
+    "fields": {
+      "title": "Titolo",
+      "startDate": "Data",
+      "island": "Isola",
+      "municipality": "Comune",
+      "venue": "Luogo",
+      "url": "Link dell'evento",
+      "description": "Descrizione"
+    },
+    "errors": {
+      "title": "Scrivi un titolo tra 3 e 160 caratteri.",
+      "startDate": "Scegli una data entro il prossimo anno.",
+      "island": "Scegli un'isola.",
+      "url": "Il link deve iniziare con https:// o http://."
+    },
+    "navLabel": "Pubblica un evento"
   }
 }

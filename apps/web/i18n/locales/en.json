@@ -152,5 +152,32 @@
     "x": "X",
     "facebook": "Facebook",
     "email": "Email"
+  },
+  "submit": {
+    "title": "Publish an event",
+    "intro": "Know an event that is not listed here? Tell us. We review it before publishing.",
+    "privacy": "We do not ask for your name or e-mail. Do not write contact details in the description: we remove them automatically.",
+    "send": "Send",
+    "sending": "Sending…",
+    "failed": "It could not be sent right now. Please try again later.",
+    "received": "Thank you, we have received it.",
+    "receivedBody": "We review it before publishing. If it meets the conditions, it will appear in the listings.",
+    "chooseIsland": "Choose an island",
+    "fields": {
+      "title": "Title",
+      "startDate": "Date",
+      "island": "Island",
+      "municipality": "Municipality",
+      "venue": "Venue",
+      "url": "Event link",
+      "description": "Description"
+    },
+    "errors": {
+      "title": "Write a title of 3 to 160 characters.",
+      "startDate": "Choose a date within the next year.",
+      "island": "Choose an island.",
+      "url": "The link must start with https:// or http://."
+    },
+    "navLabel": "Publish an event"
   }
 }

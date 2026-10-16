@@ -4,6 +4,7 @@
       <p class="max-w-prose text-ink-muted">{{ t('footer.notice') }}</p>
       <nav :aria-label="t('nav.primary')" class="flex flex-wrap gap-4 font-medium">
         <NuxtLinkLocale to="/acerca" class="hover:text-link">{{ t('footer.about') }}</NuxtLinkLocale>
+        <NuxtLinkLocale to="/enviar" class="hover:text-link">{{ t('submit.navLabel') }}</NuxtLinkLocale>
         <NuxtLinkLocale to="/privacidad" class="hover:text-link">{{ t('footer.privacy') }}</NuxtLinkLocale>
       </nav>
     </div>

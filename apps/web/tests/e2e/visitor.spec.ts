@@ -155,4 +155,26 @@ test.describe('visitor journeys', () => {
     expect(copied).toMatch(/\/evento\/concierto-de-jazz/)
     expect(copied).not.toContain('?')
   })
+
+  test('a visitor can submit an event and sees a neutral receipt', async ({ page }) => {
+    await page.goto('/enviar')
+
+    await page.getByLabel('Título').fill('Mercadillo de Garachico')
+    await page.getByLabel('Fecha').fill('2026-12-05')
+    await page.getByLabel('Isla').selectOption('Tenerife')
+    await page.getByLabel('Enlace del evento').fill('https://garachico.test/mercadillo')
+    await page.getByRole('button', { name: 'Enviar' }).click()
+
+    await expect(page.getByText('Gracias, lo hemos recibido.')).toBeVisible()
+  })
+
+  test('an incomplete submission shows field errors and is not sent', async ({ page }) => {
+    await page.goto('/enviar')
+
+    await page.getByLabel('Título').fill('x')
+    await page.getByRole('button', { name: 'Enviar' }).click()
+
+    await expect(page.getByText('Escribe un título de entre 3 y 160 caracteres.')).toBeVisible()
+    await expect(page.getByText('Gracias, lo hemos recibido.')).toHaveCount(0)
+  })
 })
