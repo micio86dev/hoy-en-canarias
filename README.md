@@ -4,7 +4,8 @@ Public, multilingual (es, en, it) discovery of events across the eight Canary Is
 Python importer that collects public event sources into one catalogue, a FastAPI read API, and a
 Nuxt 4 site with server-rendered pages, search, a map and SEO.
 
-Status: working end to end locally. Not deployed. No domain is registered or configured.
+Status: deployed on Railway (project `hoy-en-canarias`: `web`, `api`, `worker`, `postgres`). Served
+on the generated `*.up.railway.app` domain. No custom domain is registered yet.
 
 ## Quick start (Docker)
 
@@ -86,7 +87,8 @@ default OpenStreetMap server is for development only; production needs a provide
 
 - Mobile Lighthouse performance is 72–83 against a target of 90 (desktop meets it). The diagnosis
   and next steps are in `docs/performance.md`.
-- Not deployed; no production domain, TLS, backups scheduling or monitoring is configured.
+- No custom domain yet; the site runs on a Railway-generated domain. Backup scheduling and
+  monitoring are not configured.
 - Google Search Console and other verification tokens are not added; they must come from your
   own accounts.
 - Semantic search is prepared (pgvector is installed) but not implemented.
