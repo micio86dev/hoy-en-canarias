@@ -1,6 +1,6 @@
 <template>
   <article class="flex flex-col overflow-hidden rounded-card bg-paper shadow-card ring-1 ring-ink/5">
-    <div class="relative aspect-[16/9] bg-ocean-soft" :style="fallbackStyle" aria-hidden="true">
+    <div class="relative aspect-[16/9]" :class="fallbackClass" aria-hidden="true">
       <img
         v-if="event.image_url"
         :src="event.image_url"
@@ -11,7 +11,7 @@
       />
       <span
         v-else
-        class="absolute inset-x-0 bottom-0 bg-ocean/80 px-3 py-1 text-xs font-medium uppercase tracking-wide text-paper"
+        class="absolute inset-x-0 bottom-0 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide"
       >
         {{ categoryLabel }}
       </span>
@@ -71,9 +71,18 @@ const priceText = computed(() => {
   return t('event.priceFrom', { amount })
 })
 
-// A deterministic CSS fallback instead of a stock photo that could misrepresent the event.
-const fallbackStyle = computed(() => {
-  const hue = [...props.event.slug].reduce((sum, char) => sum + char.charCodeAt(0), 0) % 60
-  return { background: `linear-gradient(135deg, hsl(${195 + hue} 45% 30%), hsl(${20 + hue} 80% 70%))` }
-})
+// Solid, token-based colour per category: no stock photo, no random gradient.
+const FALLBACK_CLASS: Record<string, string> = {
+  music: 'bg-ocean text-paper',
+  festivals: 'bg-accent text-ink',
+  markets: 'bg-sand text-ink',
+  nature: 'bg-ocean-soft text-ocean',
+  sports: 'bg-ink text-paper',
+  family: 'bg-accent/60 text-ink',
+  workshops: 'bg-sand text-ink',
+  culture: 'bg-ocean/85 text-paper',
+  nightlife: 'bg-ink text-paper',
+  other: 'bg-sand text-ink',
+}
+const fallbackClass = computed(() => FALLBACK_CLASS[props.event.category] ?? FALLBACK_CLASS.other)
 </script>

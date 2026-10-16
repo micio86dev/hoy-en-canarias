@@ -25,10 +25,10 @@
         </div>
       </dl>
 
-      <section v-if="related?.items.length" aria-labelledby="related-title" class="space-y-4 pt-6">
+      <section v-if="relatedRows.length" aria-labelledby="related-title" class="space-y-4 pt-6">
         <h2 id="related-title" class="font-display text-2xl font-semibold">{{ t('event.related') }}</h2>
         <ul class="grid gap-6 sm:grid-cols-2" role="list">
-          <li v-for="item in related.items" :key="item.id">
+          <li v-for="item in relatedRows" :key="item.id">
             <EventCard :event="item" />
           </li>
         </ul>
@@ -36,7 +36,7 @@
     </div>
 
     <aside class="space-y-6" :aria-label="t('event.practical')">
-      <div class="space-y-3 rounded-card bg-sand p-5">
+      <div v-if="event.official_event_url || event.ticket_url" class="space-y-3 rounded-card bg-sand p-5">
         <h2 class="font-semibold">{{ t('event.links') }}</h2>
         <ul class="space-y-2 text-sm" role="list">
           <li v-if="event.official_event_url">
@@ -49,7 +49,6 @@
               {{ t('event.tickets') }}<span class="sr-only"> {{ t('event.opensNewTab') }}</span>
             </a>
           </li>
-          <li v-if="!event.official_event_url && !event.ticket_url" class="text-ink-muted">{{ t('event.noLinks') }}</li>
         </ul>
       </div>
 
@@ -75,6 +74,7 @@
 import type { EventDetail, EventPage } from '~/types/api'
 import { formatEventWhen } from '~/utils/dates'
 import { buildEventJsonLd, safeJsonLd } from '~/utils/seo'
+import { completeRows } from '~/utils/home-sections'
 
 const { t, locale } = useI18n()
 const route = useRoute()
@@ -97,6 +97,7 @@ if (!event.value) {
   throw createError({ statusCode: 404, statusMessage: 'Event not found', fatal: true })
 }
 const current = event.value
+const relatedRows = computed(() => completeRows(related.value?.items ?? [], 2))
 
 const when = computed(() =>
   formatEventWhen(

@@ -25,7 +25,7 @@ Public, multilingual (es/en/it) event discovery portal for the Canary Islands: F
 - [x] P8 Map (Leaflet client-only, markercluster, bbox sync, list alternative, opt-in geolocation).
 - [x] P9 SEO/GEO: canonical + Open Graph per page, hreflang, Event JSON-LD, sitemap, robots, llms.txt, privacy/about, 404.
 - [ ] P10 Vitest + Playwright e2e.
-- [ ] P11 Visual/a11y/Lighthouse pass, README and docs.
+- [x] P11 Visual pass, accessibility, Lighthouse, Docker stack, README and docs.
 
 ## Progress and evidence
 - Baseline importer suite before work: 1382 passed, 20 deselected.
@@ -105,3 +105,5 @@ Public, multilingual (es/en/it) event discovery portal for the Canary Islands: F
 
 ## How to run the E2E suite
 Requires the disposable Postgres: `docker compose --profile test up -d db_test`. Then `pnpm test:e2e` in `apps/web` (builds, resets the test schema, starts the API on 8766 and the web app on 3210).
+- P11: Visual review of desktop and mobile captures (home, search, event, map) with fixes: no duplicated event between sections, complete rows, zero-count chips hidden, token colour fallback instead of gradients, complete related rows, empty link box hidden. Map placeholder reserves height (CLS 0.24 to 0 on mobile). Lazy-free i18n option tried and reverted after checking the module types. Docker: API, worker and web images build; the compose stack runs healthy (db, api, web), the proxy serves data and the admin route answers 404 without a token. A blank HOY_ADMIN_TOKEN from compose was rejected at start, which led to removing the default. Lighthouse: desktop 98-100 performance; mobile 72-83 (target 90 not met, documented). Final gates: importer 1382 passed, API 108, web unit 49, E2E 34.
+

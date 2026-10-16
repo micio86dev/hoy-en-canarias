@@ -19,7 +19,9 @@
     <ClientOnly>
       <EventMap :points="points" :focus="focus" @bounds-change="onBoundsChange" />
       <template #fallback>
-        <p class="text-ink-muted">{{ t('common.loading') }}</p>
+        <div class="flex h-[60vh] min-h-80 w-full items-center justify-center rounded-card bg-sand text-ink-muted" role="status">
+          {{ t('common.loading') }}
+        </div>
       </template>
     </ClientOnly>
 

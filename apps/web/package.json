@@ -31,9 +31,11 @@
     "@types/leaflet.markercluster": "^1.5.6",
     "@vue/test-utils": "^2.5.1",
     "happy-dom": "^21.0.1",
+    "lighthouse": "^12.8.2",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.9.3",
     "vitest": "^4.1.12",
     "vue-tsc": "^3.3.13"
-  }
+  },
+  "packageManager": "pnpm@11.22.0"
 }
