@@ -9,7 +9,7 @@ from collections import Counter
 from collections.abc import Callable, Mapping, Sequence
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 
@@ -48,6 +48,11 @@ logger = logging.getLogger("canarias_events.pipeline")
 
 OUTSIDE_WINDOW = "outside window"
 MISSING_START = "missing start date"
+IMPLAUSIBLE_DATE = "implausible date"
+
+# Dates outside these bounds are source typos (e.g. year 0026), not real events.
+EARLIEST_PLAUSIBLE_YEAR = 2000
+MAX_PLAUSIBLE_SPAN_DAYS = 731  # the longest real runs seen (dinner shows, seasons) last ~14 months
 ISLAND_FILTER = "island filter"
 
 PERMANENT_HTTP = frozenset({401, 403})  # access denied: never retried as a temporary error
@@ -64,12 +69,27 @@ def event_overlaps(window: DateWindow, event: Event) -> bool | None:
     return window.overlaps(start, end, event.all_day or event.start_datetime is None)
 
 
+def implausible_dates(event: Event) -> bool:
+    """True when the dates look like a source typo: an ancient year or a multi-year span."""
+    start = event.start_date or (event.start_datetime.date() if event.start_datetime else None)
+    if start is None:
+        return False
+    end: date | None = event.end_date or (
+        event.end_datetime.date() if event.end_datetime else None
+    )
+    if start.year < EARLIEST_PLAUSIBLE_YEAR:
+        return True
+    return end is not None and (end - start).days > MAX_PLAUSIBLE_SPAN_DAYS
+
+
 def events_in_window(db: Database, window: DateWindow, island: str | None = None) -> list[Event]:
     """Stored events overlapping the window (optionally one island), in display order."""
     found = [
         e
         for e in db.all_events()
-        if event_overlaps(window, e) and (island is None or e.island == island)
+        if event_overlaps(window, e)
+        and not implausible_dates(e)
+        and (island is None or e.island == island)
     ]
     far = datetime.max.replace(tzinfo=TZ)
     found.sort(key=lambda e: (e.start_date or window.start_date, e.start_datetime or far, e.title))
@@ -150,6 +170,8 @@ def _in_window(
         inside = event_overlaps(window, event)
         if inside is None:
             discarded[MISSING_START] += 1
+        elif implausible_dates(event):
+            discarded[IMPLAUSIBLE_DATE] += 1
         elif not inside:
             discarded[OUTSIDE_WINDOW] += 1
         elif island and event.island != island:

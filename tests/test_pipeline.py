@@ -14,7 +14,7 @@ from canarias_events.database import Database
 from canarias_events.date_range import TZ
 from canarias_events.http import HttpError, SafeHttpClient
 from canarias_events.models import Event
-from canarias_events.pipeline import accept_quarantine, run_import
+from canarias_events.pipeline import accept_quarantine, events_in_window, ingest_events, run_import
 from canarias_events.snapshots import save_snapshot
 from canarias_events.sources.base import (
     FetchContext,
@@ -188,6 +188,40 @@ def test_event_without_any_start_is_discarded(db: Database, client: SafeHttpClie
     )
     report = run(db, client, {"a": fake("a", undated)})
     assert report["sources"]["a"]["discarded"] == {"missing start date": 1}
+
+
+def dated(event_id: str, title: str, start: date, end: date) -> Event:
+    return Event(
+        title=title,
+        start_date=start,
+        end_date=end,
+        all_day=True,
+        source_name="Source a",
+        source_event_id=event_id,
+    )
+
+
+def test_events_with_implausible_dates_are_discarded(db: Database, client: SafeHttpClient) -> None:
+    events = [
+        dated("typo-year", "Trail", date(26, 12, 6), date(2026, 12, 6)),  # year typo at the source
+        dated("decade", "Fiestas", date(2016, 11, 28), date(2026, 12, 8)),  # span over two years
+        dated("season", "Dinner show", date(2025, 11, 6), date(2026, 12, 27)),  # long but real
+    ]
+    report = run(db, client, {"a": fake("a", *events)})
+    stats = report["sources"]["a"]
+    assert stats["in_window"] == 1
+    assert stats["discarded"] == {"implausible date": 2}
+    assert {e.title for e in db.all_events()} == {"Dinner show"}
+
+
+def test_stored_events_with_implausible_dates_are_not_exported(db: Database) -> None:
+    stored = [
+        dated("typo-year", "Trail", date(26, 12, 6), date(2026, 12, 6)),
+        dated("ok", "Concierto", date(2026, 10, 21), date(2026, 10, 21)),
+    ]
+    db.sync_sources([make_cfg("a")])
+    ingest_events(db, stored, "a", NOW)  # stored before the plausibility check existed
+    assert [e.title for e in events_in_window(db, WINDOW)] == ["Concierto"]
 
 
 def test_all_day_event_uses_inclusive_dates(db: Database, client: SafeHttpClient) -> None:
