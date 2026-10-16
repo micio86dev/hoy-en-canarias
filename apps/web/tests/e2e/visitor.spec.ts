@@ -128,4 +128,13 @@ test.describe('visitor journeys', () => {
     expect(overflow).toBeLessThanOrEqual(1)
     await expect(page.getByRole('searchbox')).toBeVisible()
   })
+
+  test('a broken event image falls back to the placeholder with the brand mark', async ({ page }) => {
+    await page.goto('/buscar')
+    const card = page.locator('article', { has: page.getByRole('link', { name: JAZZ }) }).first()
+
+    await expect(card.getByTestId('event-placeholder')).toBeVisible({ timeout: 15_000 })
+    await expect(card.getByTestId('event-placeholder').getByTestId('brand-mark')).toBeVisible()
+    await expect(card.locator('img')).toHaveCount(0)
+  })
 })

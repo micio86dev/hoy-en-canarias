@@ -45,6 +45,7 @@ def demo_events(anchor: date) -> list[tuple[str, ImportedEvent]]:
             start_datetime=_at(anchor + timedelta(days=5), 20),
             end_datetime=_at(anchor + timedelta(days=5), 22),
             description="<p>Jazz al atardecer.</p>",
+            image_url="https://images.hoy-demo.test/jazz-no-existe.jpg",
             is_free=True,
             latitude=28.1,
             longitude=-16.7,

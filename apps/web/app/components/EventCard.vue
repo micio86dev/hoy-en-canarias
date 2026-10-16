@@ -1,18 +1,28 @@
 <template>
   <article class="flex flex-col overflow-hidden rounded-card bg-paper shadow-card ring-1 ring-ink/5">
-    <div class="relative aspect-[16/9]" :class="fallbackClass" aria-hidden="true">
+    <div
+      v-if="showImage"
+      class="relative aspect-[16/9] bg-sand"
+    >
       <img
-        v-if="event.image_url"
-        :src="event.image_url"
+        :src="event.image_url ?? undefined"
         alt=""
         loading="lazy"
         decoding="async"
         class="h-full w-full object-cover"
+        @error="imageFailed = true"
+        ref="imageEl"
       />
-      <span
-        v-else
-        class="absolute inset-x-0 bottom-0 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide"
-      >
+    </div>
+    <div
+      v-else
+      data-testid="event-placeholder"
+      class="relative flex aspect-[16/9] items-center justify-center"
+      :class="fallbackClass"
+      aria-hidden="true"
+    >
+      <BrandMark class="h-12 w-auto opacity-80" />
+      <span class="absolute inset-x-0 bottom-0 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide">
         {{ categoryLabel }}
       </span>
     </div>
@@ -40,6 +50,16 @@ import type { EventSummary } from '~/types/api'
 import { formatEventWhen } from '~/utils/dates'
 
 const props = defineProps<{ event: EventSummary }>()
+const imageFailed = ref(false)
+const showImage = computed(() => Boolean(props.event.image_url) && !imageFailed.value)
+watch(() => props.event.image_url, () => { imageFailed.value = false })
+
+// A server-rendered image can fail before hydration, so its error event was already fired.
+const imageEl = ref<HTMLImageElement | null>(null)
+onMounted(() => {
+  const image = imageEl.value
+  if (image && image.complete && image.naturalWidth === 0) imageFailed.value = true
+})
 const { t, locale } = useI18n()
 
 const when = computed(() =>
