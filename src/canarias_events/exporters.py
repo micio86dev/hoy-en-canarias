@@ -5,12 +5,15 @@ from __future__ import annotations
 import csv
 import io
 import json
+import logging
 import os
 import tempfile
 from collections.abc import Mapping
 from datetime import date, datetime
 from pathlib import Path
 from typing import Any
+
+import yaml
 
 from canarias_events.database import Database
 from canarias_events.date_range import DateWindow
@@ -30,6 +33,8 @@ _CSV_COLUMNS = [
 ]
 _CSV_EXTRA = ["tags", "sources", "source_urls", "source_event_ids", "source_license"]
 _CSV_MAP = ["map_latitude", "map_longitude", "map_precision"]
+logger = logging.getLogger("canarias_events.exporters")
+
 DEFAULT_VENUES = Path("config/venues.yaml")
 _GEOJSON_PROPERTIES = [
     "id", "title", "start_date", "start_datetime", "end_date", "end_datetime", "venue_name",
@@ -227,7 +232,12 @@ def export_all(
 ) -> dict[str, Path]:
     environment: Mapping[str, str] = os.environ if env is None else env
     events = events_in_window(db, window, island)
-    venues = load_venues(venues_path)  # once per export; a missing file is an empty table
+    try:
+        venues = load_venues(venues_path)  # once per export; a missing file is an empty table
+    except (OSError, yaml.YAMLError, ValueError) as exc:
+        # An optional reference table must not block the export of what was just imported.
+        logger.warning("venues table %s ignored: %s", venues_path, exc)
+        venues = []
     paths = {
         "events": output_dir / "events.json",
         "csv": output_dir / "events.csv",

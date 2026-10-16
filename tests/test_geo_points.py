@@ -184,13 +184,13 @@ def test_load_venues_rejects_coordinates_outside_declared_island(tmp_path: Path)
 venues:
   - name: Teatro Leal
     municipality: La Laguna
-    island: Gran Canaria
-    latitude: 28.48972
-    longitude: -16.31806
+    island: Tenerife
+    latitude: 28.13012
+    longitude: -15.44912
     source: wikidata:Q950052
 """,
-    )
-    with pytest.raises(ValueError, match="island"):
+    )  # municipality and island agree; only the coordinates (Gran Canaria) are wrong
+    with pytest.raises(ValueError, match="coordinates are not inside"):
         load_venues(path)
 
 

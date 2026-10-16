@@ -322,3 +322,18 @@ def test_missing_venues_file_still_gives_municipality_points(
     )  # fmt: skip
     by_title = {e["title"]: e for e in read_json(paths["events"])}
     assert by_title["En el Leal"]["map"]["precision"] == "municipality"
+
+
+def test_malformed_venues_file_does_not_block_the_export(
+    db: Database, client: SafeHttpClient, tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    report = map_run(db, client)
+    broken = tmp_path / "venues.yaml"
+    broken.write_text("venues: [\n  - name: [unclosed\n", encoding="utf-8")
+    paths = export_all(
+        db, catalog(), WINDOW, report, tmp_path / "o", now=NOW, env={}, venues_path=broken,
+    )  # fmt: skip
+    by_title = {e["title"]: e for e in read_json(paths["events"])}
+    assert by_title["En el Leal"]["map"]["precision"] == "municipality"
+    assert paths["geojson"].exists()
+    assert "venues" in caplog.text
