@@ -210,5 +210,9 @@ def _municipality_point(event: Event) -> MapPoint | None:
 def locate(event: Event, venues: list[Venue]) -> MapPoint | None:
     """The best honest point for ``event``, or None. Never alters the event."""
     if event.latitude is not None and event.longitude is not None:
-        return MapPoint(event.latitude, event.longitude, "source", "event coordinates")
+        # Sources do publish wrong points (one Las Palmas event sat in Ecuador): use them only
+        # when they fall in the Canaries and, if the island is known, on that island.
+        found = island_for_coordinates(event.latitude, event.longitude)
+        if found is not None and (event.island is None or normalize_island(event.island) == found):
+            return MapPoint(event.latitude, event.longitude, "source", "event coordinates")
     return _venue_point(event, venues) or _municipality_point(event)

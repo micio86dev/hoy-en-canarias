@@ -54,6 +54,28 @@ def test_source_coordinates_win_and_are_not_modified() -> None:
     assert (event.latitude, event.longitude) == (28.1, -16.5)
 
 
+@pytest.mark.parametrize(
+    ("lat", "lon", "island"),
+    [
+        (-1.352688, -80.576995, "Gran Canaria"),  # real source error: Ecuador for Las Palmas
+        (28.46417, -16.25139, "Gran Canaria"),  # inside the Canaries but on another island
+    ],
+)
+def test_source_coordinates_off_their_island_are_not_used(
+    lat: float, lon: float, island: str
+) -> None:
+    event = make(
+        latitude=lat, longitude=lon, island=island, municipality="Las Palmas de Gran Canaria"
+    )
+    point = locate(event, VENUES)
+    assert point is not None and point.precision == "municipality"
+    assert (event.latitude, event.longitude) == (lat, lon)  # the source fields stay as given
+
+
+def test_source_coordinates_outside_the_canaries_without_island_are_not_used() -> None:
+    assert locate(make(latitude=40.4, longitude=-3.7), VENUES) is None
+
+
 def test_only_one_source_coordinate_is_not_a_source_point() -> None:
     event = make(latitude=28.1, municipality="Adeje")
     point = locate(event, VENUES)
