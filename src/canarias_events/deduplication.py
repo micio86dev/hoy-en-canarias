@@ -3,16 +3,18 @@
 Order of the rules for an incoming event:
 
 1. Same ``(source_id, source_event_id)``: it is the same event (an update).
-2. Same canonical official URL and same start date, from another source: same event.
+2. Same canonical official URL and same start date, from another source: same event. From
+   the same source it is a republished copy only when start and end are exactly the same.
 3. Same start/end dates, similar title, agreeing location and compatible start time: merge.
    Near misses (similar title but no location agreement, a lower score, or the same start with
    another end date) are kept as separate events and reported as possible duplicates. A title
    suffix naming the venue (``Show - Teatro Leal``) is ignored when comparing titles.
 
-Two events of the same source are never merged automatically. Events read from social posts
-(``extra.source_trust == "social"``) skip rule 3 on either side: a near match is only reported
-as a possible duplicate. Rules 1 and 2 are exact identities and still apply; field conflicts are
-settled by source priority, which social sources keep low (see ``social.SOCIAL_PRIORITY``).
+Apart from such exact copies, two events of the same source are never merged. Events read
+from social posts (``extra.source_trust == "social"``) skip rule 3 on either side: a near match
+is only reported as a possible duplicate. Rules 1 and 2 are exact identities and still apply;
+field conflicts are settled by source priority, which social sources keep low (see
+``social.SOCIAL_PRIORITY``).
 """
 
 from __future__ import annotations
@@ -108,6 +110,17 @@ def times_compatible(a: Event, b: Event) -> bool:
     return (la.hour, la.minute) == (lb.hour, lb.minute)
 
 
+def same_occurrence(a: Event, b: Event) -> bool:
+    """Exactly the same start and end, for a source that publishes one event twice."""
+    return (a.start_date, a.start_datetime, a.end_date, a.end_datetime, a.all_day) == (
+        b.start_date,
+        b.start_datetime,
+        b.end_date,
+        b.end_datetime,
+        b.all_day,
+    )
+
+
 def same_dates(a: Event, b: Event) -> bool:
     if a.start_date is None or a.start_date != b.start_date:
         return False
@@ -127,7 +140,10 @@ def resolve(
 
     if event.official_event_url:
         for cand in db.candidates_by_url(event.official_event_url):
-            if source_id not in cand.source_ids and cand.event.start_date == event.start_date:
+            if source_id in cand.source_ids:
+                if same_occurrence(event, cand.event):
+                    return Decision("merge", cand.event.id, "url")
+            elif cand.event.start_date == event.start_date:
                 return Decision("merge", cand.event.id, "url")
 
     if event.start_date is None:

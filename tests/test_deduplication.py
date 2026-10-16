@@ -101,6 +101,36 @@ def test_same_source_similar_events_are_not_merged(db: Database) -> None:
     assert "same source" in db.possible_duplicates()[0]["reason"]
 
 
+def test_same_source_copy_with_the_same_url_and_times_is_merged(db: Database) -> None:
+    first = ingest(db, make_event(source_event_id="a", official_event_url="https://club.test/e/1"))
+    copy = make_event(
+        source_event_id="b",
+        venue_name="Otro texto",
+        official_event_url="https://www.club.test/e/1/",
+    )
+    decision = resolve(db, copy, "s1")
+    assert (decision.kind, decision.method) == ("merge", "url")
+    result = db.upsert(copy, "s1", decision, NOW)
+    assert (result.outcome, result.event_id) == ("merged", first.event_id)
+    assert db.count("events") == 1
+    assert db.count("event_sources") == 2
+    assert db.count("possible_duplicates") == 0
+
+
+def test_same_source_same_url_with_another_end_time_is_not_merged(db: Database) -> None:
+    ingest(db, make_event(source_event_id="a", official_event_url="https://club.test/e/1"))
+    other = make_event(
+        source_event_id="b", official_event_url="https://club.test/e/1",
+        end_datetime=datetime(2026, 10, 20, 23, 0, tzinfo=TZ),
+    )  # fmt: skip
+    assert resolve(db, other, "s1").kind == "new"
+
+
+def test_same_source_without_url_is_never_merged(db: Database) -> None:
+    ingest(db, make_event(source_event_id="a"))
+    assert resolve(db, make_event(source_event_id="b"), "s1").kind == "new"
+
+
 # --------------------------------------------------------------------------- cross source
 
 
@@ -439,21 +469,21 @@ def _fixture_events() -> tuple[list[Event], list[Event]]:
 def test_tenerife_fixtures_share_no_events_but_ckan_repeats_one_across_www(
     tmp_path: Path,
 ) -> None:
-    """The captured Tribe and CKAN samples cover different days: nothing may be merged.
+    """The captured Tribe and CKAN samples cover different days: no cross-source merge.
 
-    The CKAN sample does contain one event twice (www and bare host, different venue text):
-    same source, so it is reported as a possible duplicate and never merged.
+    The CKAN sample does contain one event twice (www and bare host, different venue text,
+    same official URL and times): that copy is merged into the first record by URL.
     """
     ckan, tribe = _fixture_events()
     assert not {e.start_date for e in ckan} & {e.start_date for e in tribe}
     with Database(tmp_path / "f.sqlite") as db:
         db.sync_sources([make_cfg("tribe"), make_cfg("ckan")])
         outcomes = [ingest(db, e, "tribe").outcome for e in tribe]
-        outcomes += [ingest(db, e, "ckan").outcome for e in ckan]
+        ckan_outcomes = [ingest(db, e, "ckan").outcome for e in ckan]
         assert "merged" not in outcomes
-        assert db.count("events") == len(tribe) + len(ckan)
-        assert db.count("possible_duplicates") == 1
-        assert "same source" in db.possible_duplicates()[0]["reason"]
+        assert ckan_outcomes.count("merged") == 1
+        assert db.count("events") == len(tribe) + len(ckan) - 1
+        assert db.count("possible_duplicates") == 0
 
 
 def test_real_ckan_event_merges_with_a_tribe_style_copy(db: Database) -> None:

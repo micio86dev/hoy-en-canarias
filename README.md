@@ -433,14 +433,16 @@ Deterministic, no AI. For each incoming event, in order:
 
 1. Same `(source, source event id)`: update of a known record.
 2. Same canonical official URL **and** same start date, from another source: same event.
+   From the same source (a feed that publishes one event twice, e.g. with and without `www.`)
+   it is merged only when start and end are exactly the same.
 3. Same start/end dates, title similarity (token-sort ratio, normalized titles) >= 92, agreeing
    location (same municipality, or coordinates within 300 m, or similar venue name) and
    compatible start time: merged.
 
 Near misses (similarity 75-92, or >= 92 with a different location or start time) stay separate
-and are recorded in `possible_duplicates`. Two events of the **same source** are never
-auto-merged. When sources disagree on a field, the source with higher `priority` wins; the
-provenance of each field is stored. The threshold is in `import-report.json` (`merge_threshold`).
+and are recorded in `possible_duplicates`. Apart from those exact copies, two events of the
+**same source** are never auto-merged. When sources disagree on a field, the source with higher
+`priority` wins; the provenance of each field is stored. The threshold is in `import-report.json` (`merge_threshold`).
 
 ## Security
 
