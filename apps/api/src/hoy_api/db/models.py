@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from typing import Any
 from uuid import UUID
 
 from hoy_api.db.base import Base
@@ -16,7 +17,7 @@ from sqlalchemy import (
     UniqueConstraint,
     text,
 )
-from sqlalchemy.dialects.postgresql import ARRAY, TSVECTOR
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB, TSVECTOR
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -125,3 +126,20 @@ class ImportRun(Base):
     events_stale: Mapped[int | None] = mapped_column(Integer)
     events_skipped: Mapped[int | None] = mapped_column(Integer)
     error_summary: Mapped[str | None] = mapped_column(Text)
+
+
+class Submission(Base):
+    """A visitor-submitted event. Only ``approved`` submissions are published."""
+
+    __tablename__ = "submissions"
+
+    id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")
+    )
+    status: Mapped[str] = mapped_column(Text)
+    reason: Mapped[str | None] = mapped_column(Text)
+    payload: Mapped[dict[str, Any]] = mapped_column(JSONB)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("now()")
+    )
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

@@ -570,3 +570,39 @@ def test_rate_limiting_is_thread_safe() -> None:
     with ThreadPoolExecutor(max_workers=8) as pool:
         list(pool.map(lambda _: client._wait_for_host("https://same.example.org/"), range(8)))
     assert sorted(slots) == [pytest.approx(float(n)) for n in range(1, 8)]
+
+
+@respx.mock
+def test_post_json_sends_payload_and_returns_parsed_json() -> None:
+    route = respx.post("https://api.test/score").mock(
+        return_value=httpx.Response(200, json={"answers": {"q": {"probability": 0.97}}})
+    )
+
+    result = make_client().post_json(
+        "https://api.test/score",
+        {"state": "hola"},
+        headers={"Authorization": "Bearer k"},
+        allowed_hosts={"api.test"},
+    )
+
+    assert result == {"answers": {"q": {"probability": 0.97}}}
+    assert route.call_count == 1
+    assert b'"state"' in route.calls.last.request.content
+
+
+@respx.mock
+def test_post_json_refuses_hosts_outside_the_allow_list() -> None:
+    route = respx.post("https://evil.test/score").mock(return_value=httpx.Response(200, json={}))
+
+    with pytest.raises(UnsafeUrlError):
+        make_client().post_json("https://evil.test/score", {}, allowed_hosts={"api.test"})
+    assert route.call_count == 0
+
+
+@respx.mock
+def test_post_json_never_retries_a_failed_write() -> None:
+    route = respx.post("https://api.test/score").mock(return_value=httpx.Response(500))
+
+    with pytest.raises(HttpError):
+        make_client(retries=3).post_json("https://api.test/score", {}, allowed_hosts={"api.test"})
+    assert route.call_count == 1

@@ -57,6 +57,42 @@ def _apply(row: Event, projected: ProjectedEvent, now: datetime) -> None:
     row.updated_at = now
 
 
+SUBMISSION_PREFIX = "submission:"
+
+
+def upsert_event(session: Session, projected: ProjectedEvent, now: datetime) -> tuple[UUID, bool]:
+    """Insert or update one event by ``importer_id``. Returns (event id, inserted)."""
+    existing_id = session.scalar(select(Event.id).where(Event.importer_id == projected.importer_id))
+    if existing_id is None:
+        row = Event(importer_id=projected.importer_id, slug=projected.slug, published_at=now)
+        _apply(row, projected, now)
+        session.add(row)
+        session.flush()  # assigns the primary key used by the provenance rows below
+        inserted = True
+    else:
+        loaded = session.get(Event, existing_id)
+        if loaded is None:  # pragma: no cover - the id was just read in this transaction
+            raise RuntimeError(f"event {existing_id} vanished during publish")
+        row = loaded
+        _apply(row, projected, now)
+        inserted = False
+    # Delete the old provenance rows before inserting the new ones: the unique key on
+    # (event, source, source_event_id) would otherwise collide within one flush.
+    session.execute(delete(EventSource).where(EventSource.event_id == row.id))
+    session.add_all(
+        EventSource(
+            event_id=row.id,
+            source_name=link.source_name,
+            source_event_id=link.source_event_id,
+            source_url=link.source_url,
+            official_url=link.official_url,
+        )
+        for link in projected.sources
+    )
+    session.flush()
+    return row.id, inserted
+
+
 def publish_events(
     session: Session, events: Sequence[ProjectedEvent], now: datetime
 ) -> PublishReport:
@@ -64,41 +100,15 @@ def publish_events(
 
     Events missing from the current importer export are flagged ``stale`` so the API can
     still serve them with an honest label while the upstream source is unavailable.
+    Visitor submissions are not part of the importer export and are never flagged.
     """
     report = PublishReport(total=len(events))
-    existing: dict[str, UUID] = dict(session.execute(select(Event.importer_id, Event.id)).all())
-
     for projected in events:
-        event_id = existing.get(projected.importer_id)
-        if event_id is None:
-            row = Event(importer_id=projected.importer_id, slug=projected.slug, published_at=now)
-            _apply(row, projected, now)
-            session.add(row)
-            session.flush()  # assigns the primary key used by the provenance rows below
+        _, inserted = upsert_event(session, projected, now)
+        if inserted:
             report.inserted += 1
         else:
-            loaded = session.get(Event, event_id)
-            if loaded is None:  # pragma: no cover - guarded by the snapshot above
-                raise RuntimeError(f"event {event_id} vanished during publish")
-            row = loaded
             report.updated += 1
-        if event_id is not None:
-            _apply(row, projected, now)
-        # Delete the old provenance rows before inserting the new ones: the unique key on
-        # (event, source, source_event_id) would otherwise collide within one flush.
-        session.execute(delete(EventSource).where(EventSource.event_id == row.id))
-        session.add_all(
-            EventSource(
-                event_id=row.id,
-                source_name=link.source_name,
-                source_event_id=link.source_event_id,
-                source_url=link.source_url,
-                official_url=link.official_url,
-            )
-            for link in projected.sources
-        )
-        session.flush()
-        existing[projected.importer_id] = row.id
 
     if not events:
         # An empty export usually means a failed upstream run, not that every event vanished.
@@ -106,7 +116,11 @@ def publish_events(
     current = [projected.importer_id for projected in events]
     stale_result = session.execute(
         update(Event)
-        .where(Event.importer_id.not_in(current), Event.stale.is_(False))
+        .where(
+            Event.importer_id.not_in(current),
+            Event.importer_id.not_like(f"{SUBMISSION_PREFIX}%"),
+            Event.stale.is_(False),
+        )
         .values(stale=True, updated_at=now)
     )
     report.stale_marked = cast(CursorResult[Any], stale_result).rowcount

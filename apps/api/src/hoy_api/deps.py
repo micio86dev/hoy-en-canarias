@@ -1,9 +1,10 @@
 import math
+import secrets
 from collections.abc import Callable, Iterator
 from datetime import datetime
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, Request
+from fastapi import Depends, Header, HTTPException, Request
 from sqlalchemy.orm import Session, sessionmaker
 
 from hoy_api.ratelimit import TokenBucketLimiter
@@ -34,3 +35,20 @@ def enforce_rate_limit(request: Request) -> None:
 
 SessionDep = Annotated[Session, Depends(get_session)]
 ClockDep = Annotated[datetime, Depends(get_clock)]
+
+
+def require_admin(
+    request: Request,
+    authorization: Annotated[str | None, Header()] = None,
+) -> None:
+    """Bearer-token guard for moderation routes. Disabled (404) unless a token is configured."""
+    token = request.app.state.settings.admin_token
+    if token is None:
+        raise HTTPException(status_code=404, detail="Not found")
+    presented = ""
+    if authorization is not None and authorization.startswith("Bearer "):
+        presented = authorization[len("Bearer ") :]
+    if not secrets.compare_digest(presented.encode(), token.get_secret_value().encode()):
+        raise HTTPException(
+            status_code=401, detail="Invalid credentials", headers={"WWW-Authenticate": "Bearer"}
+        )

@@ -354,6 +354,40 @@ class SafeHttpClient:
         except (ValueError, UnicodeDecodeError) as exc:
             raise InvalidPayload(f"invalid JSON from {mask_secrets(result.url)}") from exc
 
+    def post_json(
+        self,
+        url: str,
+        payload: Any,
+        headers: Mapping[str, str] | None = None,
+        allowed_hosts: Collection[str] | None = None,
+    ) -> Any:
+        """Send one JSON write. Same URL checks as ``get``; never retried, because a retried
+        write can be charged or applied twice."""
+        allowed = {h.lower() for h in allowed_hosts} if allowed_hosts is not None else None
+        self._check_url(url, allowed)
+        send = {"User-Agent": self.user_agent, "Accept": "application/json"}
+        if headers:
+            send.update(headers)
+        self._wait_for_host(url)
+        with self._client.stream("POST", url, json=payload, headers=send) as response:
+            status = response.status_code
+            body = b""
+            if 200 <= status < 300:
+                chunks: list[bytes] = []
+                size = 0
+                for chunk in response.iter_bytes():
+                    size += len(chunk)
+                    if size > self.max_bytes:
+                        raise ResponseTooLarge(f"response exceeds {self.max_bytes} bytes")
+                    chunks.append(chunk)
+                body = b"".join(chunks)
+        if not 200 <= status < 300:
+            raise HttpError(status, f"HTTP {status} for {mask_secrets(url)}")
+        try:
+            return json.loads(body)
+        except (ValueError, UnicodeDecodeError) as exc:
+            raise InvalidPayload(f"invalid JSON from {mask_secrets(url)}") from exc
+
     # ------------------------------------------------------------------ internals
 
     def _check_url(self, url: str, allowed: set[str] | None) -> None:
