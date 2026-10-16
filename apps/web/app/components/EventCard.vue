@@ -64,10 +64,11 @@ const place = computed(() =>
 
 const priceText = computed(() => {
   if (props.event.price_min === null) return ''
-  const currency = props.event.currency ?? 'EUR'
-  return t('event.priceFrom', {
-    amount: new Intl.NumberFormat(locale.value, { style: 'currency', currency }).format(props.event.price_min),
-  })
+  // Without a source currency the amount is shown bare: never assume EUR.
+  const amount = props.event.currency
+    ? new Intl.NumberFormat(locale.value, { style: 'currency', currency: props.event.currency }).format(props.event.price_min)
+    : new Intl.NumberFormat(locale.value, { maximumFractionDigits: 2 }).format(props.event.price_min)
+  return t('event.priceFrom', { amount })
 })
 
 // A deterministic CSS fallback instead of a stock photo that could misrepresent the event.

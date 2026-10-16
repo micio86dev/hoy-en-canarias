@@ -92,3 +92,5 @@ Public, multilingual (es/en/it) event discovery portal for the Canary Islands: F
 - `llms.txt` is a supplementary discovery aid only; no claim is made that it improves AI visibility.
 - Site verification tokens (Search Console and others) are not added: the brief forbids inventing them. They belong in the README (P11).
 - `NUXT_PUBLIC_SITE_URL` is read at build time for hreflang and canonical URLs, so each deployed environment must set it when building.
+- Review follow-up (P9): `eventAttendanceMode` and `offers.availability` are no longer asserted, because the source does not provide them. Covered by a test.
+- Review follow-up (P9): no currency is assumed. JSON-LD omits `priceCurrency` and omits paid offers when the source gives no currency; the card shows a bare amount. Covered by tests.

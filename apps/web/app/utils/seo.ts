@@ -64,9 +64,9 @@ export function buildEventJsonLd(event: EventDetail, context: JsonLdContext): Re
 
   let offers: Record<string, unknown> | undefined
   if (event.is_free === true) {
-    offers = { '@type': 'Offer', price: 0, priceCurrency: event.currency ?? 'EUR', availability: 'https://schema.org/InStock' }
-  } else if (event.price_min !== null) {
-    offers = { '@type': 'Offer', price: event.price_min, priceCurrency: event.currency ?? 'EUR', availability: 'https://schema.org/InStock' }
+    offers = { '@type': 'Offer', price: 0, ...(event.currency ? { priceCurrency: event.currency } : {}) }
+  } else if (event.price_min !== null && event.currency) {
+    offers = { '@type': 'Offer', price: event.price_min, priceCurrency: event.currency }
   }
 
   return {
@@ -78,7 +78,6 @@ export function buildEventJsonLd(event: EventDetail, context: JsonLdContext): Re
     startDate,
     endDate,
     eventStatus: EVENT_STATUS[event.status],
-    eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
     location,
     image: event.image_url ?? undefined,
     organizer: event.organizer_name

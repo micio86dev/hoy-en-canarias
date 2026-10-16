@@ -84,8 +84,26 @@ describe('Event JSON-LD', () => {
       '@type': 'Offer',
       price: 0,
       priceCurrency: 'EUR',
-      availability: 'https://schema.org/InStock',
     })
+  })
+
+  it('never asserts an attendance mode or availability the source did not give', () => {
+    const data = buildEventJsonLd(detail({ is_free: true, currency: 'EUR' }), { siteUrl: SITE, url: SITE })
+
+    expect(data.eventAttendanceMode).toBeUndefined()
+    expect((data.offers as Record<string, unknown>).availability).toBeUndefined()
+  })
+
+  it('never assumes a currency: a free offer carries no currency code unless the source gave one', () => {
+    const data = buildEventJsonLd(detail({ is_free: true, currency: null }), { siteUrl: SITE, url: SITE })
+
+    expect(data.offers).toEqual({ '@type': 'Offer', price: 0 })
+  })
+
+  it('omits a paid offer whose currency is unknown rather than guessing EUR', () => {
+    const data = buildEventJsonLd(detail({ price_min: 5, currency: null }), { siteUrl: SITE, url: SITE })
+
+    expect(data.offers).toBeUndefined()
   })
 
   it('maps a known cancellation to schema.org', () => {
