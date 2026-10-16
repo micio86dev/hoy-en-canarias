@@ -19,7 +19,7 @@ Public, multilingual (es/en/it) event discovery portal for the Canary Islands: F
 - [x] P2 Publish projection (importer SQLite -> Postgres): schema 0002, slugs, categories, status, stale.
 - [x] P3 Search repositories + public endpoints (events, detail, related, map, islands, categories, municipalities, health/ready).
 - [x] P4 Worker scheduler (04:00 Canary, DST-safe, advisory lock, bounded retries, import_runs) + `hoy` CLI + admin trigger.
-- [ ] P5 Nuxt foundation: tokens, fonts, i18n es/en/it, layout.
+- [x] P5 Nuxt foundation: tokens (single @theme source, contrast-tested), fonts, i18n es/en/it, layout with skip link, language switcher.
 - [ ] P6 Home + search + cards + filters + voice search.
 - [ ] P7 Event detail + island/municipality/category pages.
 - [ ] P8 Map (Leaflet, clustering, list alternative, opt-in geolocation).
@@ -52,3 +52,12 @@ Public, multilingual (es/en/it) event discovery portal for the Canary Islands: F
 - The importer runs as its own process (`canarias-events import-events --no-ai`), so its code and CLI are untouched. The API process never imports it at run time.
 - The scheduler lives in `hoy worker` (one process). It is not embedded in API replicas. Multi-replica safety comes from the advisory lock, not from process placement.
 - Docker services `api` and `worker` are still to be added (with the web service, in the Docker task).
+- P5: `apps/web` unit suite green (11 passed: i18n key parity es/en/it, WCAG AA 4.5:1 for all 7 text pairs). `pnpm build` and `pnpm typecheck` (exit 0). SSR verified: `/` `/en/` `/it/` return 200 with `lang` es-ES / en-GB / it-IT and localized skip-link text; `hreflang` alternates present.
+
+## Decisions and deviations (P5)
+- pnpm 11 blocks esbuild's build script by default: allowed explicitly in `pnpm-workspace.yaml` (`allowBuilds`), not interactively.
+- Vitest 4 + @nuxt/test-utils 4 so that Vite is a single version (8.x) with Nuxt and the Tailwind plugin. Vitest 3 pulled Vite 7 and broke `nuxt typecheck`.
+- TypeScript pinned to 5.x: vue-tsc and the Nuxt type chain are validated on 5.x; 7.x not adopted.
+- `baseUrl` (for hreflang absolute URLs) is read from NUXT_PUBLIC_SITE_URL at BUILD time. A production build must set it explicitly.
+- Dark mode not implemented yet (light palette only); P11 decides whether to add it.
+- Nav links to /buscar, /islas, /categorias, /mapa, /acerca, /privacidad are not built yet and currently log Vue Router warnings. They are built in P6 to P9.

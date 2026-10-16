@@ -1,0 +1,25 @@
+/* Design tokens. Single source for CSS custom properties and Tailwind utilities. */
+@theme {
+  /* Palette: Atlantic ocean, volcanic charcoal, warm sand, coral sun. */
+  --color-ocean: #0b3954;
+  --color-ocean-soft: #d7e6ec;
+  --color-ink: #1d2328;
+  --color-ink-muted: #4d5862;
+  --color-paper: #fbf7f0;
+  --color-sand: #efe3cd;
+  --color-accent: #f08a5d;
+  --color-accent-ink: #1d2328;
+  --color-link: #0b5676;
+  --color-focus: #0b5676;
+
+  --font-display: "Fraunces", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --radius-card: 1.25rem;
+  --radius-pill: 999px;
+
+  --shadow-card: 0 1px 2px rgb(29 35 40 / 0.06), 0 8px 24px rgb(29 35 40 / 0.08);
+
+  --container-page: 72rem;
+  --ease-soft: cubic-bezier(0.2, 0.7, 0.2, 1);
+}

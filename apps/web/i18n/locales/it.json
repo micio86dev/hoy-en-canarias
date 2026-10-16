@@ -1,0 +1,33 @@
+{
+  "site": {
+    "name": "Hoy en Canarias",
+    "description": "Scopri gli eventi delle otto isole Canarie: concerti, mercati, feste, cultura e natura."
+  },
+  "nav": {
+    "home": "Home",
+    "search": "Cerca",
+    "islands": "Isole",
+    "categories": "Categorie",
+    "map": "Mappa",
+    "skipToContent": "Vai al contenuto principale",
+    "primary": "Navigazione principale",
+    "openMenu": "Apri menu",
+    "closeMenu": "Chiudi menu"
+  },
+  "footer": {
+    "about": "Chi siamo",
+    "privacy": "Privacy",
+    "notice": "I dati provengono da fonti pubbliche. Verifica sempre la fonte ufficiale prima di partire."
+  },
+  "language": {
+    "label": "Lingua",
+    "es": "Español",
+    "en": "English",
+    "it": "Italiano"
+  },
+  "common": {
+    "loading": "Caricamento…",
+    "error": "Impossibile caricare le informazioni.",
+    "retry": "Riprova"
+  }
+}

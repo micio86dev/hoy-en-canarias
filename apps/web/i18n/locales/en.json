@@ -1,0 +1,33 @@
+{
+  "site": {
+    "name": "Hoy en Canarias",
+    "description": "Discover events across the eight Canary Islands: concerts, markets, festivals, culture and nature."
+  },
+  "nav": {
+    "home": "Home",
+    "search": "Search",
+    "islands": "Islands",
+    "categories": "Categories",
+    "map": "Map",
+    "skipToContent": "Skip to main content",
+    "primary": "Primary navigation",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
+  },
+  "footer": {
+    "about": "About",
+    "privacy": "Privacy",
+    "notice": "Data comes from public sources. Always check the official source before you go."
+  },
+  "language": {
+    "label": "Language",
+    "es": "Español",
+    "en": "English",
+    "it": "Italiano"
+  },
+  "common": {
+    "loading": "Loading…",
+    "error": "The information could not be loaded.",
+    "retry": "Try again"
+  }
+}
