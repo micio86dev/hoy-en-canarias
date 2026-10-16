@@ -10,6 +10,8 @@ WORKDIR /app
 COPY pyproject.toml uv.lock ./
 COPY src ./src
 COPY apps/api ./apps/api
+# The importer reads config/sources.yaml relative to its working directory (apps/api).
+COPY config ./apps/api/config
 RUN uv sync --package hoy-api --frozen --no-dev
 
 ENV PATH="/app/.venv/bin:${PATH}"
