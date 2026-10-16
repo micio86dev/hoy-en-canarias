@@ -609,6 +609,26 @@ class Database:
             (event_id,),
         ).fetchall()
 
+    def shared_url_groups(self) -> list[tuple[str, str, list[str]]]:
+        """``(source_id, canonical_url, event_ids)`` where a source links one URL to 2+ events."""
+        rows = self.conn.execute(
+            "SELECT DISTINCT source_id, canonical_official_url, event_id FROM event_sources"
+            " WHERE canonical_official_url IS NOT NULL"
+            " ORDER BY source_id, canonical_official_url, event_id"
+        ).fetchall()
+        groups: dict[tuple[str, str], list[str]] = {}
+        for source_id, url, event_id in rows:
+            groups.setdefault((source_id, url), []).append(event_id)
+        return [(sid, url, ids) for (sid, url), ids in groups.items() if len(ids) > 1]
+
+    def link_counts(self, event_id: str) -> tuple[int, int]:
+        """``(links, distinct sources)`` of an event."""
+        row = self.conn.execute(
+            "SELECT COUNT(*), COUNT(DISTINCT source_id) FROM event_sources WHERE event_id = ?",
+            (event_id,),
+        ).fetchone()
+        return int(row[0]), int(row[1])
+
     def count(self, table: str) -> int:
         if table not in {"events", "event_sources", "possible_duplicates", "sources"}:
             raise ValueError(table)
@@ -724,11 +744,21 @@ class Database:
         )
         return cur.rowcount
 
-    def _merge_into(self, event_id: str, incoming: Event, source_id: str, now: datetime) -> None:
+    def _merge_into(
+        self,
+        event_id: str,
+        incoming: Event,
+        source_id: str,
+        now: datetime,
+        *,
+        fill_only: bool = False,
+    ) -> None:
         row = self.conn.execute("SELECT * FROM events WHERE id = ?", (event_id,)).fetchone()
         current = row_to_event(row)
         provenance: dict[str, str] = json.loads(row["field_provenance"])
-        merged, provenance = self._merged(current, provenance, incoming, source_id)
+        merged, provenance = self._merged(
+            current, provenance, incoming, source_id, fill_only=fill_only
+        )
         merged = merged.model_copy(update={"last_seen_at": now, "last_verified_at": now})
         new_hash = merged.content_hash()
         changed = new_hash != row["content_hash"]
@@ -749,6 +779,41 @@ class Database:
         )
         self._refresh_link_provenance(event_id, provenance)
 
+    def absorb_event(self, keep_id: str, drop_id: str, source_id: str, now: datetime) -> None:
+        """Fold a stored copy into another event of the same source, in one transaction."""
+        dropped = self.get_event(drop_id)
+        kept = self.get_event(keep_id)
+        if dropped is None or kept is None:
+            raise LookupError(f"no event {drop_id if dropped is None else keep_id}")
+        with self.conn:
+            self._merge_into(keep_id, dropped, source_id, now, fill_only=True)
+            # Nothing was fetched: keep the latest real sighting of either copy, not ``now``.
+            seen = [e.last_seen_at for e in (kept, dropped) if e.last_seen_at is not None]
+            verified = [e.last_verified_at for e in (kept, dropped) if e.last_verified_at]
+            self.conn.execute(
+                "UPDATE events SET last_seen_at = ?, last_verified_at = ? WHERE id = ?",
+                (
+                    max(seen).isoformat() if seen else None,
+                    max(verified).isoformat() if verified else None,
+                    keep_id,
+                ),
+            )
+            self.conn.execute(
+                "UPDATE event_sources SET event_id = ?, match_method = 'url' WHERE event_id = ?",
+                (keep_id, drop_id),
+            )
+            provenance: dict[str, str] = json.loads(
+                self.conn.execute(
+                    "SELECT field_provenance FROM events WHERE id = ?", (keep_id,)
+                ).fetchone()[0]
+            )
+            self._refresh_link_provenance(keep_id, provenance)
+            self.conn.execute(
+                "DELETE FROM possible_duplicates WHERE event_id_a = ? OR event_id_b = ?",
+                (drop_id, drop_id),
+            )
+            self.conn.execute("DELETE FROM events WHERE id = ?", (drop_id,))
+
     def _refresh_link_provenance(self, event_id: str, provenance: dict[str, str]) -> None:
         """Each link lists the fields it currently supplies to the event."""
         for (link_source,) in self.conn.execute(
@@ -762,14 +827,25 @@ class Database:
             )
 
     def _merged(
-        self, current: Event, provenance: dict[str, str], incoming: Event, source_id: str
+        self,
+        current: Event,
+        provenance: dict[str, str],
+        incoming: Event,
+        source_id: str,
+        *,
+        fill_only: bool = False,
     ) -> tuple[Event, dict[str, str]]:
-        """Field-wise merge: never null over non-null; priority decides real conflicts."""
+        """Field-wise merge: never null over non-null; priority decides real conflicts.
+
+        With ``fill_only`` (a stored copy folded into its twin) the current values always win.
+        """
         incoming_rank = self.priority_of(source_id)
         updates: dict[str, Any] = {}
         result = dict(provenance)
 
         def takes_over(lead: str) -> bool:
+            if fill_only:
+                return False
             owner = provenance.get(lead)
             if owner is None or owner == source_id:
                 return True
@@ -798,7 +874,8 @@ class Database:
         union = list(dict.fromkeys([*current.tags, *incoming.tags]))
         extra = (
             {**current.extra, **incoming.extra}
-            if incoming_rank >= self.priority_of(provenance.get("source_name", source_id))
+            if not fill_only
+            and incoming_rank >= self.priority_of(provenance.get("source_name", source_id))
             else {**incoming.extra, **current.extra}
         )
         updates.update(tags=union, extra=extra)

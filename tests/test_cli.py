@@ -15,7 +15,7 @@ from typer.testing import CliRunner
 
 from canarias_events import cli
 from canarias_events.cli import app
-from canarias_events.database import Database
+from canarias_events.database import Database, Decision
 from canarias_events.date_range import TZ, next_week
 from canarias_events.http import SafeHttpClient
 from canarias_events.models import Event
@@ -1202,3 +1202,47 @@ def test_validation_output_treats_an_unknown_error_rate_as_unknown(
     report.reliability = {"runs": 0, "error_rate": None, "last_status": None}
     cli._echo_validation(report)
     assert "unknown" in capsys.readouterr().out.split("Reliability:")[1].splitlines()[0]
+
+
+# --------------------------------------------------------------------------- merge-duplicates
+
+
+def stored_copies(tmp_path: Path) -> str:
+    """A database holding one source's event twice (stored before copies were merged)."""
+    db_path = tmp_path / "copies.sqlite"
+    with Database(db_path) as db:
+        db.sync_sources(
+            [SourceConfig(id="s1", name="Source s1", adapter="fake", url="https://s1.test/feed")]
+        )
+        for key, url in (("a", "https://club.test/e/1"), ("b", "https://www.club.test/e/1/")):
+            event = Event(
+                title="Concierto de Navidad",
+                start_datetime=datetime(2026, 10, 20, 20, 0, tzinfo=TZ),
+                island="Tenerife",
+                official_event_url=url,
+                source_name="Source s1",
+                source_event_id=key,
+            )
+            db.upsert(event, "s1", Decision("new"), NOW)
+    return str(db_path)
+
+
+def test_merge_duplicates_lists_and_merges_a_copy(tmp_path: Path) -> None:
+    db_path = stored_copies(tmp_path)
+    result = invoke("merge-duplicates", "--db", db_path)
+    assert result.exit_code == 0, result.output
+    assert "Concierto de Navidad" in result.output and "s1" in result.output
+    assert "Merged 1" in result.output
+    with Database(db_path) as check:
+        assert check.count("events") == 1
+    again = invoke("merge-duplicates", "--db", db_path)
+    assert again.exit_code == 0 and "Merged 0" in again.output
+
+
+def test_merge_duplicates_dry_run_writes_nothing(tmp_path: Path) -> None:
+    db_path = stored_copies(tmp_path)
+    result = invoke("merge-duplicates", "--db", db_path, "--dry-run")
+    assert result.exit_code == 0, result.output
+    assert "Concierto de Navidad" in result.output and "Would merge 1" in result.output
+    with Database(db_path) as check:
+        assert check.count("events") == 2

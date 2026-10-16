@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import math
 import re
+from dataclasses import dataclass
 
 from rapidfuzz import fuzz
 
@@ -189,3 +190,53 @@ def resolve(
     if best is not None and best[1].event.id is not None:
         return Decision("merge", best[1].event.id, "fuzzy")
     return Decision("new", possibles=tuple(possibles))
+
+
+@dataclass(frozen=True)
+class CopyPair:
+    """Two stored events of one source that are the same occurrence (see ``same_occurrence``)."""
+
+    keep_id: str
+    drop_id: str
+    source_id: str
+    url: str
+    skipped_reason: str | None = None
+
+
+def _first_seen(event: Event) -> str:
+    return event.first_seen_at.isoformat() if event.first_seen_at else ""
+
+
+def find_same_source_copies(db: Database) -> list[CopyPair]:
+    """Pairs of events one source published twice (same canonical URL, same start and end).
+
+    The kept event has the most links, then the older ``first_seen_at``, then the smaller id.
+    A copy with more than one link has data from several places and is reported as skipped.
+    Each event is in at most one pair, so a run never touches the same row twice.
+    """
+    pairs: list[CopyPair] = []
+    used: set[str] = set()
+    for source_id, url, event_ids in db.shared_url_groups():
+        events = {e.id: e for i in event_ids if (e := db.get_event(i)) is not None and e.id}
+        counts = {i: db.link_counts(i) for i in events}
+        order = sorted(events, key=lambda i: (-counts[i][0], _first_seen(events[i]), i))
+        for keep_id in order:
+            if keep_id in used:
+                continue
+            for drop_id in order:
+                if drop_id == keep_id or drop_id in used:
+                    continue
+                if not same_occurrence(events[keep_id], events[drop_id]):
+                    continue
+                used.add(drop_id)
+                links, sources = counts[drop_id]
+                reason = None
+                if links > 1:
+                    reason = (
+                        f"copy has links from {sources} sources"
+                        if sources > 1
+                        else f"copy has {links} links"
+                    )
+                pairs.append(CopyPair(keep_id, drop_id, source_id, url, reason))
+            used.add(keep_id)
+    return pairs

@@ -444,6 +444,20 @@ and are recorded in `possible_duplicates`. Apart from those exact copies, two ev
 **same source** are never auto-merged. When sources disagree on a field, the source with higher
 `priority` wins; the provenance of each field is stored. The threshold is in `import-report.json` (`merge_threshold`).
 
+### Merging copies stored earlier
+
+Rule 2 only applies at ingest. Same-source copies stored before it existed are merged with:
+
+```bash
+uv run canarias-events merge-duplicates --dry-run   # list the pairs, change nothing
+uv run canarias-events merge-duplicates             # merge them
+```
+
+A pair is two events of one source with the same canonical official URL and exactly the same
+start and end. The event with more links (then the older one) is kept; null fields are filled
+from the copy and the source's link moves over. A copy that also has links from other sources
+is skipped and listed. A second run finds nothing. Use `--db` for another database file.
+
 ## Security
 
 - Only `http`/`https`; every request goes through `SafeHttpClient`.

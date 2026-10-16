@@ -19,6 +19,7 @@ from canarias_events.candidates import FoundCandidate, candidates_from_report
 from canarias_events.crawl_settings import CrawlSettings
 from canarias_events.database import Database, SqliteHttpCache, default_db_path
 from canarias_events.date_range import TZ, DateWindow, explicit_window, next_week
+from canarias_events.deduplication import find_same_source_copies
 from canarias_events.discovery import (
     configured_domains,
     configured_urls,
@@ -760,6 +761,32 @@ def review_quarantine(
         for sid, items in groups.items()
     ]  # fmt: skip
     typer.echo(format_table(["source", "events", "reason", "run", "held at", "first titles"], rows))
+
+
+@app.command("merge-duplicates")
+def merge_duplicates(
+    db_path: DbOption = None,
+    dry_run: Annotated[
+        bool, typer.Option("--dry-run", help="List what would be merged; write nothing.")
+    ] = False,
+) -> None:
+    """Merge events a source stored twice (same official URL, same start and end)."""
+    now = datetime.now(TZ)
+    merged = 0
+    with Database(db_path or default_db_path()) as db:
+        for pair in find_same_source_copies(db):
+            event = db.get_event(pair.drop_id)
+            title = event.title if event else pair.drop_id
+            start = (event.start_datetime or event.start_date) if event else None
+            label = f"{title} | {start if start is not None else 'no start'} | {pair.source_id}"
+            if pair.skipped_reason is not None:
+                typer.echo(f"Skipped: {label} ({pair.skipped_reason})")
+                continue
+            if not dry_run:
+                db.absorb_event(pair.keep_id, pair.drop_id, pair.source_id, now)
+            typer.echo(f"{'Would merge' if dry_run else 'Merged'}: {label}")
+            merged += 1
+    typer.echo(f"{'Would merge' if dry_run else 'Merged'} {merged} duplicate event(s).")
 
 
 if __name__ == "__main__":

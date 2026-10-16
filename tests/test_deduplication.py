@@ -8,9 +8,9 @@ from typing import Any
 import pytest
 import respx
 
-from canarias_events.database import Database, UpsertResult
+from canarias_events.database import Database, Decision, UpsertResult
 from canarias_events.date_range import TZ, explicit_window
-from canarias_events.deduplication import haversine_m, resolve
+from canarias_events.deduplication import find_same_source_copies, haversine_m, resolve
 from canarias_events.models import Event
 from canarias_events.sources.base import FetchContext
 from canarias_events.sources.ckan import CkanAdapter
@@ -591,3 +591,125 @@ def test_a_reliable_source_overrides_what_a_social_one_wrote_first(social_db: Da
     ingest(social_db, make_event(official_event_url=url, description="Texto oficial"), "s1")
     stored = social_db.get_event(first.event_id)
     assert stored is not None and stored.description == "Texto oficial"
+
+
+# --------------------------------------------------------------------------- backfill
+
+CLUB_URL = "https://club.test/e/1"
+
+
+def seed_copies(
+    db: Database, first: Event | None = None, second: Event | None = None
+) -> tuple[str, str]:
+    """Store two copies the way the pre-merge ingest did: both as new events."""
+    a = first or make_event(source_event_id="a", official_event_url=CLUB_URL)
+    b = second or make_event(source_event_id="b", official_event_url="https://www.club.test/e/1/")
+    id_a = db.upsert(a, "s1", Decision("new"), NOW).event_id
+    id_b = db.upsert(b, "s1", Decision("new"), NOW + timedelta(hours=1)).event_id
+    return id_a, id_b
+
+
+def test_finder_pairs_an_exact_same_source_copy(db: Database) -> None:
+    older, newer = seed_copies(db)
+    pairs = find_same_source_copies(db)
+    assert [(p.keep_id, p.drop_id, p.source_id, p.skipped_reason) for p in pairs] == [
+        (older, newer, "s1", None)
+    ]
+    assert pairs[0].url == "https://club.test/e/1"
+
+
+def test_finder_keeps_the_event_with_more_links(db: Database) -> None:
+    older, newer = seed_copies(db)
+    extra = make_event(source_event_id="x", official_event_url="https://other.test/x")
+    db.upsert(extra, "s2", Decision("merge", newer, "fuzzy"), NOW)
+    (pair,) = find_same_source_copies(db)
+    assert (pair.keep_id, pair.drop_id) == (newer, older)
+
+
+def test_finder_ignores_different_end_url_or_missing_url(db: Database) -> None:
+    other_end = make_event(
+        source_event_id="b",
+        official_event_url=CLUB_URL,
+        end_datetime=datetime(2026, 10, 20, 23, 0, tzinfo=TZ),
+    )
+    seed_copies(db, second=other_end)
+    other_url = make_event(source_event_id="c", official_event_url="https://club.test/e/2")
+    seed_copies(
+        db, make_event(source_event_id="d", official_event_url="https://club.test/e/3"), other_url
+    )
+    no_url_a, no_url_b = make_event(source_event_id="n1"), make_event(source_event_id="n2")
+    seed_copies(db, no_url_a, no_url_b)
+    assert [p for p in find_same_source_copies(db) if p.skipped_reason is None] == []
+
+
+def test_finder_reports_a_copy_with_links_from_two_sources_as_skipped(db: Database) -> None:
+    older, newer = seed_copies(db)
+    for index, event_id in enumerate((older, newer)):
+        extra = make_event(
+            source_event_id=f"x{index}", official_event_url=f"https://o.test/{index}"
+        )
+        db.upsert(extra, "s2", Decision("merge", event_id, "fuzzy"), NOW)
+    (pair,) = find_same_source_copies(db)
+    assert pair.skipped_reason == "copy has links from 2 sources"
+    assert db.count("events") == 2
+
+
+def test_finder_pairs_every_extra_copy_with_the_same_keep(db: Database) -> None:
+    older, second = seed_copies(db)
+    third = make_event(source_event_id="c", official_event_url="https://club.test/e/1?utm_source=x")
+    third_id = db.upsert(third, "s1", Decision("new"), NOW + timedelta(hours=2)).event_id
+    pairs = find_same_source_copies(db)
+    assert [(p.keep_id, p.drop_id) for p in pairs] == [(older, second), (older, third_id)]
+
+
+def test_absorb_event_merges_fields_moves_the_link_and_cleans_up(db: Database) -> None:
+    first = make_event(source_event_id="a", official_event_url=CLUB_URL, description=None)
+    second = make_event(
+        source_event_id="b",
+        official_event_url=CLUB_URL,
+        description="Filled from the copy",
+        venue_name=None,
+    )
+    keep_id, drop_id = seed_copies(db, first, second)
+    db.conn.execute(
+        "INSERT INTO possible_duplicates (event_id_a, event_id_b, score, reason, created_at)"
+        " VALUES (?, ?, 95, 'same source, never auto-merged', ?)",
+        (keep_id, drop_id, NOW.isoformat()),
+    )
+    db.absorb_event(keep_id, drop_id, "s1", NOW + timedelta(days=1))
+
+    assert db.count("events") == 1
+    assert db.count("possible_duplicates") == 0
+    kept = db.get_event(keep_id)
+    assert kept is not None
+    assert kept.description == "Filled from the copy"  # null on keep filled from the drop
+    assert kept.municipality == "Adeje"  # non-null never overwritten by null
+    # Nothing was fetched: the latest real sighting of either copy is kept, not the run time.
+    assert kept.last_seen_at == NOW + timedelta(hours=1)
+    assert kept.last_verified_at != NOW + timedelta(days=1)
+    links = db.event_sources(keep_id)
+    assert sorted(link["source_event_id"] for link in links) == ["a", "b"]
+    moved = next(link for link in links if link["source_event_id"] == "b")
+    assert moved["match_method"] == "url"
+    assert db.get_event(drop_id) is None
+
+
+def test_absorb_event_never_replaces_a_kept_value(db: Database) -> None:
+    first = make_event(
+        source_event_id="a", official_event_url=CLUB_URL, venue_name="Área Chanajiga"
+    )
+    second = make_event(source_event_id="b", official_event_url=CLUB_URL, venue_name="Chanajiga")
+    keep_id, drop_id = seed_copies(db, first, second)
+    db.absorb_event(keep_id, drop_id, "s1", NOW + timedelta(days=1))
+    kept = db.get_event(keep_id)
+    assert kept is not None
+    assert kept.venue_name == "Área Chanajiga"
+
+
+def test_second_run_finds_nothing(db: Database) -> None:
+    keep_id, drop_id = seed_copies(db)
+    (pair,) = find_same_source_copies(db)
+    db.absorb_event(pair.keep_id, pair.drop_id, pair.source_id, NOW)
+    assert find_same_source_copies(db) == []
+    assert db.count("events") == 1
+    assert {keep_id, drop_id} >= {pair.keep_id}
