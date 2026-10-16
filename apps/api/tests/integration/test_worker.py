@@ -9,6 +9,7 @@ from hoy_api.worker import (
     RunnerResult,
     acquire_import_lock,
     run_import_cycle,
+    sanitize,
 )
 from sqlalchemy import text
 from sqlalchemy.orm import Session, sessionmaker
@@ -139,8 +140,6 @@ def test_lock_is_released_after_the_cycle(
 
 
 def test_secret_query_parameters_are_masked_in_stored_errors() -> None:
-    from hoy_api.worker import sanitize
-
     raw = "GET https://app.ticketmaster.com/discovery/v2/events.json?apikey=ABC123&size=20 failed"
 
     cleaned = sanitize(raw)
