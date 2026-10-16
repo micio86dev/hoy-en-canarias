@@ -34,7 +34,9 @@ function isPlausibleDay(value: string, today: Date): boolean {
   if (!ISO_DAY.test(value)) return false
   const day = new Date(`${value}T00:00:00Z`)
   if (Number.isNaN(day.getTime()) || day.toISOString().slice(0, 10) !== value) return false
-  const start = new Date(`${today.toISOString().slice(0, 10)}T00:00:00Z`)
+  // "Today" is the Canary Islands calendar day, the same rule the API applies.
+  const canaryToday = new Intl.DateTimeFormat('en-CA', { timeZone: 'Atlantic/Canary' }).format(today)
+  const start = new Date(`${canaryToday}T00:00:00Z`)
   const ahead = (day.getTime() - start.getTime()) / 86_400_000
   return ahead >= 0 && ahead <= MAX_AHEAD_DAYS
 }
