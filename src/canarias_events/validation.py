@@ -39,6 +39,7 @@ _RE_FEED = re.compile(rb"<(?:rss|feed)[\s>]", re.IGNORECASE)
 _KIND_MODES = {"html": "html", "web": "html", "ical": "ical", "feed": "rss", "rss": "rss"}
 _FORMAT_KINDS = frozenset({"ical", "feed", "rss"})  # a feed is worth a mode even when empty
 TRANSIENT_HTTP = 429  # plus every 5xx and transport failures (no status)
+GONE_HTTP = frozenset({404, 410})  # a definite answer: the page is not there any more
 
 
 @dataclass
@@ -196,6 +197,10 @@ def validate_source(
         if exc.status in (401, 403):
             _deny(report, exc.status, f"access denied (HTTP {exc.status})")
             return report
+        if exc.status in GONE_HTTP:
+            report.suggested_mode, report.suggested_state = None, "rejected"
+            report.notes.append(f"page not found (HTTP {exc.status}); check the URL")
+            return report
         transient = exc.status is None or exc.status == TRANSIENT_HTTP or exc.status >= 500
         label = "temporary trouble" if transient else "cannot read the page"
         return _inconclusive(report, f"{label}: {exc}", transient=transient)
@@ -203,7 +208,12 @@ def validate_source(
         report.reachable = False
         return _inconclusive(report, f"cannot read the page: {exc}", transient=False)
     except Exception as exc:  # adapter or parser failure: a report with the error, no traceback
-        logger.warning("validate-source %s: %s: %s", mask_secrets(url), type(exc).__name__, exc)
+        logger.warning(
+            "validate-source %s: %s: %s",
+            mask_secrets(url),
+            type(exc).__name__,
+            mask_secrets(str(exc)),
+        )
         return _inconclusive(report, f"{type(exc).__name__}: {exc}", transient=False)
     return _evaluate(report, result, body, now, source)
 
