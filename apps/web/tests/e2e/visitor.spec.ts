@@ -137,4 +137,22 @@ test.describe('visitor journeys', () => {
     await expect(card.getByTestId('event-placeholder').getByTestId('brand-mark')).toBeVisible()
     await expect(card.locator('img')).toHaveCount(0)
   })
+
+  test('an event page offers share links to the canonical address', async ({ page, context }) => {
+    await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+    await page.goto('/buscar')
+    await page.getByRole('link', { name: JAZZ }).click()
+    await expect(page.getByRole('heading', { level: 1, name: JAZZ })).toBeVisible()
+
+    const whatsapp = page.getByRole('link', { name: /WhatsApp/ })
+    await expect(whatsapp).toHaveAttribute('href', /^https:\/\/wa\.me\/\?text=/)
+    await expect(page.getByRole('link', { name: /Facebook/ })).toHaveAttribute('href', /sharer\.php\?u=/)
+    await expect(page.getByRole('link', { name: /Correo/ })).toHaveAttribute('href', /^mailto:/)
+
+    await page.getByRole('button', { name: 'Copiar enlace' }).click()
+    await expect(page.getByRole('status')).toHaveText('Enlace copiado.')
+    const copied = await page.evaluate(() => navigator.clipboard.readText())
+    expect(copied).toMatch(/\/evento\/concierto-de-jazz/)
+    expect(copied).not.toContain('?')
+  })
 })

@@ -9,6 +9,7 @@
         alt=""
         loading="lazy"
         decoding="async"
+        referrerpolicy="no-referrer"
         class="h-full w-full object-cover"
         @error="imageFailed = true"
         ref="imageEl"

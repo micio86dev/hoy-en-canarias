@@ -140,5 +140,17 @@
     "title": "Page not found",
     "body": "The link may have changed, or the event is no longer published.",
     "home": "Back to home"
+  },
+  "share": {
+    "title": "Share",
+    "device": "Share…",
+    "copy": "Copy link",
+    "copied": "Link copied.",
+    "copyFailed": "Could not copy. Select the address in the browser bar instead.",
+    "whatsapp": "WhatsApp",
+    "telegram": "Telegram",
+    "x": "X",
+    "facebook": "Facebook",
+    "email": "Email"
   }
 }

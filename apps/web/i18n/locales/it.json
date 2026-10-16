@@ -140,5 +140,17 @@
     "title": "Pagina non trovata",
     "body": "Il link potrebbe essere cambiato o l'evento non è più pubblicato.",
     "home": "Torna alla home"
+  },
+  "share": {
+    "title": "Condividi",
+    "device": "Condividi…",
+    "copy": "Copia link",
+    "copied": "Link copiato.",
+    "copyFailed": "Impossibile copiare. Seleziona l'indirizzo nella barra del browser.",
+    "whatsapp": "WhatsApp",
+    "telegram": "Telegram",
+    "x": "X",
+    "facebook": "Facebook",
+    "email": "Email"
   }
 }

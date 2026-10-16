@@ -1,6 +1,16 @@
 <template>
   <article class="grid gap-10 lg:grid-cols-[1fr_20rem]">
     <div class="space-y-6">
+      <div v-if="showHero" class="aspect-[16/9] overflow-hidden rounded-card bg-sand">
+        <img
+          ref="heroEl"
+          :src="current.image_url ?? undefined"
+          alt=""
+          referrerpolicy="no-referrer"
+          class="h-full w-full object-cover"
+          @error="heroFailed = true"
+        />
+      </div>
       <header class="space-y-3">
         <p class="text-sm font-medium text-link">{{ when }}</p>
         <h1 class="font-display text-4xl font-semibold leading-tight text-ocean">{{ event.title }}</h1>
@@ -60,12 +70,7 @@
         <p v-if="verified" class="text-ink-muted">{{ t('event.lastVerified', { date: verified }) }}</p>
       </div>
 
-      <div class="flex flex-col gap-2">
-        <button type="button" class="w-fit rounded-pill border border-ocean px-4 py-2 text-sm font-medium text-ocean hover:bg-ocean-soft" @click="share">
-          {{ t('event.share') }}
-        </button>
-        <p aria-live="polite" class="text-sm text-ink-muted">{{ shareStatus }}</p>
-      </div>
+      <ShareButtons :url="shareUrl" :title="current.title" :text="current.description?.slice(0, 120) ?? undefined" />
     </aside>
   </article>
 </template>
@@ -116,19 +121,19 @@ const verified = computed(() =>
     : '',
 )
 
-const shareStatus = ref('')
-async function share(): Promise<void> {
-  const url = window.location.href
-  if (navigator.share) {
-    await navigator.share({ title: current.title, url }).catch(() => undefined)
-    return
-  }
-  await navigator.clipboard.writeText(url)
-  shareStatus.value = t('event.linkCopied')
-}
+const heroFailed = ref(false)
+const heroEl = ref<HTMLImageElement | null>(null)
+const showHero = computed(() => Boolean(current.image_url) && !heroFailed.value)
+onMounted(() => {
+  const image = heroEl.value
+  if (image && image.complete && image.naturalWidth === 0) heroFailed.value = true
+})
 
 const config = useRuntimeConfig()
 const pagePath = `/evento/${current.slug}`
+// Share the canonical address, never a URL with query parameters.
+const shareUrl = `${String(config.public.siteUrl).replace(/\/$/, '')}${pagePath}`
+
 useSiteSeo(() => ({
   title: `${current.title} · ${t('site.name')}`,
   description: current.description?.slice(0, 160) ?? t('site.description'),
