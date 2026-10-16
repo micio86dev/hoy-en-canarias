@@ -40,3 +40,26 @@ export interface CountItem {
 export interface CountList {
   items: CountItem[]
 }
+
+export interface SourceLink {
+  source_name: string
+  source_url: string | null
+  official_url: string | null
+}
+
+export interface EventDetail extends EventSummary {
+  description: string | null
+  address: string | null
+  tags: string[]
+  booking_url: string | null
+  ticket_url: string | null
+  official_event_url: string | null
+  organizer_name: string | null
+  organizer_url: string | null
+  first_seen_at: string | null
+  last_seen_at: string | null
+  last_verified_at: string | null
+  updated_at: string
+  sources: SourceLink[]
+}
+

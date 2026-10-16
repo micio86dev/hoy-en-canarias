@@ -21,7 +21,7 @@ Public, multilingual (es/en/it) event discovery portal for the Canary Islands: F
 - [x] P4 Worker scheduler (04:00 Canary, DST-safe, advisory lock, bounded retries, import_runs) + `hoy` CLI + admin trigger.
 - [x] P5 Nuxt foundation: tokens (single @theme source, contrast-tested), fonts, i18n es/en/it, layout with skip link, language switcher.
 - [x] P6 Home + search (URL-synced filters, date presets, island/category chips, pagination) + event cards + voice search.
-- [ ] P7 Event detail + island/municipality/category pages.
+- [x] P7 Event detail (sanitised text, provenance, related, share) + island and category index/detail pages.
 - [ ] P8 Map (Leaflet, clustering, list alternative, opt-in geolocation).
 - [ ] P9 SEO/GEO: meta, hreflang, JSON-LD, sitemaps, robots, llms.txt, privacy.
 - [ ] P10 Vitest + Playwright e2e.
@@ -68,3 +68,10 @@ Public, multilingual (es/en/it) event discovery portal for the Canary Islands: F
 - Voice search is progressive enhancement: rendered only where `SpeechRecognition` exists; recognised text fills the field for review and is parsed on submit, the same way as typed text.
 - Local port 8000 is held by an unrelated Docker Desktop forward on this machine; the API runs on 8765 in local checks.
 - Event detail links point to `/evento/<slug>`, built in P7. Until then they 404.
+- P7: web suite green (27 passed, including island URL segments). Typecheck and build exit 0. Live checks against the API on 8765: detail 200 with description and related events; unknown slug 404; `/islas` and `/islas/tenerife` 200 with counts; `/islas/atlantis` 404; `/categorias/music` 200; `/categorias/xyz` 404; `/en/islas/gran-canaria` 200 with the English count.
+
+## Findings and deviations (P7)
+- Plural messages: ICU `{count, plural, ...}` is not parsed by this module's `vue-i18n` and crashed SSR for the index pages. Replaced with explicit `One`/`Other` keys and `countKey()`. Found by running the dev server, not the production build.
+- Upstream error bodies that are not JSON now map to 502 instead of throwing.
+- Navigation paths `/islas` and `/categorias` are not localised yet (`/en/categorias`). Localised route names are a P9 item.
+- Municipality pages are not separate routes: municipality chips link to `/buscar?island=…&municipality=…`.

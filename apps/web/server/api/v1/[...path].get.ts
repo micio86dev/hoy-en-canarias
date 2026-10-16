@@ -34,5 +34,10 @@ export default defineEventHandler(async (event) => {
   } else {
     setResponseHeader(event, 'cache-control', 'no-store')
   }
-  return response.json()
+  const body = await response.text()
+  try {
+    return JSON.parse(body) as unknown
+  } catch {
+    throw createError({ statusCode: 502, statusMessage: 'Invalid upstream response' })
+  }
 })

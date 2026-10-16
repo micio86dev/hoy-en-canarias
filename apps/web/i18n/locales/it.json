@@ -71,13 +71,28 @@
     "islandsTitle": "Esplora per isola",
     "categoriesTitle": "Per categoria",
     "seeAll": "Vedi tutti",
-    "empty": "Non ci sono ancora eventi pubblicati. Torna presto."
+    "empty": "Non ci sono ancora eventi pubblicati. Torna presto.",
+    "upcomingCountOne": "{count} evento",
+    "upcomingCountOther": "{count} eventi"
   },
   "event": {
     "free": "Gratuito",
     "priceFrom": "Da {amount}",
     "stale": "In attesa di conferma",
-    "placeUnknown": "Luogo da confermare"
+    "placeUnknown": "Luogo da confermare",
+    "address": "Indirizzo",
+    "organizer": "Organizzato da",
+    "related": "Eventi correlati",
+    "practical": "Informazioni pratiche",
+    "links": "Link",
+    "officialPage": "Sito ufficiale",
+    "tickets": "Biglietti",
+    "noLinks": "Nessun link pubblicato.",
+    "opensNewTab": "(si apre in una nuova scheda)",
+    "provenance": "Fonti",
+    "lastVerified": "Ultimo controllo: {date}",
+    "share": "Condividi",
+    "linkCopied": "Link copiato."
   },
   "categories": {
     "nightlife": "Vita notturna",
