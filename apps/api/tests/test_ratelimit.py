@@ -38,3 +38,17 @@ def test_buckets_are_per_client() -> None:
     assert limiter.hit("198.51.100.1")[0] is True
     assert limiter.hit("198.51.100.2")[0] is True
     assert limiter.hit("198.51.100.1")[0] is False
+
+
+def test_idle_buckets_are_evicted_when_the_table_is_full() -> None:
+    clock = FakeClock()
+    limiter = TokenBucketLimiter(per_minute=5, clock=clock, max_keys=2)
+
+    limiter.hit("198.51.100.1")
+    clock.now += 1.0
+    limiter.hit("198.51.100.2")
+    clock.now += 1.0
+    limiter.hit("198.51.100.3")
+
+    assert len(limiter._buckets) == 2
+    assert "198.51.100.1" not in limiter._buckets  # least recently used was dropped
