@@ -105,5 +105,19 @@
     "culture": "Cultura",
     "festivals": "Feste",
     "other": "Altro"
+  },
+  "map": {
+    "lead": "Gli eventi in arrivo sulla mappa delle isole. Puoi anche sfogliarli nell'elenco.",
+    "regionLabel": "Mappa degli eventi",
+    "attribution": "© OpenStreetMap",
+    "locate": "Usa la mia posizione",
+    "locating": "Ricerca della tua posizione…",
+    "located": "Mappa centrata sulla tua posizione. La tua posizione non viene salvata.",
+    "locateDenied": "Non è stato possibile trovare la tua posizione. Puoi continuare a usare mappa ed elenco.",
+    "locateUnavailable": "Il tuo browser non offre la posizione.",
+    "listTitle": "Eventi in quest'area",
+    "noPoints": "Nessun evento con posizione in quest'area.",
+    "truncated": "Sono mostrati i primi 1000 eventi di quest'area. Avvicina la mappa per vederne di più.",
+    "openEvent": "Vedi evento"
   }
 }

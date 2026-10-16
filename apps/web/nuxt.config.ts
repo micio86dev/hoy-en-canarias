@@ -30,6 +30,9 @@ export default defineNuxtConfig({
     apiBase: 'http://localhost:8000',
     public: {
       siteUrl: 'http://localhost:3000',
+      // Tile server is configurable at runtime; the default is for development only.
+      // OpenStreetMap's tile policy forbids heavy production traffic: use a provider you pay for.
+      tileUrl: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
     },
   },
 })

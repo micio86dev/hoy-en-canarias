@@ -63,3 +63,19 @@ export interface EventDetail extends EventSummary {
   sources: SourceLink[]
 }
 
+export interface MapPoint {
+  slug: string
+  title: string
+  latitude: number
+  longitude: number
+  start_date: string | null
+  start_at: string | null
+  island: string | null
+  category: string
+}
+
+export interface MapPage {
+  items: MapPoint[]
+  truncated: boolean
+}
+

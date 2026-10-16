@@ -105,5 +105,19 @@
     "culture": "Cultura",
     "festivals": "Fiestas",
     "other": "Otros"
+  },
+  "map": {
+    "lead": "Los eventos próximos en el mapa de las islas. También puedes verlos en la lista.",
+    "regionLabel": "Mapa de eventos",
+    "attribution": "© OpenStreetMap",
+    "locate": "Usar mi ubicación",
+    "locating": "Buscando tu ubicación…",
+    "located": "Mapa centrado en tu ubicación. Tu posición no se guarda.",
+    "locateDenied": "No se pudo obtener tu ubicación. Puedes seguir usando el mapa y la lista.",
+    "locateUnavailable": "Tu navegador no ofrece ubicación.",
+    "listTitle": "Eventos en esta zona",
+    "noPoints": "No hay eventos con ubicación en esta zona.",
+    "truncated": "Se muestran los primeros 1000 eventos de la zona. Acerca el mapa para ver más.",
+    "openEvent": "Ver evento"
   }
 }

@@ -105,5 +105,19 @@
     "culture": "Culture",
     "festivals": "Festivals",
     "other": "Other"
+  },
+  "map": {
+    "lead": "Upcoming events on the map of the islands. You can also browse them in the list.",
+    "regionLabel": "Event map",
+    "attribution": "© OpenStreetMap",
+    "locate": "Use my location",
+    "locating": "Finding your location…",
+    "located": "Map centred on your location. Your position is not stored.",
+    "locateDenied": "Your location could not be found. You can keep using the map and the list.",
+    "locateUnavailable": "Your browser does not offer location.",
+    "listTitle": "Events in this area",
+    "noPoints": "No events with a location in this area.",
+    "truncated": "Only the first 1000 events in this area are shown. Zoom in to see more.",
+    "openEvent": "View event"
   }
 }

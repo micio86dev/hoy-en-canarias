@@ -22,7 +22,7 @@ Public, multilingual (es/en/it) event discovery portal for the Canary Islands: F
 - [x] P5 Nuxt foundation: tokens (single @theme source, contrast-tested), fonts, i18n es/en/it, layout with skip link, language switcher.
 - [x] P6 Home + search (URL-synced filters, date presets, island/category chips, pagination) + event cards + voice search.
 - [x] P7 Event detail (sanitised text, provenance, related, share) + island and category index/detail pages.
-- [ ] P8 Map (Leaflet, clustering, list alternative, opt-in geolocation).
+- [x] P8 Map (Leaflet client-only, markercluster, bbox sync, list alternative, opt-in geolocation).
 - [ ] P9 SEO/GEO: meta, hreflang, JSON-LD, sitemaps, robots, llms.txt, privacy.
 - [ ] P10 Vitest + Playwright e2e.
 - [ ] P11 Visual/a11y/Lighthouse pass, README and docs.
@@ -75,3 +75,10 @@ Public, multilingual (es/en/it) event discovery portal for the Canary Islands: F
 - Upstream error bodies that are not JSON now map to 502 instead of throwing.
 - Navigation paths `/islas` and `/categorias` are not localised yet (`/en/categorias`). Localised route names are a P9 item.
 - Municipality pages are not separate routes: municipality chips link to `/buscar?island=…&municipality=…`.
+- P8: web suite green (33 passed: coordinate validation, no invented positions, default view covers all eight islands, bbox formatting and clamping). Typecheck and build exit 0. `/mapa` SSR 200 with the list alternative populated from the API; the map itself loads client-only.
+
+## Decisions and deviations (P8)
+- Leaflet and markercluster load with dynamic imports on the client only. Popups are built with textContent, not innerHTML, because titles come from external sources.
+- Geolocation requires an explicit tap, centres the map and is never stored.
+- Default tiles are OpenStreetMap for development (`NUXT_PUBLIC_TILE_URL` overrides at runtime). OSM's tile policy does not permit heavy production traffic; a paid or self-hosted provider is needed for production.
+- The in-browser map render is not yet verified: it is covered by the Playwright suite (P10) and the visual pass (P11).
