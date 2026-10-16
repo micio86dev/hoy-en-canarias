@@ -140,3 +140,10 @@ def test_projection_carries_source_links() -> None:
 
     assert projected.sources == (link,)
     assert projected.sources[0].official_url == "https://club.test/e/1"
+
+
+def test_projection_does_not_invent_seen_timestamps() -> None:
+    projected = project_event(_imported(first_seen_at=None, last_seen_at=None), [])
+
+    assert projected.first_seen_at is None
+    assert projected.last_seen_at is None

@@ -51,8 +51,8 @@ def _apply(row: Event, projected: ProjectedEvent, now: datetime) -> None:
     row.organizer_url = projected.organizer_url
     row.status = projected.status
     row.stale = False
-    row.first_seen_at = row.first_seen_at or projected.first_seen_at or now
-    row.last_seen_at = projected.last_seen_at or now
+    row.first_seen_at = row.first_seen_at or projected.first_seen_at
+    row.last_seen_at = projected.last_seen_at
     row.last_verified_at = projected.last_verified_at or row.last_verified_at
     row.updated_at = now
 
