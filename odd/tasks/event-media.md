@@ -30,5 +30,8 @@ Branch: feat/adaptive-crawling (follow-up). TDD strict (source: project AGENTS.m
 - Re-import of holaislascanarias on the 2026-10-12..25 test DB: 9.7 s, 83 updated. Image coverage: Hola 84/86 (was 2/84); all other sources unchanged (Auditorio LPA 1/13 and Cabildo Tenerife deportes 5/9 are the remaining gaps).
 - 6 random Hola image URLs: HTTP 200 with image/jpeg or image/png.
 
+### Review follow-ups (route: direct inline)
+- RDD review of 1cf3362..a209f5a approved and acknowledged. Warning R3-offhost-image-urls fixed: image URLs must share the source origin (absolute or protocol-relative paths to another host are skipped; RED 2 tests, GREEN 1367 passed). Venues warning test now asserts the WARNING record. Hola still 84/86 images after re-import.
+
 ## Next step
 Optional: check why auditorio_teatro_lpa yields images for only 1 of 13 events.
