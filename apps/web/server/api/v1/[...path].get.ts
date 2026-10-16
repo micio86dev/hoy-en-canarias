@@ -29,6 +29,10 @@ export default defineEventHandler(async (event) => {
   }
 
   setResponseStatus(event, response.status)
-  setResponseHeader(event, 'cache-control', 'public, max-age=60, stale-while-revalidate=300')
+  if (response.ok) {
+    setResponseHeader(event, 'cache-control', 'public, max-age=60, stale-while-revalidate=300')
+  } else {
+    setResponseHeader(event, 'cache-control', 'no-store')
+  }
   return response.json()
 })

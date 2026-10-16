@@ -11,7 +11,6 @@ export interface VoiceQuery {
 
 export interface ParseOptions {
   locale: VoiceLocale
-  today: Date
 }
 
 // Phrases are matched on normalised tokens (lower case, no diacritics), longest first.

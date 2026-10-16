@@ -33,7 +33,7 @@ const text = ref(props.initialText)
 
 function parse(value: string): VoiceQuery {
   const voiceLocale = locale.value === 'en' || locale.value === 'it' ? locale.value : 'es'
-  return parseVoiceQuery(value, { locale: voiceLocale, today: new Date() })
+  return parseVoiceQuery(value, { locale: voiceLocale })
 }
 
 // Recognised speech only fills the field; the visitor reviews it and presses Search.
