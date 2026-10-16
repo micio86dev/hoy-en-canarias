@@ -42,6 +42,9 @@
         <span v-else-if="priceText" class="rounded-pill bg-ocean-soft px-2 py-1 text-ocean">{{ priceText }}</span>
         <span v-if="event.stale" class="rounded-pill bg-accent/30 px-2 py-1 text-ink">{{ t('event.stale') }}</span>
       </div>
+      <div class="pt-2">
+        <FavoriteButton :slug="event.slug" />
+      </div>
     </div>
   </article>
 </template>

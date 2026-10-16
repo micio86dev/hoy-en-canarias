@@ -70,6 +70,8 @@
         <p v-if="verified" class="text-ink-muted">{{ t('event.lastVerified', { date: verified }) }}</p>
       </div>
 
+      <FavoriteButton :slug="current.slug" />
+
       <ShareButtons :url="shareUrl" :title="current.title" :text="current.description?.slice(0, 120) ?? undefined" />
     </aside>
   </article>

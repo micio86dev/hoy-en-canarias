@@ -10,6 +10,7 @@
         <NuxtLinkLocale to="/islas" class="hover:text-link">{{ t('nav.islands') }}</NuxtLinkLocale>
         <NuxtLinkLocale to="/categorias" class="hover:text-link">{{ t('nav.categories') }}</NuxtLinkLocale>
         <NuxtLinkLocale to="/mapa" class="hover:text-link">{{ t('nav.map') }}</NuxtLinkLocale>
+        <NuxtLinkLocale to="/favoritos" class="hover:text-link">{{ t('nav.favorites') }}</NuxtLinkLocale>
       </nav>
       <LanguageSwitcher />
     </div>

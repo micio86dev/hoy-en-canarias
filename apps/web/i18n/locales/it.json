@@ -12,7 +12,8 @@
     "skipToContent": "Vai al contenuto principale",
     "primary": "Navigazione principale",
     "openMenu": "Apri menu",
-    "closeMenu": "Chiudi menu"
+    "closeMenu": "Chiudi menu",
+    "favorites": "Preferiti"
   },
   "footer": {
     "about": "Chi siamo",
@@ -179,5 +180,16 @@
       "url": "Il link deve iniziare con https:// o http://."
     },
     "navLabel": "Pubblica un evento"
+  },
+  "favorites": {
+    "title": "I miei preferiti",
+    "intro": "Salvati solo in questo browser. Non serve un account e nulla viene inviato a un server.",
+    "loading": "Caricamento dei preferiti…",
+    "empty": "Non hai ancora preferiti. Tocca ♡ su un evento per salvarlo.",
+    "unavailable": "{count} evento/i non sono più disponibili.",
+    "add": "Salva nei preferiti",
+    "remove": "Rimuovi dai preferiti",
+    "save": "Salva",
+    "saved": "Salvato"
   }
 }
