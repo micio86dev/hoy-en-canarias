@@ -23,6 +23,7 @@ logger = logging.getLogger("hoy_api.worker")
 IMPORT_LOCK_KEY = 0x48_4F_59_49_4D_50_4F  # "HOYIMPO"
 MAX_ERROR_CHARS = 500
 _URL_PATTERN = re.compile(r"postgres(?:ql)?(?:\+\w+)?://\S+")
+_SECRET_PARAM_PATTERN = re.compile(r"(?i)\b(apikey|api_key|token|secret|password|key)=[^&\s]+")
 
 Trigger = Literal["schedule", "manual", "cli"]
 Status = Literal["succeeded", "failed", "skipped_locked"]
@@ -54,7 +55,8 @@ class CycleOutcome:
 
 def sanitize(text: str) -> str:
     """Remove database URLs (which carry passwords) and bound the length of an error."""
-    redacted = _URL_PATTERN.sub("<redacted-url>", text).strip()
+    redacted = _URL_PATTERN.sub("<redacted-url>", text)
+    redacted = _SECRET_PARAM_PATTERN.sub(lambda m: f"{m.group(1)}=<redacted>", redacted).strip()
     return redacted[:MAX_ERROR_CHARS]
 
 

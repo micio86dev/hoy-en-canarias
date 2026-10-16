@@ -136,3 +136,15 @@ def test_lock_is_released_after_the_cycle(
 
     with acquire_import_lock(session_factory) as held:
         assert held is True
+
+
+def test_secret_query_parameters_are_masked_in_stored_errors() -> None:
+    from hoy_api.worker import sanitize
+
+    raw = "GET https://app.ticketmaster.com/discovery/v2/events.json?apikey=ABC123&size=20 failed"
+
+    cleaned = sanitize(raw)
+
+    assert "ABC123" not in cleaned
+    assert "apikey=<redacted>" in cleaned
+    assert "size=20" in cleaned
