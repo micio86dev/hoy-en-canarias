@@ -100,6 +100,9 @@ def publish_events(
         session.flush()
         existing[projected.importer_id] = row.id
 
+    if not events:
+        # An empty export usually means a failed upstream run, not that every event vanished.
+        return report
     current = [projected.importer_id for projected in events]
     stale_result = session.execute(
         update(Event)

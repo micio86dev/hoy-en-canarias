@@ -188,3 +188,16 @@ def test_search_vector_matches_accent_insensitive_terms(
         "SELECT count(*) FROM events WHERE search_tsv @@ to_tsquery('simple', 'ano & fiesta')",
     )
     assert matches == 1
+
+
+def test_empty_importer_export_does_not_mark_everything_stale(
+    importer_path: Path, session_factory: sessionmaker[Session]
+) -> None:
+    publish_from_sqlite(importer_path, session_factory, NOW)
+    empty_path = importer_path.with_name("empty.sqlite")
+    _seed_importer(empty_path, [])
+
+    report = publish_from_sqlite(empty_path, session_factory, NOW)
+
+    assert report.stale_marked == 0
+    assert _scalar(session_factory, "SELECT count(*) FROM events WHERE stale") == 0
