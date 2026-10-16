@@ -1145,8 +1145,10 @@ def test_validate_source_save_keeps_the_state_after_a_transient_failure(
 
 @respx.mock
 @pytest.mark.usefixtures("offline")
-@pytest.mark.parametrize("status", [404, 410])
-def test_validate_source_save_rejects_a_page_that_is_gone(tmp_path: Path, status: int) -> None:
+@pytest.mark.parametrize(("status", "state"), [(404, "candidate"), (410, "rejected")])
+def test_validate_source_save_demotes_a_page_that_is_gone(
+    tmp_path: Path, status: int, state: str
+) -> None:
     respx.get("https://agenda.example.org/robots.txt").mock(return_value=httpx.Response(404))
     respx.get(SOURCE_URL).mock(return_value=httpx.Response(status, text="gone"))
     config = write_config(tmp_path, [fake_source("a")])
@@ -1158,7 +1160,7 @@ def test_validate_source_save_rejects_a_page_that_is_gone(tmp_path: Path, status
     with Database(db_path) as db:
         row = db.get_candidate(cid)
     assert row is not None
-    assert (row.verification_state, row.acquisition_mode, row.last_score) == ("rejected", None, 0)
+    assert (row.verification_state, row.acquisition_mode, row.last_score) == (state, None, 0)
     assert row.report is not None and row.report["error"] is None
     assert f"HTTP {status}" in " ".join(row.report["notes"])
 

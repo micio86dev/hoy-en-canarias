@@ -39,7 +39,9 @@ _RE_FEED = re.compile(rb"<(?:rss|feed)[\s>]", re.IGNORECASE)
 _KIND_MODES = {"html": "html", "web": "html", "ical": "ical", "feed": "rss", "rss": "rss"}
 _FORMAT_KINDS = frozenset({"ical", "feed", "rss"})  # a feed is worth a mode even when empty
 TRANSIENT_HTTP = 429  # plus every 5xx and transport failures (no status)
-GONE_HTTP = frozenset({404, 410})  # a definite answer: the page is not there any more
+# A definite answer, so a stale "verified" must not survive it. 404 may be momentary (a redeploy,
+# a moved page): back to "candidate" for a recheck. 410 declares the page removed for good.
+GONE_HTTP = {404: "candidate", 410: "rejected"}
 
 
 @dataclass
@@ -198,7 +200,7 @@ def validate_source(
             _deny(report, exc.status, f"access denied (HTTP {exc.status})")
             return report
         if exc.status in GONE_HTTP:
-            report.suggested_mode, report.suggested_state = None, "rejected"
+            report.suggested_mode, report.suggested_state = None, GONE_HTTP[exc.status]
             report.notes.append(f"page not found (HTTP {exc.status}); check the URL")
             return report
         transient = exc.status is None or exc.status == TRANSIENT_HTTP or exc.status >= 500
