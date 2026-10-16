@@ -5,8 +5,9 @@ Order of the rules for an incoming event:
 1. Same ``(source_id, source_event_id)``: it is the same event (an update).
 2. Same canonical official URL and same start date, from another source: same event.
 3. Same start/end dates, similar title, agreeing location and compatible start time: merge.
-   Near misses (similar title but no location agreement, or a lower score) are kept as separate
-   events and reported as possible duplicates.
+   Near misses (similar title but no location agreement, a lower score, or the same start with
+   another end date) are kept as separate events and reported as possible duplicates. A title
+   suffix naming the venue (``Show - Teatro Leal``) is ignored when comparing titles.
 
 Two events of the same source are never merged automatically. Events read from social posts
 (``extra.source_trust == "social"``) skip rule 3 on either side: a near match is only reported
@@ -17,6 +18,7 @@ settled by source priority, which social sources keep low (see ``social.SOCIAL_P
 from __future__ import annotations
 
 import math
+import re
 
 from rapidfuzz import fuzz
 
@@ -37,6 +39,8 @@ REVIEW_THRESHOLD = 75.0
 MAX_DISTANCE_M = 300.0
 VENUE_THRESHOLD = 85.0
 
+_SUFFIX_SEPARATOR = re.compile(r"\s+[-\u2013\u2014|]\s+")
+
 
 def haversine_m(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """Great-circle distance in metres."""
@@ -48,8 +52,30 @@ def haversine_m(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     return 2 * 6_371_000 * math.asin(math.sqrt(a))
 
 
+def without_venue_suffix(title: str, venues: list[str]) -> str:
+    """Drop a trailing `` - <venue>`` segment (``Show - Teatro Leal de La Laguna``)."""
+    parts = _SUFFIX_SEPARATOR.split(title)
+    if len(parts) < 2:
+        return title
+    tail = normalize_title(parts[-1])
+    for venue in venues:
+        name = normalize_title(venue)
+        if name and (tail == name or tail.startswith(name + " ")):
+            return " - ".join(parts[:-1])
+    return title
+
+
 def title_score(a: Event, b: Event) -> float:
-    return float(fuzz.token_sort_ratio(normalize_title(a.title), normalize_title(b.title)))
+    """Title similarity, also comparing the titles without a suffix naming either venue."""
+    plain = fuzz.token_sort_ratio(normalize_title(a.title), normalize_title(b.title))
+    venues = [v for v in (a.venue_name, b.venue_name) if v]
+    if not venues:
+        return float(plain)
+    bare = fuzz.token_sort_ratio(
+        normalize_title(without_venue_suffix(a.title, venues)),
+        normalize_title(without_venue_suffix(b.title, venues)),
+    )
+    return float(max(plain, bare))
 
 
 def _municipality(event: Event) -> str | None:
@@ -110,9 +136,15 @@ def resolve(
     best: tuple[float, Candidate] | None = None
     possibles: list[PossibleDuplicate] = []
     for cand in db.candidates_on(event.start_date):
-        if cand.event.id is None or not same_dates(event, cand.event):
+        if cand.event.id is None or cand.event.start_date != event.start_date:
             continue
         score = title_score(event, cand.event)
+        if not same_dates(event, cand.event):
+            if score >= REVIEW_THRESHOLD and source_id not in cand.source_ids:
+                possibles.append(
+                    PossibleDuplicate(cand.event.id, score, "same start date, end date differs")
+                )
+            continue
         if source_id in cand.source_ids:
             if score >= merge_threshold:
                 possibles.append(

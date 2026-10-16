@@ -186,6 +186,52 @@ def test_clearly_different_titles_are_ignored(db: Database) -> None:
     assert (result.outcome, result.possible_duplicates) == ("new", 0)
 
 
+def test_title_with_venue_suffix_merges_across_sources(db: Database) -> None:
+    day: dict[str, Any] = {
+        "start_datetime": None,
+        "end_datetime": None,
+        "start_date": date(2026, 10, 21),
+        "all_day": True,
+        "municipality": "San Cristóbal de La Laguna",
+        "venue_name": "Teatro Leal",
+    }
+    first = ingest(db, make_event(title="Un matrimonio sin filtros", **day))
+    other = make_event(
+        title="Un matrimonio sin filtros - Teatro Leal de La Laguna",
+        source_name="Source s2", source_event_id="z", **day,
+    )  # fmt: skip
+    decision = resolve(db, other, "s2")
+    assert (decision.kind, decision.method, decision.event_id) == (
+        "merge", "fuzzy", first.event_id,
+    )  # fmt: skip
+
+
+def test_same_start_with_other_end_date_is_only_a_possible_duplicate(db: Database) -> None:
+    ingest(db, make_event(start_datetime=None, end_datetime=None, start_date=date(2026, 10, 21),
+                          end_date=date(2026, 10, 22), all_day=True))  # fmt: skip
+    result = ingest(
+        db,
+        make_event(start_datetime=None, end_datetime=None, start_date=date(2026, 10, 21),
+                   all_day=True, source_name="Source s2", source_event_id="z"),  # fmt: skip
+        "s2",
+    )
+    assert (result.outcome, result.possible_duplicates) == ("new", 1)
+    assert "end date" in db.possible_duplicates()[0]["reason"]
+
+
+def test_suffix_that_is_not_the_venue_is_kept(db: Database) -> None:
+    ingest(db, make_event(venue_name="Teatro Leal"))
+    result = ingest(
+        db,
+        make_event(
+            title="Concierto de Navidad - Coro infantil y orquesta juvenil",
+            venue_name="Teatro Leal", source_name="Source s2", source_event_id="z",
+        ),  # fmt: skip
+        "s2",
+    )
+    assert result.outcome == "new"
+
+
 def test_different_start_time_is_not_auto_merged(db: Database) -> None:
     ingest(db, make_event())
     other = make_event(
