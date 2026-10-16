@@ -36,5 +36,8 @@ Delivery: ask-on-risk; no remote.
 - Coverage after fix, 217 events: source 82, venue 37, municipality 82, none 16 (93% with a point); 0 points on the wrong island.
 - The 16 without a point have no municipality and an unknown venue (Casa de la Cultura de Puerto del Rosario, Auditorio Infanta Leonor, Paraninfo ULL, Jameos del Agua, ...).
 
+### Review follow-ups (route: direct inline)
+- RDD review of 634624b..1cf3362 approved and acknowledged; warnings fixed in 958d6d3: a malformed venues.yaml now logs a warning and exports continue with an empty venue table; the venue validation test now exercises the coordinate check. 1356 passed; ruff/format/mypy clean.
+
 ## Next step
 Optional: extend config/venues.yaml with verified coordinates for the remaining venues.
