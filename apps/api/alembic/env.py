@@ -9,12 +9,12 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name, disable_existing_loggers=False)
 
-target_metadata = None
+target_metadata: None = None
 
 
 def _url() -> str:
     override = config.get_main_option("sqlalchemy.url")
-    return override or get_settings().database_url
+    return override or get_settings().database_url.get_secret_value()
 
 
 def run_migrations_offline() -> None:

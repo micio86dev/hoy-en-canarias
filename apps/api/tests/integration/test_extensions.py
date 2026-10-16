@@ -5,10 +5,7 @@ import pytest
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 
-TEST_DATABASE_URL = os.environ.get(
-    "HOY_TEST_DATABASE_URL",
-    "postgresql+psycopg://hoy:hoy_test_password@localhost:55433/hoy_test",
-)
+from tests.conftest import TEST_DATABASE_URL
 
 
 @pytest.fixture(scope="module")
@@ -17,8 +14,11 @@ def engine() -> Generator[Engine, None, None]:
     try:
         with eng.connect():
             pass
-    except Exception as exc:  # pragma: no cover - environment guard
-        pytest.skip(f"PostgreSQL test database unavailable: {exc}")
+    except Exception as exc:
+        # HOY_SKIP_DB_TESTS=1 skips DB tests; otherwise a missing database fails loudly.
+        if os.environ.get("HOY_SKIP_DB_TESTS") == "1":
+            pytest.skip(f"PostgreSQL test database unavailable: {exc}")
+        pytest.fail(f"PostgreSQL test database unavailable: {exc}")
     yield eng
     eng.dispose()
 
