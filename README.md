@@ -16,7 +16,7 @@ with deterministic parsers first, honouring `robots.txt` and never bypassing blo
 [Health and quarantine](#source-health-anomalies-and-quarantine) |
 [Discovery and validation](#discovery-and-validation) | [Scheduling](#scheduling) |
 [Options](#run-options) | [Extras](#optional-extras) | [Query data](#query-the-data) |
-[Reports](#reports) | [Deduplication](#deduplication) | [Security](#security) |
+[Reports](#reports) | [Map points](#map-points) | [Deduplication](#deduplication) | [Security](#security) |
 [Source status](#source-status) | [Requirements](#requirements-and-measured-resources) |
 [Cost](#operating-cost) | [Testing](#testing) | [Known issues](#limitations-and-known-issues)
 
@@ -70,7 +70,7 @@ Global option: `--log-level DEBUG|INFO|WARNING` (or `CANARIAS_LOG_LEVEL`). Other
 `--config` (default `config/sources.yaml`). `--from` and `--to` must be given together.
 
 Outputs (default `output/`, written atomically): `events.json`, `events.csv` (UTF-8 with BOM, for
-Excel), `import-report.json`, `sources-report.json`; `discover-sources` writes
+Excel), `events.geojson` (map points), `import-report.json`, `sources-report.json`; `discover-sources` writes
 `discovery-report.json`. The database defaults to `data/events.sqlite` (or `$CANARIAS_DB_PATH`).
 `import-events` exits with code 1 when no source succeeded.
 
@@ -399,6 +399,33 @@ and set `params.ai: true` on the sources allowed to use it. The model gets clean
 Environment overrides: `CANARIAS_AI_ENABLED`, `_BASE_URL`, `_MODEL`, `_TIMEOUT`,
 `_MAX_INPUT_CHARS`. **RAM for a 7B model is an unverified estimate (several GB); it was not
 measured here and the AI tier has not been run live.**
+
+## Map points
+
+Every exported event may carry a derived map point, separate from the source fields:
+`latitude`/`longitude` are **source-only** and are never modified. The point is in `events.json`
+(`map`: `latitude`, `longitude`, `precision`, `basis`, or `null`), in `events.csv` (last columns
+`map_latitude`, `map_longitude`, `map_precision`) and in `events.geojson` (a FeatureCollection,
+coordinates `[longitude, latitude]`; events without a point are left out).
+
+Precision, in order of preference:
+
+1. `source`: the event has both coordinates from its source.
+2. `venue`: `venue_name` equals a name or alias in `config/venues.yaml` (case, accents and
+   punctuation ignored, no fuzzy matching) and the event's municipality, when known, is the
+   venue's municipality.
+3. `municipality`: the event's municipality has a reference point (and its island, when known,
+   agrees). **Approximate**: it is the municipality's main town, not the event location, so draw
+   it differently (larger marker, clustering) from `source` and `venue` points.
+
+Otherwise there is no point: nothing is guessed from the title or from the island alone.
+
+Provenance: municipality points are Wikidata P625 (CC0, fetched 2026-10-16, in
+`canarias_events/geo_points.py`); venues use Wikidata P625 too, with the item in `source`.
+
+Add a venue by appending to `config/venues.yaml` (`name`, optional `aliases`, `municipality`,
+`island`, `latitude`, `longitude`, `source`). Loading fails when the municipality is unknown or
+the coordinates fall outside the declared island. Use verified coordinates only.
 
 ## Deduplication
 

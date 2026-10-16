@@ -1,0 +1,56 @@
+# Known venues with verified coordinates, used to give events a map point (precision "venue").
+# Coordinates: Wikidata P625 (CC0). An event matches a venue only when its venue_name equals the
+# name or an alias (case, accents and punctuation ignored) and its municipality, when known,
+# is the venue's municipality. Coordinates must fall inside the declared island.
+venues:
+  - name: Teatro Leal
+    municipality: San Cristóbal de La Laguna
+    island: Tenerife
+    latitude: 28.48972
+    longitude: -16.31806
+    source: wikidata:Q950052
+
+  - name: TEA Tenerife Espacio de las Artes
+    aliases: [TEA, Tenerife Espacio de las Artes]
+    municipality: Santa Cruz de Tenerife
+    island: Tenerife
+    latitude: 28.46417
+    longitude: -16.25139
+    source: wikidata:Q2403459
+
+  - name: Auditorio Alfredo Kraus
+    municipality: Las Palmas de Gran Canaria
+    island: Gran Canaria
+    latitude: 28.13012
+    longitude: -15.44912
+    source: wikidata:Q3629501
+
+  - name: Teatro Pérez Galdós
+    municipality: Las Palmas de Gran Canaria
+    island: Gran Canaria
+    latitude: 28.10363
+    longitude: -15.41406
+    source: wikidata:Q206404
+
+  - name: Auditorio de Tenerife
+    aliases: [Auditorio de Tenerife Adán Martín]
+    municipality: Santa Cruz de Tenerife
+    island: Tenerife
+    latitude: 28.45607
+    longitude: -16.25128
+    source: wikidata:Q28964
+
+  - name: Cueva de los Verdes
+    municipality: Haría
+    island: Lanzarote
+    latitude: 29.16078
+    longitude: -13.43869
+    source: wikidata:Q899513
+
+  - name: Palmetum de Santa Cruz de Tenerife
+    aliases: [Palmetum]
+    municipality: Santa Cruz de Tenerife
+    island: Tenerife
+    latitude: 28.45194
+    longitude: -16.25583
+    source: wikidata:Q3892794

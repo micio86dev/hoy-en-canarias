@@ -311,7 +311,14 @@ def import_events(
             )
         else:
             export_all(
-                db, catalog, window, report, output_dir, now=now, island=report["params"]["island"]
+                db,
+                catalog,
+                window,
+                report,
+                output_dir,
+                now=now,
+                island=report["params"]["island"],
+                venues_path=config.parent / "venues.yaml",
             )
     _echo_report(report)
     if dry_run:

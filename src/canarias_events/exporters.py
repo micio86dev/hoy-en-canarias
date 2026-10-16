@@ -1,4 +1,4 @@
-"""Write the JSON/CSV event exports and the import and sources reports, atomically."""
+"""Write the JSON/CSV/GeoJSON event exports and the import and sources reports, atomically."""
 
 from __future__ import annotations
 
@@ -14,6 +14,7 @@ from typing import Any
 
 from canarias_events.database import Database
 from canarias_events.date_range import DateWindow
+from canarias_events.geo_points import MapPoint, Venue, load_venues, locate
 from canarias_events.health import summarize
 from canarias_events.models import Event
 from canarias_events.pipeline import events_in_window
@@ -28,6 +29,12 @@ _CSV_COLUMNS = [
     if name not in _NOT_IN_CSV and not name.startswith("source_")
 ]
 _CSV_EXTRA = ["tags", "sources", "source_urls", "source_event_ids", "source_license"]
+_CSV_MAP = ["map_latitude", "map_longitude", "map_precision"]
+DEFAULT_VENUES = Path("config/venues.yaml")
+_GEOJSON_PROPERTIES = [
+    "id", "title", "start_date", "start_datetime", "end_date", "end_datetime", "venue_name",
+    "municipality", "island", "official_event_url", "source_name",
+]  # fmt: skip
 
 
 def write_atomic(path: Path, data: bytes) -> None:
@@ -70,11 +77,24 @@ def _source_links(db: Database, event: Event, *, raw: bool) -> list[dict[str, An
     return links
 
 
-def events_payload(db: Database, events: list[Event]) -> list[dict[str, Any]]:
+def events_payload(
+    db: Database, events: list[Event], venues: list[Venue] | None = None
+) -> list[dict[str, Any]]:
     payload: list[dict[str, Any]] = []
     for event in events:
         item = event.model_dump(mode="json", exclude={"raw_data"})
         item["sources"] = _source_links(db, event, raw=True)
+        point = locate(event, venues or [])
+        item["map"] = (
+            {
+                "latitude": point.latitude,
+                "longitude": point.longitude,
+                "precision": point.precision,
+                "basis": point.basis,
+            }
+            if point
+            else None
+        )
         payload.append(item)
     return payload
 
@@ -89,10 +109,10 @@ def _cell(value: Any) -> str:
     return str(value)
 
 
-def events_csv(db: Database, events: list[Event]) -> bytes:
+def events_csv(db: Database, events: list[Event], venues: list[Venue] | None = None) -> bytes:
     buffer = io.StringIO()
     writer = csv.writer(buffer, quoting=csv.QUOTE_ALL, lineterminator="\r\n")
-    writer.writerow([*_CSV_COLUMNS, *_CSV_EXTRA])
+    writer.writerow([*_CSV_COLUMNS, *_CSV_EXTRA, *_CSV_MAP])
     for event in events:
         links = _source_links(db, event, raw=False)
         row = [_cell(getattr(event, name)) for name in _CSV_COLUMNS]
@@ -103,8 +123,35 @@ def events_csv(db: Database, events: list[Event]) -> bytes:
             "|".join(str(link["source_event_id"]) for link in links),
             _cell(event.source_license),
         ]
+        point = locate(event, venues or [])
+        row += [
+            _cell(point.latitude if point else None),
+            _cell(point.longitude if point else None),
+            _cell(point.precision if point else None),
+        ]
         writer.writerow(row)
     return CSV_BOM + buffer.getvalue().encode("utf-8")
+
+
+def events_geojson(events: list[Event], venues: list[Venue] | None = None) -> dict[str, Any]:
+    """A FeatureCollection with one Point (lon, lat) per event that has a map point."""
+    features: list[dict[str, Any]] = []
+    for event in events:
+        point: MapPoint | None = locate(event, venues or [])
+        if point is None:
+            continue
+        properties = event.model_dump(mode="json", include=set(_GEOJSON_PROPERTIES))
+        properties = {name: properties.get(name) for name in _GEOJSON_PROPERTIES}
+        properties["precision"] = point.precision
+        properties["basis"] = point.basis
+        features.append(
+            {
+                "type": "Feature",
+                "geometry": {"type": "Point", "coordinates": [point.longitude, point.latitude]},
+                "properties": properties,
+            }
+        )
+    return {"type": "FeatureCollection", "features": features}
 
 
 # --------------------------------------------------------------------------- sources report
@@ -176,17 +223,21 @@ def export_all(
     now: datetime,
     env: Mapping[str, str] | None = None,
     island: str | None = None,
+    venues_path: Path = DEFAULT_VENUES,
 ) -> dict[str, Path]:
     environment: Mapping[str, str] = os.environ if env is None else env
     events = events_in_window(db, window, island)
+    venues = load_venues(venues_path)  # once per export; a missing file is an empty table
     paths = {
         "events": output_dir / "events.json",
         "csv": output_dir / "events.csv",
+        "geojson": output_dir / "events.geojson",
         "import_report": output_dir / "import-report.json",
         "sources_report": output_dir / "sources-report.json",
     }
-    write_atomic(paths["events"], _json_bytes(events_payload(db, events)))
-    write_atomic(paths["csv"], events_csv(db, events))
+    write_atomic(paths["events"], _json_bytes(events_payload(db, events, venues)))
+    write_atomic(paths["csv"], events_csv(db, events, venues))
+    write_atomic(paths["geojson"], _json_bytes(events_geojson(events, venues)))
     write_atomic(paths["import_report"], _json_bytes(report))
     write_atomic(
         paths["sources_report"], _json_bytes(build_sources_report(catalog, db, now, environment))

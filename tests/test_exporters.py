@@ -152,9 +152,9 @@ def test_reports_are_written(db: Database, client: SafeHttpClient, tmp_path: Pat
     out = tmp_path / "out"
     paths = export_all(db, catalog(), WINDOW, report, out, now=NOW, env={})
     assert read_json(paths["import_report"])["run_id"] == report["run_id"]
-    assert set(paths) == {"events", "csv", "import_report", "sources_report"}
+    assert set(paths) == {"events", "csv", "geojson", "import_report", "sources_report"}
     assert {p.name for p in out.iterdir()} == {
-        "events.json", "events.csv", "import-report.json", "sources-report.json"
+        "events.json", "events.csv", "events.geojson", "import-report.json", "sources-report.json"
     }  # fmt: skip
 
 
@@ -226,3 +226,99 @@ def test_sources_report_carries_the_health_summary(db: Database, client: SafeHtt
     assert health["error_rate"] == 0.5
     assert health["last_events_found"] == 1
     assert health["last_status"] == "failed"
+
+
+# --------------------------------------------------------------------------- map points
+
+VENUES_YAML = """
+venues:
+  - name: Teatro Leal
+    municipality: San Cristóbal de La Laguna
+    island: Tenerife
+    latitude: 28.48972
+    longitude: -16.31806
+    source: wikidata:Q950052
+"""
+
+
+def map_run(db: Database, client: SafeHttpClient) -> dict[str, Any]:
+    at_venue = ev("a", "1", "En el Leal", municipality="San Cristóbal de La Laguna")
+    at_venue = at_venue.model_copy(update={"venue_name": "Teatro Leal"})
+    with_coords = ev("a", "2", "Con coordenadas").model_copy(
+        update={"latitude": 28.1, "longitude": -16.7}
+    )
+    by_town = ev("a", "3", "Solo municipio", municipality="Adeje")
+    nowhere = ev("a", "4", "Sin lugar", municipality=None)
+    return run(
+        db, client, {"a": FakeAdapter(make_cfg("a"), [at_venue, with_coords, by_town, nowhere])}
+    )
+
+
+def export_map(db: Database, client: SafeHttpClient, tmp_path: Path) -> dict[str, Path]:
+    venues = tmp_path / "venues.yaml"
+    venues.write_text(VENUES_YAML, encoding="utf-8")
+    report = map_run(db, client)
+    return export_all(
+        db, catalog(), WINDOW, report, tmp_path / "out", now=NOW, env={}, venues_path=venues
+    )
+
+
+def test_events_json_has_map_object_and_keeps_source_coordinates(
+    db: Database, client: SafeHttpClient, tmp_path: Path
+) -> None:
+    paths = export_map(db, client, tmp_path)
+    by_title = {e["title"]: e for e in read_json(paths["events"])}
+    assert by_title["En el Leal"]["map"]["precision"] == "venue"
+    assert by_title["En el Leal"]["latitude"] is None  # source field untouched
+    assert by_title["Con coordenadas"]["map"] == {
+        "latitude": 28.1, "longitude": -16.7, "precision": "source", "basis": "event coordinates"
+    }  # fmt: skip
+    assert by_title["Solo municipio"]["map"]["precision"] == "municipality"
+    assert by_title["Sin lugar"]["map"] is None
+
+
+def test_events_csv_appends_map_columns(
+    db: Database, client: SafeHttpClient, tmp_path: Path
+) -> None:
+    paths = export_map(db, client, tmp_path)
+    with paths["csv"].open(encoding="utf-8-sig", newline="") as handle:
+        reader = csv.DictReader(handle)
+        assert reader.fieldnames is not None
+        assert reader.fieldnames[-3:] == ["map_latitude", "map_longitude", "map_precision"]
+        rows = {r["title"]: r for r in reader}
+    assert rows["Con coordenadas"]["map_precision"] == "source"
+    assert rows["Con coordenadas"]["map_latitude"] == "28.1"
+    assert rows["Sin lugar"]["map_latitude"] == ""
+    assert rows["Sin lugar"]["map_precision"] == ""
+
+
+def test_events_geojson_is_a_feature_collection_in_lon_lat_order(
+    db: Database, client: SafeHttpClient, tmp_path: Path
+) -> None:
+    paths = export_map(db, client, tmp_path)
+    data = read_json(paths["geojson"])
+    assert data["type"] == "FeatureCollection"
+    features = {f["properties"]["title"]: f for f in data["features"]}
+    assert set(features) == {"En el Leal", "Con coordenadas", "Solo municipio"}  # no "Sin lugar"
+    leal = features["En el Leal"]
+    assert leal["type"] == "Feature"
+    assert leal["geometry"] == {"type": "Point", "coordinates": [-16.31806, 28.48972]}
+    props = leal["properties"]
+    assert props["precision"] == "venue"
+    assert "Teatro Leal" in props["basis"]
+    assert props["venue_name"] == "Teatro Leal"
+    assert {"id", "start_date", "start_datetime", "end_date", "end_datetime", "municipality",
+            "island", "official_event_url", "source_name"} <= set(props)  # fmt: skip
+    assert features["Con coordenadas"]["geometry"]["coordinates"] == [-16.7, 28.1]
+
+
+def test_missing_venues_file_still_gives_municipality_points(
+    db: Database, client: SafeHttpClient, tmp_path: Path
+) -> None:
+    report = map_run(db, client)
+    paths = export_all(
+        db, catalog(), WINDOW, report, tmp_path / "o", now=NOW, env={},
+        venues_path=tmp_path / "missing.yaml",
+    )  # fmt: skip
+    by_title = {e["title"]: e for e in read_json(paths["events"])}
+    assert by_title["En el Leal"]["map"]["precision"] == "municipality"
