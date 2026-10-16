@@ -7,9 +7,10 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from hoy_api.db.base import make_engine, make_session_factory
 from hoy_api.errors import install_error_handlers
+from hoy_api.importer import subprocess_runner
 from hoy_api.middleware import add_security_headers
 from hoy_api.ratelimit import TokenBucketLimiter
-from hoy_api.routers import catalog, events, ops
+from hoy_api.routers import admin, catalog, events, ops
 from hoy_api.settings import Settings, get_settings
 
 
@@ -34,6 +35,9 @@ def create_app(
     )
     app.state.clock = clock
     app.state.rate_limiter = TokenBucketLimiter(per_minute=config.rate_limit_per_minute)
+    app.state.run_importer = subprocess_runner(
+        config.importer_command, config.importer_db_path, config.importer_timeout_seconds
+    )
 
     app.add_middleware(
         CORSMiddleware,
@@ -48,6 +52,7 @@ def create_app(
     app.include_router(ops.router)
     app.include_router(events.router, prefix="/api/v1")
     app.include_router(catalog.router, prefix="/api/v1")
+    app.include_router(admin.router, prefix="/api/v1")
     return app
 
 

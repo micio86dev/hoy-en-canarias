@@ -1,3 +1,4 @@
+import pytest
 from hoy_api.ratelimit import TokenBucketLimiter
 
 
@@ -52,3 +53,8 @@ def test_idle_buckets_are_evicted_when_the_table_is_full() -> None:
 
     assert len(limiter._buckets) == 2
     assert "198.51.100.1" not in limiter._buckets  # least recently used was dropped
+
+
+def test_zero_rate_is_rejected() -> None:
+    with pytest.raises(ValueError):
+        TokenBucketLimiter(per_minute=0)

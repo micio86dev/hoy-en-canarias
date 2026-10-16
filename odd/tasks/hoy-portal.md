@@ -18,7 +18,7 @@ Public, multilingual (es/en/it) event discovery portal for the Canary Islands: F
 - [x] P1 Workspace + compose (pgvector 0.8.1-pg17) + settings + Alembic baseline (extensions) + health endpoint.
 - [x] P2 Publish projection (importer SQLite -> Postgres): schema 0002, slugs, categories, status, stale.
 - [x] P3 Search repositories + public endpoints (events, detail, related, map, islands, categories, municipalities, health/ready).
-- [ ] P4 Worker scheduler (04:00 DST-safe, advisory lock) + CLI + admin endpoint.
+- [x] P4 Worker scheduler (04:00 Canary, DST-safe, advisory lock, bounded retries, import_runs) + `hoy` CLI + admin trigger.
 - [ ] P5 Nuxt foundation: tokens, fonts, i18n es/en/it, layout.
 - [ ] P6 Home + search + cards + filters + voice search.
 - [ ] P7 Event detail + island/municipality/category pages.
@@ -46,3 +46,9 @@ Public, multilingual (es/en/it) event discovery portal for the Canary Islands: F
 - `GET /api/v1/sitemap-data` deferred to P9 (SEO), where its consumer is defined.
 - Rate limit is in-process per client IP, and `X-Forwarded-For` is deliberately not trusted. Behind a reverse proxy this needs a trusted-proxy setting before scale-out (documented for P11).
 - Events without coordinates sort last under distance sort.
+- P4: API suite green: 103 passed. Covers DST-safe 04:00 scheduling, non-blocking advisory lock (overlap skipped and recorded), bounded retries with backoff, timeout as failed attempt, secret redaction in stored errors, lock release, JSON logs, admin trigger (404 disabled / 401 wrong token / 202 recorded manual run), CLI migrate/publish/import-now/worker. `apps/api` mypy strict clean (49 files).
+
+## Deviations (P4)
+- The importer runs as its own process (`canarias-events import-events --no-ai`), so its code and CLI are untouched. The API process never imports it at run time.
+- The scheduler lives in `hoy worker` (one process). It is not embedded in API replicas. Multi-replica safety comes from the advisory lock, not from process placement.
+- Docker services `api` and `worker` are still to be added (with the web service, in the Docker task).

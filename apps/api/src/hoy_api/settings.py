@@ -1,4 +1,5 @@
 from functools import lru_cache
+from pathlib import Path
 from typing import Annotated
 
 from pydantic import Field, SecretStr, field_validator
@@ -17,6 +18,12 @@ class Settings(BaseSettings):
     cors_origins: Annotated[list[str], NoDecode] = ["http://localhost:3000"]
     admin_token: SecretStr | None = None
     rate_limit_per_minute: int = Field(default=120, ge=1, le=10_000)
+    importer_command: str = "canarias-events"
+    importer_db_path: Path = Path("data/events.sqlite")
+    importer_timeout_seconds: int = Field(default=900, ge=60, le=7200)
+    import_window_days: int = Field(default=60, ge=7, le=365)
+    import_max_attempts: int = Field(default=2, ge=1, le=5)
+    import_retry_backoff_seconds: float = Field(default=60.0, ge=0, le=3600)
 
     @field_validator("cors_origins", mode="before")
     @classmethod

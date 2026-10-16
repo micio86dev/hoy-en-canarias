@@ -10,6 +10,7 @@ from sqlalchemy import (
     DateTime,
     Double,
     ForeignKey,
+    Integer,
     Numeric,
     Text,
     UniqueConstraint,
@@ -103,3 +104,24 @@ class EventSource(Base):
     official_url: Mapped[str | None] = mapped_column(Text)
 
     event: Mapped[Event] = relationship(back_populates="sources")
+
+
+class ImportRun(Base):
+    """One importer cycle: who triggered it, the window, attempts, outcome and counts."""
+
+    __tablename__ = "import_runs"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    trigger: Mapped[str] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(Text)
+    window_start: Mapped[date] = mapped_column(Date)
+    window_end: Mapped[date] = mapped_column(Date)
+    attempts: Mapped[int] = mapped_column(Integer, server_default=text("0"))
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    duration_ms: Mapped[int | None] = mapped_column(Integer)
+    events_inserted: Mapped[int | None] = mapped_column(Integer)
+    events_updated: Mapped[int | None] = mapped_column(Integer)
+    events_stale: Mapped[int | None] = mapped_column(Integer)
+    events_skipped: Mapped[int | None] = mapped_column(Integer)
+    error_summary: Mapped[str | None] = mapped_column(Text)

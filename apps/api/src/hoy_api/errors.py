@@ -10,6 +10,7 @@ logger = logging.getLogger("hoy_api")
 
 _STATUS_CODES: dict[int, str] = {
     400: "bad_request",
+    401: "unauthorized",
     404: "not_found",
     405: "method_not_allowed",
     429: "rate_limited",

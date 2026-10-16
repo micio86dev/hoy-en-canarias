@@ -18,6 +18,10 @@ class TokenBucketLimiter:
     max_keys: int = 10_000
     _buckets: dict[str, _Bucket] = field(default_factory=dict)
 
+    def __post_init__(self) -> None:
+        if self.per_minute < 1:
+            raise ValueError("per_minute must be at least 1")
+
     def hit(self, key: str) -> tuple[bool, float]:
         """Consume one token. Returns (allowed, seconds_until_next_token_when_denied)."""
         capacity = float(self.per_minute)
