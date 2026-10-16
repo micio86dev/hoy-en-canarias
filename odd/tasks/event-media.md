@@ -15,6 +15,7 @@ Branch: feat/adaptive-crawling (follow-up). TDD strict (source: project AGENTS.m
 ## Tasks
 - [x] M1 Hola media + tags (route: delegated direct, one writer; adapter + tests + fixture): image_url from header image, else first gallery image; all images in extra.images [{url, alt, width, height, role}]; tags from field_t_tags names; missing file -> skipped, never guessed
 - [x] M2 Real-run check: image coverage per source on the test DB
+- [x] M3 Auditorio LPA images (route: direct inline; one constant + one test): embedded extractor reads main_image / touch_image
 
 ## Acceptance criteria
 - No invented URLs: only file URLs present in the payload, made absolute against the source origin.
@@ -33,5 +34,10 @@ Branch: feat/adaptive-crawling (follow-up). TDD strict (source: project AGENTS.m
 ### Review follow-ups (route: direct inline)
 - RDD review of 1cf3362..a209f5a approved and acknowledged. Warning R3-offhost-image-urls fixed: image URLs must share the source origin (absolute or protocol-relative paths to another host are skipped; RED 2 tests, GREEN 1367 passed). Venues warning test now asserts the WARNING record. Hola still 84/86 images after re-import.
 
+### M3 (route: direct inline; one constant + one test)
+- Cause: Auditorio productions carry their picture in main_image / touch_image (Nuxt media objects with fullUrl on api.auditorioteatrolaspalmasgc.es); IMAGE_KEYS only had image/image_url/imagen/thumbnail/cover_image, so only the carousel copy matched.
+- RED: test_auditorio_productions_take_their_main_or_touch_image failed. GREEN: 1368 passed; ruff, format, mypy clean.
+- Live: auditorio_teatro_lpa 13/13 window events with image (was 1/13); 3 sampled URLs HTTP 200 image/jpeg.
+
 ## Next step
-Optional: check why auditorio_teatro_lpa yields images for only 1 of 13 events.
+Optional: Cabildo Tenerife deportes images (5/9).

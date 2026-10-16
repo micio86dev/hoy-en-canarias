@@ -35,7 +35,15 @@ START_TIME_KEYS = ("start_time", "hora_inicio", "hora", "time")
 END_TIME_KEYS = ("end_time", "hora_fin")
 URL_KEYS = ("public_url", "url", "link", "permalink", "href", "enlace")
 TICKET_KEYS = ("tickets_url", "ticket_url", "booking_url", "url_entradas", "entradas_url")
-IMAGE_KEYS = ("image", "image_url", "imagen", "thumbnail", "cover_image")
+IMAGE_KEYS = (
+    "image",
+    "image_url",
+    "imagen",
+    "main_image",
+    "touch_image",
+    "thumbnail",
+    "cover_image",
+)
 VENUE_KEYS = ("space", "venue", "location", "lugar", "place", "recinto")
 ROOM_KEYS = ("room", "sala")
 CATEGORY_KEYS = ("category", "categoria", "genre")

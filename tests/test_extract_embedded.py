@@ -67,6 +67,16 @@ def test_nuxt_payload_of_the_auditorio_home_page() -> None:
     assert [c.title for c in result.candidates].count("This is Michael") == 1
 
 
+def test_auditorio_productions_take_their_main_or_touch_image() -> None:
+    page = "https://auditorioteatrolaspalmasgc.es/"
+    result = extract_embedded(_fixture("auditorioteatrolpa_home.html"), page)
+    by_title = {c.title: c for c in result.candidates}
+    assert by_title["This is Michael"].image_url == (
+        "https://api.auditorioteatrolaspalmasgc.es/storage/26066/cSnWp9GmxPcUpTJDcw70.jpg"
+    )
+    assert all(c.image_url for c in result.candidates)
+
+
 def test_carousel_dates_in_spanish_text_are_read() -> None:
     result = extract_embedded(_fixture("auditorioteatrolpa_home.html"), "https://x.example.org/")
     assert any(
