@@ -40,3 +40,8 @@ python_version = "3.12"
 strict = true
 files = ["src", "tests"]
 plugins = ["pydantic.mypy"]
+
+# The importer ships without py.typed; it is consumed as an untyped dependency.
+[[tool.mypy.overrides]]
+module = ["canarias_events", "canarias_events.*"]
+ignore_missing_imports = true

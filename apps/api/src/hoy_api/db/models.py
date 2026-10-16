@@ -1,0 +1,91 @@
+from datetime import date, datetime
+from uuid import UUID
+
+from hoy_api.db.base import Base
+from sqlalchemy import (
+    BigInteger,
+    Boolean,
+    Date,
+    DateTime,
+    Double,
+    ForeignKey,
+    Numeric,
+    Text,
+    UniqueConstraint,
+    text,
+)
+from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+
+class Event(Base):
+    """A published event. Mirrors migration 0002; ``search_tsv`` is DB-generated and not mapped."""
+
+    __tablename__ = "events"
+
+    id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")
+    )
+    importer_id: Mapped[str] = mapped_column(Text, unique=True)
+    slug: Mapped[str] = mapped_column(Text, unique=True)
+    title: Mapped[str] = mapped_column(Text)
+    description: Mapped[str | None] = mapped_column(Text)
+    category: Mapped[str] = mapped_column(Text, server_default=text("'other'"))
+    category_raw: Mapped[str | None] = mapped_column(Text)
+    tags: Mapped[list[str]] = mapped_column(ARRAY(Text), server_default=text("'{}'"))
+    start_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    end_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    start_date: Mapped[date | None] = mapped_column(Date)
+    end_date: Mapped[date | None] = mapped_column(Date)
+    all_day: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
+    timezone: Mapped[str] = mapped_column(Text, server_default=text("'Atlantic/Canary'"))
+    venue_name: Mapped[str | None] = mapped_column(Text)
+    address: Mapped[str | None] = mapped_column(Text)
+    municipality: Mapped[str | None] = mapped_column(Text)
+    island: Mapped[str | None] = mapped_column(Text)
+    latitude: Mapped[float | None] = mapped_column(Double)
+    longitude: Mapped[float | None] = mapped_column(Double)
+    price_min: Mapped[float | None] = mapped_column(Numeric(10, 2, asdecimal=False))
+    price_max: Mapped[float | None] = mapped_column(Numeric(10, 2, asdecimal=False))
+    currency: Mapped[str | None] = mapped_column(Text)
+    is_free: Mapped[bool | None] = mapped_column(Boolean)
+    booking_url: Mapped[str | None] = mapped_column(Text)
+    ticket_url: Mapped[str | None] = mapped_column(Text)
+    official_event_url: Mapped[str | None] = mapped_column(Text)
+    image_url: Mapped[str | None] = mapped_column(Text)
+    organizer_name: Mapped[str | None] = mapped_column(Text)
+    organizer_url: Mapped[str | None] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(Text, server_default=text("'unknown'"))
+    stale: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
+    first_seen_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_seen_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    published_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("now()")
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("now()")
+    )
+
+    sources: Mapped[list["EventSource"]] = relationship(
+        back_populates="event", cascade="all, delete-orphan", passive_deletes=True
+    )
+
+
+class EventSource(Base):
+    """Provenance: one importer source record merged into a published event."""
+
+    __tablename__ = "event_sources"
+    __table_args__ = (UniqueConstraint("event_id", "source_name", "source_event_id"),)
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    event_id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("events.id", ondelete="CASCADE"), index=True
+    )
+    source_name: Mapped[str] = mapped_column(Text)
+    source_event_id: Mapped[str] = mapped_column(Text)
+    source_url: Mapped[str | None] = mapped_column(Text)
+    official_url: Mapped[str | None] = mapped_column(Text)
+
+    event: Mapped[Event] = relationship(back_populates="sources")
