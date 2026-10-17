@@ -12,6 +12,19 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+@layer base {
+  button,
+  [role="button"],
+  summary {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [role="button"][aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+}
+
 :focus-visible {
   outline: 3px solid var(--color-focus);
   outline-offset: 3px;
