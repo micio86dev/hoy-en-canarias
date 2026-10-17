@@ -181,6 +181,12 @@
     },
     "navLabel": "Publish an event"
   },
+  "attendance": {
+    "join": "I'm going",
+    "joined": "You're going",
+    "count": "{count} people going",
+    "error": "Could not save your attendance. Try again."
+  },
   "favorites": {
     "title": "My favourites",
     "intro": "Saved only in this browser. You don't need an account and nothing is sent to a server.",

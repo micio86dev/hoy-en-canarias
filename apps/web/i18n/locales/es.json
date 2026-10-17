@@ -181,6 +181,12 @@
     },
     "navLabel": "Publicar un evento"
   },
+  "attendance": {
+    "join": "Participar",
+    "joined": "Ya participas",
+    "count": "{count} persona(s) participan",
+    "error": "No se pudo guardar tu participación. Inténtalo de nuevo."
+  },
   "favorites": {
     "title": "Mis favoritos",
     "intro": "Guardados solo en este navegador. No necesitas cuenta y nada se envía a un servidor.",

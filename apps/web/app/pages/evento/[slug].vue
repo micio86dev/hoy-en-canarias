@@ -71,6 +71,7 @@
       </div>
 
       <FavoriteButton :slug="current.slug" />
+      <AttendButton :slug="current.slug" :initial-count="current.attendee_count" />
 
       <ShareButtons :url="shareUrl" :title="current.title" :text="current.description?.slice(0, 120) ?? undefined" />
     </aside>

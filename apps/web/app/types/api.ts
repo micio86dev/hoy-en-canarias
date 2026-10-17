@@ -48,6 +48,7 @@ export interface SourceLink {
 }
 
 export interface EventDetail extends EventSummary {
+  attendee_count: number
   description: string | null
   address: string | null
   tags: string[]
@@ -79,3 +80,8 @@ export interface MapPage {
   truncated: boolean
 }
 
+
+export interface AttendanceState {
+  attendees: number
+  attending: boolean
+}

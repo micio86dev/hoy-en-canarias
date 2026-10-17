@@ -181,6 +181,12 @@
     },
     "navLabel": "Pubblica un evento"
   },
+  "attendance": {
+    "join": "Partecipa",
+    "joined": "Partecipi già",
+    "count": "{count} persone partecipano",
+    "error": "Impossibile salvare la partecipazione. Riprova."
+  },
   "favorites": {
     "title": "I miei preferiti",
     "intro": "Salvati solo in questo browser. Non serve un account e nulla viene inviato a un server.",
