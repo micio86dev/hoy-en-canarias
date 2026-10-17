@@ -15,8 +15,8 @@
       <p v-if="today.pending.value" class="text-ink-muted">{{ t('common.loading') }}</p>
       <p v-else-if="!today.data.value?.items.length" class="text-ink-muted">{{ t('home.empty') }}</p>
       <ul v-else class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" role="list">
-        <li v-for="event in today.data.value.items" :key="event.id">
-          <EventCard :event="event" />
+        <li v-for="(event, index) in today.data.value.items" :key="event.id">
+          <EventCard :event="event" :eager="index < 2" />
         </li>
       </ul>
     </section>

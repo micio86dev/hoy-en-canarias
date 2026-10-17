@@ -10,7 +10,8 @@
       <img
         :src="event.image_url ?? undefined"
         alt=""
-        loading="lazy"
+        :loading="eager ? 'eager' : 'lazy'"
+        :fetchpriority="eager ? 'high' : 'auto'"
         decoding="async"
         referrerpolicy="no-referrer"
         class="h-full w-full object-cover"
@@ -58,7 +59,8 @@
 import type { EventSummary } from '~/types/api'
 import { formatEventWhen } from '~/utils/dates'
 
-const props = defineProps<{ event: EventSummary }>()
+// Cards above the fold load at once, so the largest image is not delayed by lazy loading.
+const props = withDefaults(defineProps<{ event: EventSummary; eager?: boolean }>(), { eager: false })
 const imageFailed = ref(false)
 const showImage = computed(() => Boolean(props.event.image_url) && !imageFailed.value)
 watch(() => props.event.image_url, () => { imageFailed.value = false })
