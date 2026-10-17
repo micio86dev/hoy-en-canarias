@@ -2,7 +2,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Annotated
 
-from pydantic import Field, SecretStr, field_validator
+from pydantic import AliasChoices, Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
@@ -24,7 +24,10 @@ class Settings(BaseSettings):
     import_window_days: int = Field(default=60, ge=7, le=365)
     import_max_attempts: int = Field(default=2, ge=1, le=5)
     import_retry_backoff_seconds: float = Field(default=60.0, ge=0, le=3600)
-    typesafe_api_key: SecretStr | None = None
+    typesafe_api_key: SecretStr | None = Field(
+        default=None,
+        validation_alias=AliasChoices("TYPESAFE_API_KEY", "HOY_TYPESAFE_API_KEY"),
+    )
     moderation_reject_above: float = Field(default=0.5, ge=0, le=1)
 
     @field_validator("cors_origins", mode="before")

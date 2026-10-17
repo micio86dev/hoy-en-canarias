@@ -40,3 +40,14 @@ def test_admin_token_rejects_blank_value(monkeypatch: pytest.MonkeyPatch) -> Non
 
     with pytest.raises(ValueError):
         Settings()
+
+
+def test_typesafe_key_reads_plain_env_name(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("HOY_DATABASE_URL", "postgresql+psycopg://u:p@db:5432/hoy")
+    monkeypatch.setenv("TYPESAFE_API_KEY", "typesafe-test-key")
+    monkeypatch.delenv("HOY_TYPESAFE_API_KEY", raising=False)
+
+    key = Settings().typesafe_api_key
+
+    assert key is not None
+    assert key.get_secret_value() == "typesafe-test-key"
