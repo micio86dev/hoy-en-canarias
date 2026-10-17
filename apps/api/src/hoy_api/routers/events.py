@@ -1,11 +1,19 @@
 from dataclasses import replace
 from datetime import date
 from typing import Annotated
+from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Header, HTTPException, Query
 
 from hoy_api.db.models import Event
 from hoy_api.deps import ClockDep, SessionDep, enforce_rate_limit
+from hoy_api.repositories.attendance import (
+    attendee_count,
+    guest_hash,
+    is_attending,
+    join,
+    leave,
+)
 from hoy_api.repositories.events import (
     EventFilters,
     get_event_by_slug,
@@ -15,6 +23,7 @@ from hoy_api.repositories.events import (
 )
 from hoy_api.schemas import (
     FAR_FUTURE,
+    AttendanceState,
     EventDetail,
     EventPage,
     EventQuery,
@@ -89,7 +98,47 @@ def event_detail(slug: str, session: SessionDep) -> EventDetail:
     event = get_event_by_slug(session, slug)
     if event is None:
         raise HTTPException(status_code=404, detail="Event not found")
-    return EventDetail.model_validate(event)
+    detail = EventDetail.model_validate(event)
+    return detail.model_copy(update={"attendee_count": attendee_count(session, event.id)})
+
+
+GuestHeader = Annotated[UUID, Header(alias="X-Guest-Id")]
+
+
+def _state(session: SessionDep, event: Event, guest: UUID) -> AttendanceState:
+    digest = guest_hash(guest)
+    return AttendanceState(
+        attendees=attendee_count(session, event.id),
+        attending=is_attending(session, event.id, digest),
+    )
+
+
+def _event_or_404(session: SessionDep, slug: str) -> Event:
+    event = get_event_by_slug(session, slug)
+    if event is None:
+        raise HTTPException(status_code=404, detail="Event not found")
+    return event
+
+
+@router.get("/{slug}/attendance", response_model=AttendanceState)
+def attendance_state(slug: str, guest: GuestHeader, session: SessionDep) -> AttendanceState:
+    return _state(session, _event_or_404(session, slug), guest)
+
+
+@router.post("/{slug}/attendance", response_model=AttendanceState)
+def join_event(slug: str, guest: GuestHeader, session: SessionDep) -> AttendanceState:
+    event = _event_or_404(session, slug)
+    join(session, event.id, guest_hash(guest))
+    session.commit()
+    return _state(session, event, guest)
+
+
+@router.delete("/{slug}/attendance", response_model=AttendanceState)
+def leave_event(slug: str, guest: GuestHeader, session: SessionDep) -> AttendanceState:
+    event = _event_or_404(session, slug)
+    leave(session, event.id, guest_hash(guest))
+    session.commit()
+    return _state(session, event, guest)
 
 
 @router.get("/{slug}/related", response_model=EventPage)

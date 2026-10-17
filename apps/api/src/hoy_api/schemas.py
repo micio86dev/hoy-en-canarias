@@ -53,6 +53,7 @@ class SourceLinkOut(BaseModel):
 
 
 class EventDetail(EventSummary):
+    attendee_count: int = 0
     description: str | None
     address: str | None
     tags: list[str]
@@ -184,3 +185,8 @@ class MapQuery(EventQuery):
     def corners(self) -> tuple[float, float, float, float]:
         min_lon, min_lat, max_lon, max_lat = (float(part) for part in self.bbox.split(","))
         return min_lon, min_lat, max_lon, max_lat
+
+
+class AttendanceState(BaseModel):
+    attendees: int
+    attending: bool

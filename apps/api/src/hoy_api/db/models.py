@@ -143,3 +143,23 @@ class Submission(Base):
         DateTime(timezone=True), server_default=text("now()")
     )
     decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class EventAttendance(Base):
+    """A guest's "I'm going" for an event. Only a SHA-256 of the guest identifier is stored."""
+
+    __tablename__ = "event_attendances"
+    __table_args__ = (
+        UniqueConstraint("event_id", "guest_hash", name="event_attendances_event_guest_key"),
+    )
+
+    id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")
+    )
+    event_id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("events.id", ondelete="CASCADE")
+    )
+    guest_hash: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("now()")
+    )
