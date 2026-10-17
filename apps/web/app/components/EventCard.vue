@@ -1,8 +1,11 @@
 <template>
   <article class="flex flex-col overflow-hidden rounded-card bg-paper shadow-card ring-1 ring-ink/5">
-    <div
+    <NuxtLinkLocale
       v-if="showImage"
-      class="relative aspect-[16/9] bg-sand"
+      :to="`/evento/${event.slug}`"
+      tabindex="-1"
+      aria-hidden="true"
+      class="relative block aspect-[16/9] bg-sand"
     >
       <img
         :src="event.image_url ?? undefined"
@@ -14,19 +17,21 @@
         @error="imageFailed = true"
         ref="imageEl"
       />
-    </div>
-    <div
+    </NuxtLinkLocale>
+    <NuxtLinkLocale
       v-else
+      :to="`/evento/${event.slug}`"
+      tabindex="-1"
+      aria-hidden="true"
       data-testid="event-placeholder"
       class="relative flex aspect-[16/9] items-center justify-center"
       :class="fallbackClass"
-      aria-hidden="true"
     >
       <BrandMark class="h-12 w-auto opacity-80" />
       <span class="absolute inset-x-0 bottom-0 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide">
         {{ categoryLabel }}
       </span>
-    </div>
+    </NuxtLinkLocale>
     <div class="flex flex-1 flex-col gap-2 p-4">
       <p class="text-sm font-medium text-link">{{ when }}</p>
       <h3 class="font-display text-xl font-semibold leading-snug text-ink">
