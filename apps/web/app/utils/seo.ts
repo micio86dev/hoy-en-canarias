@@ -41,6 +41,16 @@ interface JsonLdContext {
   url: string
 }
 
+/** Only web links may reach structured data; a javascript: or other scheme never does. */
+function isWebUrl(value: string | null): value is string {
+  if (!value) return false
+  try {
+    return ['http:', 'https:'].includes(new URL(value).protocol)
+  } catch {
+    return false
+  }
+}
+
 /** Schema.org Event. Only fields the source actually provided are written. */
 export function buildEventJsonLd(event: EventDetail, context: JsonLdContext): Record<string, unknown> {
   const startDate = event.start_at ? canaryIso(event.start_at) : (event.start_date ?? undefined)
@@ -63,7 +73,7 @@ export function buildEventJsonLd(event: EventDetail, context: JsonLdContext): Re
   }
 
   // An offer needs a known price; its link is the first ticket, booking or official page the source gave.
-  const offerUrl = event.ticket_url ?? event.booking_url ?? event.official_event_url
+  const offerUrl = [event.ticket_url, event.booking_url, event.official_event_url].find(isWebUrl)
   const offerLink = offerUrl ? { url: offerUrl } : {}
   let offers: Record<string, unknown> | undefined
   if (event.is_free === true) {

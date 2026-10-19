@@ -140,6 +140,15 @@ describe('Event JSON-LD', () => {
     expect(data.offers).not.toHaveProperty('url')
   })
 
+  it('never writes a link that is not http or https', () => {
+    const data = buildEventJsonLd(
+      detail({ price_min: 5, currency: 'EUR', ticket_url: 'javascript:alert(1)' }),
+      { siteUrl: SITE, url: SITE },
+    )
+
+    expect(data.offers).not.toHaveProperty('url')
+  })
+
   it('writes no offer at all for a link without a known price', () => {
     const data = buildEventJsonLd(detail({ ticket_url: 'https://tickets.example/a' }), { siteUrl: SITE, url: SITE })
 
