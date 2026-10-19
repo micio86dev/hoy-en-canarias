@@ -23,4 +23,7 @@
 
 ## Data
 - Never guess missing fields (price, island, dates): use null.
+- Exception (decided by the owner, structured data only): an upcoming event with unknown status is
+  published as `EventScheduled`, and without a named organizer the venue stands in as `Organization`.
+  Past or undated events keep status unknown. No performer is ever invented.
 - Timestamps are timezone-aware; the working timezone is Atlantic/Canary.

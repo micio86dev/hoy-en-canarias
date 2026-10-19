@@ -39,6 +39,18 @@ export function canaryIso(instant: string): string {
 interface JsonLdContext {
   siteUrl: string
   url: string
+  now?: Date
+}
+
+/** The event's start instant; a date-only start counts through its last moment in the Canary Islands. */
+function startInstant(event: EventDetail): number {
+  if (event.start_at) return Date.parse(event.start_at)
+  if (event.start_date) {
+    // Noon UTC is never on the other side of a Canary daylight-saving switch, so its offset is the day's offset.
+    const dayOffset = canaryIso(`${event.start_date}T12:00:00Z`).slice(-6)
+    return Date.parse(`${event.start_date}T23:59:59${dayOffset}`)
+  }
+  return Number.NaN
 }
 
 /** Only web links may reach structured data; a javascript: or other scheme never does. */
@@ -55,6 +67,11 @@ function isWebUrl(value: string | null): value is string {
 export function buildEventJsonLd(event: EventDetail, context: JsonLdContext): Record<string, unknown> {
   const startDate = event.start_at ? canaryIso(event.start_at) : (event.start_date ?? undefined)
   const endDate = event.end_at ? canaryIso(event.end_at) : (event.end_date ?? undefined)
+  // Owner-approved default: an upcoming event with no status yet is scheduled. Past or undated stays unknown.
+  const isUpcoming = startInstant(event) > (context.now ?? new Date()).getTime()
+  const status = event.status === 'unknown' && isUpcoming ? 'scheduled' : event.status
+  // Owner-approved default: without a named organizer, the venue hosts the event and stands in for it.
+  const organizer = event.organizer_name ?? event.venue_name
 
   const address = {
     '@type': 'PostalAddress',
@@ -90,11 +107,15 @@ export function buildEventJsonLd(event: EventDetail, context: JsonLdContext): Re
     url: context.url,
     startDate,
     endDate,
-    eventStatus: EVENT_STATUS[event.status],
+    eventStatus: EVENT_STATUS[status],
     location,
-    image: event.image_url ?? undefined,
-    organizer: event.organizer_name
-      ? { '@type': 'Organization', name: event.organizer_name, url: event.organizer_url ?? undefined }
+    image: isWebUrl(event.image_url) ? event.image_url : undefined,
+    organizer: organizer
+      ? {
+          '@type': 'Organization',
+          name: organizer,
+          url: event.organizer_name && isWebUrl(event.organizer_url) ? event.organizer_url : undefined,
+        }
       : undefined,
     offers,
   }

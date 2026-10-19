@@ -70,11 +70,84 @@ describe('Event JSON-LD', () => {
     expect(data.endDate).toBeUndefined()
   })
 
-  it('omits offers and status when the source did not say', () => {
+  it('omits offers when the source gave no price', () => {
     const data = buildEventJsonLd(detail(), { siteUrl: SITE, url: SITE })
 
     expect(data.offers).toBeUndefined()
+  })
+
+  it('marks an upcoming event with unknown status as scheduled', () => {
+    const data = buildEventJsonLd(detail(), { siteUrl: SITE, url: SITE, now: new Date('2026-10-19T12:00:00Z') })
+
+    expect(data.eventStatus).toBe('https://schema.org/EventScheduled')
+  })
+
+  it('marks an upcoming date-only event with unknown status as scheduled', () => {
+    const data = buildEventJsonLd(detail({ start_at: null, end_at: null }), {
+      siteUrl: SITE,
+      url: SITE,
+      now: new Date('2026-10-19T12:00:00Z'),
+    })
+
+    expect(data.eventStatus).toBe('https://schema.org/EventScheduled')
+  })
+
+  it('uses the winter offset for a date-only event in January', () => {
+    // Canary is UTC+0 in winter: 23:30 UTC on the 15th is still the 15th, so the event is upcoming.
+    const data = buildEventJsonLd(detail({ start_at: null, end_at: null, start_date: '2026-01-15' }), {
+      siteUrl: SITE,
+      url: SITE,
+      now: new Date('2026-01-15T23:30:00Z'),
+    })
+
+    expect(data.eventStatus).toBe('https://schema.org/EventScheduled')
+  })
+
+  it('leaves the status off a past event whose status is unknown', () => {
+    const data = buildEventJsonLd(detail(), { siteUrl: SITE, url: SITE, now: new Date('2026-11-01T12:00:00Z') })
+
     expect(data.eventStatus).toBeUndefined()
+  })
+
+  it('leaves the status off when no start is known', () => {
+    const data = buildEventJsonLd(detail({ start_at: null, start_date: null }), {
+      siteUrl: SITE,
+      url: SITE,
+      now: new Date('2026-10-19T12:00:00Z'),
+    })
+
+    expect(data.eventStatus).toBeUndefined()
+  })
+
+  it('keeps a known cancellation even for a past event', () => {
+    const data = buildEventJsonLd(detail({ status: 'cancelled' }), {
+      siteUrl: SITE,
+      url: SITE,
+      now: new Date('2026-11-01T12:00:00Z'),
+    })
+
+    expect(data.eventStatus).toBe('https://schema.org/EventCancelled')
+  })
+
+  it('names the venue as organizer when the source names none', () => {
+    const data = buildEventJsonLd(detail({ venue_name: 'Puerto', organizer_name: null }), { siteUrl: SITE, url: SITE })
+
+    expect(data.organizer).toEqual({ '@type': 'Organization', name: 'Puerto' })
+  })
+
+  it('prefers the organizer the source named over the venue', () => {
+    const data = buildEventJsonLd(detail({ venue_name: 'Puerto', organizer_name: 'Ayuntamiento' }), {
+      siteUrl: SITE,
+      url: SITE,
+    })
+
+    expect(data.organizer).toMatchObject({ name: 'Ayuntamiento' })
+  })
+
+  it('omits the organizer when neither the source nor a venue names one', () => {
+    const data = buildEventJsonLd(detail({ venue_name: null, organizer_name: null }), { siteUrl: SITE, url: SITE })
+
+    expect(data.organizer).toBeUndefined()
   })
 
   it('declares a free offer only when the source says the event is free', () => {
@@ -138,6 +211,16 @@ describe('Event JSON-LD', () => {
     const data = buildEventJsonLd(detail({ price_min: 5, currency: 'EUR' }), { siteUrl: SITE, url: SITE })
 
     expect(data.offers).not.toHaveProperty('url')
+  })
+
+  it('never writes an image or organizer link that is not http or https', () => {
+    const data = buildEventJsonLd(
+      detail({ image_url: 'javascript:alert(1)', organizer_name: 'Ayuntamiento', organizer_url: 'data:text/html,x' }),
+      { siteUrl: SITE, url: SITE },
+    )
+
+    expect(data.image).toBeUndefined()
+    expect(data.organizer).toEqual({ '@type': 'Organization', name: 'Ayuntamiento', url: undefined })
   })
 
   it('never writes a link that is not http or https', () => {
