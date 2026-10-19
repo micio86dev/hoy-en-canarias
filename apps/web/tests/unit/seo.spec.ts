@@ -106,6 +106,46 @@ describe('Event JSON-LD', () => {
     expect(data.offers).toBeUndefined()
   })
 
+  it('points a priced offer at the ticket link the source gave', () => {
+    const data = buildEventJsonLd(
+      detail({ price_min: 5, currency: 'EUR', ticket_url: 'https://tickets.example/a' }),
+      { siteUrl: SITE, url: SITE },
+    )
+
+    expect(data.offers).toEqual({
+      '@type': 'Offer',
+      price: 5,
+      priceCurrency: 'EUR',
+      url: 'https://tickets.example/a',
+    })
+  })
+
+  it('falls back to the booking link, then the official page, for the offer url', () => {
+    const booking = buildEventJsonLd(
+      detail({ is_free: true, currency: 'EUR', booking_url: 'https://book.example/b', official_event_url: 'https://official.example/o' }),
+      { siteUrl: SITE, url: SITE },
+    )
+    const official = buildEventJsonLd(
+      detail({ is_free: true, currency: 'EUR', official_event_url: 'https://official.example/o' }),
+      { siteUrl: SITE, url: SITE },
+    )
+
+    expect(booking.offers).toMatchObject({ url: 'https://book.example/b' })
+    expect(official.offers).toMatchObject({ url: 'https://official.example/o' })
+  })
+
+  it('never writes an offer url when the source gave no link', () => {
+    const data = buildEventJsonLd(detail({ price_min: 5, currency: 'EUR' }), { siteUrl: SITE, url: SITE })
+
+    expect(data.offers).not.toHaveProperty('url')
+  })
+
+  it('writes no offer at all for a link without a known price', () => {
+    const data = buildEventJsonLd(detail({ ticket_url: 'https://tickets.example/a' }), { siteUrl: SITE, url: SITE })
+
+    expect(data.offers).toBeUndefined()
+  })
+
   it('maps a known cancellation to schema.org', () => {
     const data = buildEventJsonLd(detail({ status: 'cancelled' }), { siteUrl: SITE, url: SITE })
 

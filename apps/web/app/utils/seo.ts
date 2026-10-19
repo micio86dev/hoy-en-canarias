@@ -62,11 +62,14 @@ export function buildEventJsonLd(event: EventDetail, context: JsonLdContext): Re
     geo: hasPoint ? { '@type': 'GeoCoordinates', latitude: event.latitude, longitude: event.longitude } : undefined,
   }
 
+  // An offer needs a known price; its link is the first ticket, booking or official page the source gave.
+  const offerUrl = event.ticket_url ?? event.booking_url ?? event.official_event_url
+  const offerLink = offerUrl ? { url: offerUrl } : {}
   let offers: Record<string, unknown> | undefined
   if (event.is_free === true) {
-    offers = { '@type': 'Offer', price: 0, ...(event.currency ? { priceCurrency: event.currency } : {}) }
+    offers = { '@type': 'Offer', price: 0, ...(event.currency ? { priceCurrency: event.currency } : {}), ...offerLink }
   } else if (event.price_min !== null && event.currency) {
-    offers = { '@type': 'Offer', price: event.price_min, priceCurrency: event.currency }
+    offers = { '@type': 'Offer', price: event.price_min, priceCurrency: event.currency, ...offerLink }
   }
 
   return {
